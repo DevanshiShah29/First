@@ -121,10 +121,18 @@ export function StringList({
   addLabel: string;
   placeholder?: string;
 }) {
+  const moveItem = (index: number, dir: -1 | 1) => {
+    const j = index + dir;
+    if (j < 0 || j >= values.length) return;
+    const next = [...values];
+    [next[index], next[j]] = [next[j], next[index]];
+    onChange(next);
+  };
+
   return (
     <div className="wp-chip-row">
       {values.map((item, i) => (
-        <div className="row" key={i}>
+        <div className="row" key={i} style={{ display: "flex", gap: 6, alignItems: "center" }}>
           <input
             value={item}
             placeholder={placeholder}
@@ -135,6 +143,26 @@ export function StringList({
             }}
             className="wp-input"
           />
+          <button
+            type="button"
+            className="wp-btn"
+            disabled={i === 0}
+            title="Move up"
+            onClick={() => moveItem(i, -1)}
+            style={{ padding: "0 8px" }}
+          >
+            ↑
+          </button>
+          <button
+            type="button"
+            className="wp-btn"
+            disabled={i === values.length - 1}
+            title="Move down"
+            onClick={() => moveItem(i, 1)}
+            style={{ padding: "0 8px" }}
+          >
+            ↓
+          </button>
           <button type="button" className="wp-btn" onClick={() => onChange(values.filter((_, j) => j !== i))}>
             Remove
           </button>

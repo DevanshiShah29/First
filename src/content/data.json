@@ -187,42 +187,8 @@
   ],
   "skills": [
     {
-      "title": "Product",
-      "items": [
-        {
-          "name": "Discovery",
-          "icon": "discovery"
-        },
-        {
-          "name": "Prioritization",
-          "icon": "prioritize"
-        },
-        {
-          "name": "Writing specs",
-          "icon": "specs"
-        },
-        {
-          "name": "Opportunity mapping",
-          "icon": "map"
-        },
-        {
-          "name": "Outcomes over output",
-          "icon": "target"
-        },
-        {
-          "name": "Empty states",
-          "icon": "empty"
-        }
-      ]
-    },
-    {
       "title": "Technical",
       "items": [
-        {
-          "name": "React",
-          "icon": "react",
-          "color": "#61dafb"
-        },
         {
           "name": "Next.js",
           "icon": "next",
@@ -234,14 +200,19 @@
           "color": "#3178C6"
         },
         {
-          "name": "Tailwind CSS",
-          "icon": "tailwind",
-          "color": "#06B6D4"
+          "name": "React",
+          "icon": "react",
+          "color": "#61dafb"
         },
         {
           "name": "HTML/CSS",
           "icon": "html",
           "color": "#E34F26"
+        },
+        {
+          "name": "Tailwind CSS",
+          "icon": "tailwind",
+          "color": "#06B6D4"
         },
         {
           "name": "Node.js",
@@ -267,6 +238,35 @@
           "name": "Figma",
           "icon": "figma",
           "color": "#F24E9A"
+        }
+      ]
+    },
+    {
+      "title": "Product",
+      "items": [
+        {
+          "name": "Discovery",
+          "icon": "discovery"
+        },
+        {
+          "name": "Prioritization",
+          "icon": "prioritize"
+        },
+        {
+          "name": "Writing specs",
+          "icon": "specs"
+        },
+        {
+          "name": "Opportunity mapping",
+          "icon": "map"
+        },
+        {
+          "name": "Outcomes over output",
+          "icon": "target"
+        },
+        {
+          "name": "Empty states",
+          "icon": "empty"
         }
       ]
     }

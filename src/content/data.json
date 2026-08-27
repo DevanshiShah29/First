@@ -1,0 +1,356 @@
+{
+  "site": {
+    "name": "Devanshi Shah",
+    "initials": "Dev",
+    "title": "Devanshi Shah | Product Manager Portfolio",
+    "description": "Portfolio of Devanshi Shah — product-minded engineer turning messy problems into products people actually use.",
+    "heroTemplate": "nook",
+    "heroMedia": {
+      "kind": "video",
+      "url": "https://img.magnific.com/premium-vector/software-developer-vector-illustration-communication-technology-cyber-security_1249867-5467.jpg?semt=ais_test_b&w=740&q=80",
+      "place": "side",
+      "side": "left"
+    },
+    "pianoYoutubeUrl": "https://youtu.be/sFzL4BTHewQ?si=VxS0grwOFsqIuQRv",
+    "goodreadsUrl": "https://www.goodreads.com/user/show/150825252-devanshi",
+    "kicker": "Crafting product experiences",
+    "greeting": "Hi, I'm Devanshi ",
+    "roles": [
+      "Product Manager",
+      "Product-minded Engineer"
+    ],
+    "line": "I like turning messy problems into products people actually want to use.",
+    "about": "I'm a product-minded engineer moving into product management. I specialize in turning messy problems into products people actually want to use — from discovery and scope through the interface that has to survive the decision. I stay close to the frontend so the product doesn't die in implementation.",
+    "philosophyKicker": "Product philosophy",
+    "philosophyTitle": "Clear problems, sharp scope, measurable outcomes",
+    "philosophy": "I start messy, name the user and the moment, and ship the smallest version that still tells the truth. Copy and empty states are strategy. Shipping is a beginning.",
+    "experienceIntro": "A path from shipping interfaces to owning the question of whether they should exist — and for whom.",
+    "contactLine": "Open to product roles and conversations about messy problems",
+    "email": "devanshifour@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/devanshishah",
+    "github": "https://github.com/DevanshiShah29",
+    "resume": "/resume.pdf",
+    "stats": [
+      {
+        "value": 15,
+        "suffix": "+",
+        "label": "Projects"
+      },
+      {
+        "value": 5,
+        "suffix": "",
+        "label": "Live product"
+      },
+      {
+        "value": 3,
+        "suffix": "+",
+        "label": "Work chapters"
+      }
+    ]
+  },
+  "experience": [
+    {
+      "id": "o2h",
+      "when": "Now",
+      "current": true,
+      "role": "Product-minded engineer → PM",
+      "company": "O2H Technology",
+      "summary": "Turned ambiguous founder briefs into shippable scope. Moved the room from “can we build it” to “should this exist, and for whom.”",
+      "bullets": [
+        "Ran discovery with users of half-built tools and wrote specs that include empty states and who a feature is not for.",
+        "Stayed close to the frontend so product decisions survived implementation instead of dying in a ticket.",
+        "Protected the smallest version that still tells the truth — and named the nice-to-haves as someone else’s roadmap."
+      ],
+      "stack": [
+        "Discovery",
+        "Specs",
+        "Prioritization",
+        "React",
+        "Next.js",
+        "Product"
+      ]
+    },
+    {
+      "id": "lead",
+      "when": "Before",
+      "current": false,
+      "role": "Frontend Team Lead",
+      "company": "People + craft",
+      "summary": "Raised the quality floor without turning review into theatre. Design and engineering started shaping work in the same conversation.",
+      "bullets": [
+        "Mentored through review, not rewrite — and asked “why are we building this” as a kindness, not a blocker.",
+        "Protected focus: fewer fires, clearer sequencing, and a quality bar that held under deadline.",
+        "Brought design and engineering into the same conversation before the interface was already decided."
+      ],
+      "stack": [
+        "Mentorship",
+        "Critique",
+        "Accessibility",
+        "TypeScript",
+        "React",
+        "CSS systems"
+      ]
+    },
+    {
+      "id": "senior",
+      "when": "Growing",
+      "current": false,
+      "role": "Senior Engineer",
+      "company": "Heavier questions",
+      "summary": "People started asking about the decision, not just the component. Craft became a default.",
+      "bullets": [
+        "Left code better than I found it, and spotted product questions hiding in “small UI changes.”",
+        "Treated empty states, copy, and the last 10% as part of the product — not polish after the fact."
+      ],
+      "stack": [
+        "TypeScript",
+        "React",
+        "Next.js",
+        "CSS systems",
+        "Accessibility"
+      ]
+    },
+    {
+      "id": "eng",
+      "when": "Foundation",
+      "current": false,
+      "role": "Software Engineer",
+      "company": "TatvaSoft",
+      "summary": "Learned that users do not care about folder structure if the next click is confusing. Shipped real interfaces under real constraints.",
+      "bullets": [
+        "Shipped production UIs and learned that the last 10% is the product.",
+        "Finished things. Then watched people actually use them."
+      ],
+      "stack": [
+        "JavaScript",
+        "React",
+        "HTML/CSS",
+        "Production UIs"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "worddeck",
+      "name": "WordDeck",
+      "blurb": "A vocabulary studio with quizzes, matching, and a relation graph — because new words lived in scattered notes and nothing remembered how they related.",
+      "tags": [
+        "Next.js",
+        "Gemini",
+        "React Flow",
+        "MongoDB",
+        "PWA"
+      ],
+      "github": "https://github.com/DevanshiShah29/WordDeck",
+      "demo": "http://wordsmithtool.netlify.app/"
+    },
+    {
+      "id": "track",
+      "name": "TrackTransactions",
+      "blurb": "A quiet ledger where rows come first and charts only exist if the rows are honest. Months ended with a feeling; now they end with a picture.",
+      "tags": [
+        "Next.js",
+        "Prisma",
+        "Recharts",
+        "TypeScript"
+      ],
+      "github": "https://github.com/DevanshiShah29/TrackTransactions",
+      "demo": ""
+    },
+    {
+      "id": "meal",
+      "name": "PlanMyMeal",
+      "blurb": "A week of dinners you actually own. AI drafts the plan, you edit it — because dinner is a daily product with terrible discovery.",
+      "tags": [
+        "React",
+        "Express",
+        "Gemini",
+        "JWT",
+        "Cloudinary"
+      ],
+      "github": "https://github.com/DevanshiShah29/PlanMyMeal",
+      "demo": ""
+    },
+    {
+      "id": "events",
+      "name": "Event desk",
+      "blurb": "Guests find and book. Organizers create and watch status. Availability is not a later feature — booking is trust.",
+      "tags": [
+        "Next.js",
+        "Express",
+        "MongoDB",
+        "TypeScript"
+      ],
+      "github": "https://github.com/DevanshiShah29/EMS-Client",
+      "demo": "https://ems-client-sigma.vercel.app"
+    }
+  ],
+  "skills": [
+    {
+      "title": "Product",
+      "items": [
+        {
+          "name": "Discovery",
+          "icon": "discovery"
+        },
+        {
+          "name": "Prioritization",
+          "icon": "prioritize"
+        },
+        {
+          "name": "Writing specs",
+          "icon": "specs"
+        },
+        {
+          "name": "Opportunity mapping",
+          "icon": "map"
+        },
+        {
+          "name": "Outcomes over output",
+          "icon": "target"
+        },
+        {
+          "name": "Empty states",
+          "icon": "empty"
+        }
+      ]
+    },
+    {
+      "title": "Technical",
+      "items": [
+        {
+          "name": "React",
+          "icon": "react",
+          "color": "#61dafb"
+        },
+        {
+          "name": "Next.js",
+          "icon": "next",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "TypeScript",
+          "icon": "typescript",
+          "color": "#3178C6"
+        },
+        {
+          "name": "Tailwind CSS",
+          "icon": "tailwind",
+          "color": "#06B6D4"
+        },
+        {
+          "name": "HTML/CSS",
+          "icon": "html",
+          "color": "#E34F26"
+        },
+        {
+          "name": "Node.js",
+          "icon": "node",
+          "color": "#339933"
+        },
+        {
+          "name": "Express",
+          "icon": "express",
+          "color": "#FFFFFF"
+        },
+        {
+          "name": "MongoDB",
+          "icon": "mongo",
+          "color": "#47A248"
+        },
+        {
+          "name": "Git",
+          "icon": "git",
+          "color": "#F05032"
+        },
+        {
+          "name": "Figma",
+          "icon": "figma",
+          "color": "#F24E9A"
+        }
+      ]
+    }
+  ],
+  "theme": {
+    "defaultMode": "system",
+    "allowToggle": true,
+    "brandFrom": "#7C3AED",
+    "brandTo": "#6366F1",
+    "dark": {
+      "background": "#080808",
+      "foreground": "#F8F8F8",
+      "card": "#0F0F0F",
+      "cardHover": "#141414",
+      "chip": "#0F0F0F",
+      "accentText": "#A78BFA",
+      "accentHover": "#A78BFA",
+      "badge": "#C4B5FD"
+    },
+    "light": {
+      "background": "#F7F7FB",
+      "foreground": "#121218",
+      "card": "#FFFFFF",
+      "cardHover": "#F3F1FF",
+      "chip": "#F4F3FA",
+      "accentText": "#6D28D9",
+      "accentHover": "#5B21B6",
+      "badge": "#6D28D9"
+    }
+  },
+  "memories": [
+    {
+      "id": "mem-1",
+      "title": "First Shipped Feature",
+      "note": "Staying up until 2:30 AM watching the very first real user click through a flow I spent weeks designing. Seeing them find exactly what they needed without hesitation felt like pure magic.",
+      "date": "Summer 2023",
+      "category": "Milestone",
+      "icon": "🚀",
+      "color": "#7C3AED"
+    },
+    {
+      "id": "mem-2",
+      "title": "Late Night Piano Chords",
+      "note": "Learning Ludovico Einaudi’s 'Nuvole Bianche' measure by measure on a quiet rainy evening. The moment muscle memory took over and the music flowed on its own.",
+      "date": "October 2023",
+      "category": "Craft",
+      "icon": "🎹",
+      "color": "#6366F1"
+    },
+    {
+      "id": "mem-3",
+      "title": "The Sketchbook on the Train",
+      "note": "Filling 14 pages of rough wireframes and margin doodles on the morning commute. The most elegant product architecture often starts on wrinkled paper with a ballpoint pen.",
+      "date": "Spring 2024",
+      "category": "Discovery",
+      "icon": "✨",
+      "color": "#A78BFA"
+    },
+    {
+      "id": "mem-4",
+      "title": "Warm Chai & Bookmarks",
+      "note": "Finishing 'The Design of Everyday Things' over hot ginger chai on a chilly Sunday. Looking at Norman doors and tea kettles with entirely new eyes forever after.",
+      "date": "Winter 2024",
+      "category": "Tiny Joy",
+      "icon": "☕",
+      "color": "#F59E0B"
+    },
+    {
+      "id": "mem-5",
+      "title": "Team Breakthrough Moment",
+      "note": "When our team was stuck on a thorny scope dispute for three days, and we drew the simple 'who is this NOT for' matrix on a whiteboard. The collective sigh of relief in that room was unforgettable.",
+      "date": "Autumn 2024",
+      "category": "Milestone",
+      "icon": "💡",
+      "color": "#10B981"
+    },
+    {
+      "id": "mem-6",
+      "title": "Stargazing After a Tough Launch",
+      "note": "Sitting on the rooftop terrace after a high-stakes release week, watching the night sky. Remembering how vast the universe is, and how sweet every tiny finished craft really is.",
+      "date": "Recent",
+      "category": "Life",
+      "icon": "⭐",
+      "color": "#EC4899"
+    }
+  ]
+}

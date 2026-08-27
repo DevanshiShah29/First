@@ -1,0 +1,2102 @@
+"use client";
+
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  DEFAULT_HERO_MEDIA,
+  DEFAULT_THEME,
+  HERO_TEMPLATES,
+  SKILL_ICONS,
+  THEME_PALETTE_FIELDS,
+  type ContentData,
+  type HeroMedia,
+  type HeroTemplateId,
+  type SiteContent,
+  type SkillIcon,
+  type ThemeContent,
+  type ThemeMode,
+  type ThemePalette,
+} from "@/content/types";
+import { LogoMark } from "@/components/Logo";
+import { goodreadsUserId } from "@/lib/goodreads";
+import { mediaHint, parsePlayableMedia, youtubeVideoId } from "@/lib/media-url";
+import { Field, HexColorInput, StringList, TextArea, TextInput } from "./fields";
+import {
+  IconAppearance,
+  IconDash,
+  IconHero,
+  IconHome,
+  IconJar,
+  IconMenu,
+  IconPages,
+  IconPin,
+  IconPlus,
+  IconSettings,
+  IconStar,
+} from "./wp-icons";
+
+type Screen =
+  | "dashboard"
+  | "site"
+  | "hero"
+  | "appearance"
+  | "experience"
+  | "experience-edit"
+  | "projects"
+  | "projects-edit"
+  | "skills"
+  | "memories"
+  | "memories-edit";
+
+function clone<T>(value: T): T {
+  return structuredClone(value);
+}
+
+function move<T>(list: T[], index: number, dir: -1 | 1) {
+  const next = [...list];
+  const j = index + dir;
+  if (j < 0 || j >= next.length) return next;
+  [next[index], next[j]] = [next[j], next[index]];
+  return next;
+}
+
+function newId() {
+  return crypto.randomUUID();
+}
+
+function goodreadsHint(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return "Leave blank to rest the books. The 3D World piano-desk book pulls this profile when tapped.";
+  }
+  if (goodreadsUserId(trimmed)) {
+    return "Goodreads profile detected — the books object will load this shelf.";
+  }
+  return "Could not find a Goodreads user ID. Paste a profile URL like https://www.goodreads.com/user/show/123-name";
+}
+
+function pianoMusicHint(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return "Leave blank to rest the piano. Playback starts only when someone taps the piano — never on page load.";
+  }
+  if (youtubeVideoId(trimmed)) {
+    return "YouTube video detected — the piano will play this track inside the 3D world.";
+  }
+  return "Could not find a YouTube video ID. Use a watch, share, Shorts, or embed URL.";
+}
+
+function Metabox({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="wp-metabox">
+      <h2 className="wp-metabox-h">{title}</h2>
+      <div className="wp-metabox-b">{children}</div>
+    </section>
+  );
+}
+
+function MiniNav() {
+  return (
+    <div className="wp-mini-nav" aria-hidden>
+      <span className="wp-mini-logo" />
+      <span className="wp-mini-links" />
+    </div>
+  );
+}
+
+function MiniBtns({ align = "start" }: { align?: "start" | "center" }) {
+  return (
+    <div className={`wp-mini-btns${align === "center" ? " is-center" : ""}`} aria-hidden>
+      <i />
+      <i className="ghost" />
+    </div>
+  );
+}
+
+function themeSkin(theme: ThemeContent) {
+  const pal = theme.dark;
+  return {
+    "--p-bg": pal.background,
+    "--p-fg": pal.foreground,
+    "--p-card": pal.card,
+    "--p-chip": pal.chip,
+    "--p-accent": pal.accentText,
+    "--p-from": theme.brandFrom,
+    "--p-to": theme.brandTo,
+  } as CSSProperties;
+}
+
+function MediaVisual({ media, compact = false }: { media: HeroMedia; compact?: boolean }) {
+  const playable = parsePlayableMedia(media.url, media.kind === "image" ? "image" : "video");
+  if (playable.type === "unsupported") {
+    return <div className="wp-media-missing">{playable.reason}</div>;
+  }
+  if (playable.type === "iframe") {
+    const src = compact ? playable.src : playable.src.replace("controls=0", "controls=1");
+    return (
+      <iframe
+        src={src}
+        title="Hero media preview"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        tabIndex={compact ? -1 : undefined}
+      />
+    );
+  }
+  if (playable.kind === "video") {
+    return <video src={playable.src} muted playsInline loop controls={!compact} />;
+  }
+  return (
+    // Uploaded or remote hero media.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={playable.src} alt="" />
+  );
+}
+
+function MediaCopy({ site, template }: { site: SiteContent; template: HeroTemplateId }) {
+  const kicker = site.kicker || "Kicker";
+  const title = site.greeting || "Hello";
+  const role = site.roles[0] || "Role";
+  if (template === "centered") {
+    return (
+      <div className="wp-mini-copy is-center">
+        <span className="wp-mini-kicker">{kicker}</span>
+        <strong>{title}</strong>
+        <span className="wp-mini-role">{role}</span>
+        <MiniBtns align="center" />
+      </div>
+    );
+  }
+  if (template === "minimal") {
+    return (
+      <div className="wp-mini-copy is-rail">
+        <span className="wp-mini-kicker">{kicker}</span>
+        <strong>{title}</strong>
+        <span className="wp-mini-role">{role}</span>
+        <MiniBtns />
+      </div>
+    );
+  }
+  if (template === "spotlight") {
+    return (
+      <div className="wp-mini-copy">
+        <span className="wp-mini-chip">{kicker}</span>
+        <strong className="is-huge">{title}</strong>
+        <span className="wp-mini-role is-chip">{role}</span>
+        <MiniBtns />
+      </div>
+    );
+  }
+  return (
+    <div className="wp-mini-copy">
+      <span className="wp-mini-kicker">{kicker}</span>
+      <strong>{title}</strong>
+      <span className="wp-mini-role">{role}</span>
+      <MiniBtns />
+    </div>
+  );
+}
+
+function MediaLayoutPreview({
+  site,
+  theme,
+  media,
+}: {
+  site: SiteContent;
+  theme: ThemeContent;
+  media: HeroMedia;
+}) {
+  const template =
+    site.heroTemplate === "world" || site.heroTemplate === "nook" ? "classic" : site.heroTemplate;
+  const copy = <MediaCopy site={site} template={template} />;
+
+  if (media.kind === "none") {
+    return (
+      <div className="wp-media-layout is-empty">
+        <p>No media selected</p>
+      </div>
+    );
+  }
+
+  if (!media.url.trim()) {
+    return (
+      <div className="wp-media-layout is-empty">
+        <p>Add a {media.kind} to preview</p>
+      </div>
+    );
+  }
+
+  const visual = <MediaVisual media={media} compact />;
+  const placeLabel = media.place === "background" ? "Background" : media.side === "left" ? "Left" : "Right";
+  const showOrbs = template !== "minimal";
+
+  if (media.place === "background") {
+    return (
+      <div className="wp-media-layout is-bg" style={themeSkin(theme)}>
+        <div className="wp-media-fill">{visual}</div>
+        <div className="wp-media-veil" />
+        <MiniNav />
+        {copy}
+        <span className="wp-media-badge">{placeLabel}</span>
+      </div>
+    );
+  }
+
+  const mediaPane = <div className="wp-media-pane">{visual}</div>;
+  return (
+    <div className="wp-media-layout is-side" style={themeSkin(theme)}>
+      <MiniNav />
+      {showOrbs ? <span className="wp-mini-orb a" /> : null}
+      <div className="wp-media-split">
+        {media.side === "left" ? mediaPane : copy}
+        {media.side === "left" ? copy : mediaPane}
+      </div>
+      <span className="wp-media-badge">{placeLabel}</span>
+    </div>
+  );
+}
+
+function HeroThumb({
+  id,
+  site,
+  theme,
+}: {
+  id: HeroTemplateId;
+  site: SiteContent;
+  theme: ThemeContent;
+}) {
+  const pal = theme.dark;
+  const skin = {
+    "--p-bg": pal.background,
+    "--p-fg": pal.foreground,
+    "--p-card": pal.card,
+    "--p-chip": pal.chip,
+    "--p-accent": pal.accentText,
+    "--p-from": theme.brandFrom,
+    "--p-to": theme.brandTo,
+  } as CSSProperties;
+  const kicker = site.kicker || "Kicker";
+  const title = site.greeting || "Hello";
+  const role = site.roles[0] || "Role";
+  const line = site.line || "";
+
+  if (id === "world") {
+    return (
+      <div className="wp-template-preview is-world">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/hero-world.jpg" alt="" />
+      </div>
+    );
+  }
+  if (id === "nook") {
+    return (
+      <div className="wp-template-preview is-world">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/hero-nook.jpg" alt="" />
+      </div>
+    );
+  }
+
+  if (id === "centered") {
+    return (
+      <div className="wp-template-preview is-centered" style={skin}>
+        <MiniNav />
+        <span className="wp-mini-orb a" />
+        <span className="wp-mini-orb b" />
+        <div className="wp-mini-copy is-center">
+          <span className="wp-mini-kicker">{kicker}</span>
+          <strong>{title}</strong>
+          <span className="wp-mini-role">{role}</span>
+          <MiniBtns align="center" />
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "split") {
+    return (
+      <div className="wp-template-preview is-split" style={skin}>
+        <MiniNav />
+        <div className="wp-mini-split">
+          <div className="wp-mini-copy">
+            <span className="wp-mini-kicker">{kicker}</span>
+            <strong>{title}</strong>
+            <span className="wp-mini-line">{line}</span>
+            <MiniBtns />
+          </div>
+          <div className="wp-mini-card">
+            <span className="wp-mini-kicker">Currently</span>
+            <span className="wp-mini-role">{role}</span>
+            <span className="wp-mini-bar" />
+            <span className="wp-mini-bar is-short" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "minimal") {
+    return (
+      <div className="wp-template-preview is-minimal" style={skin}>
+        <MiniNav />
+        <div className="wp-mini-copy is-rail">
+          <span className="wp-mini-kicker">{kicker}</span>
+          <strong>{title}</strong>
+          <span className="wp-mini-role">{role}</span>
+          <MiniBtns />
+        </div>
+      </div>
+    );
+  }
+
+  if (id === "spotlight") {
+    return (
+      <div className="wp-template-preview is-spotlight" style={skin}>
+        <MiniNav />
+        <span className="wp-mini-orb a" />
+        <div className="wp-mini-copy">
+          <span className="wp-mini-chip">{kicker}</span>
+          <strong className="is-huge">{title}</strong>
+          <span className="wp-mini-role is-chip">{role}</span>
+          <MiniBtns />
+          <div className="wp-mini-stats" aria-hidden>
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="wp-template-preview is-classic" style={skin}>
+      <MiniNav />
+      <span className="wp-mini-orb a" />
+      <span className="wp-mini-orb b" />
+      <div className="wp-mini-copy">
+        <span className="wp-mini-kicker">{kicker}</span>
+        <strong>{title}</strong>
+        <span className="wp-mini-role">{role}</span>
+        <span className="wp-mini-line">{line}</span>
+        <MiniBtns />
+      </div>
+    </div>
+  );
+}
+
+function ThemePreview({
+  brandFrom,
+  brandTo,
+  palette,
+  label,
+}: {
+  brandFrom: string;
+  brandTo: string;
+  palette: ThemePalette;
+  label: string;
+}) {
+  return (
+    <div
+      style={{
+        background: palette.background,
+        color: palette.foreground,
+        border: "1px solid #c3c4c7",
+        padding: 12,
+      }}
+    >
+      <div style={{ fontSize: 11, marginBottom: 8, opacity: 0.7 }}>{label}</div>
+      <div
+        style={{
+          height: 8,
+          marginBottom: 10,
+          background: `linear-gradient(90deg, ${brandFrom}, ${brandTo})`,
+        }}
+      />
+      <div style={{ background: palette.card, padding: 10, marginBottom: 8 }}>
+        <span style={{ color: palette.accentText, fontWeight: 600 }}>Accent text</span>
+        <div style={{ marginTop: 8, background: palette.chip, padding: 6, fontSize: 12 }}>Chip</div>
+      </div>
+      <span
+        style={{
+          display: "inline-block",
+          background: palette.badge,
+          color: palette.background,
+          padding: "1px 8px",
+          fontSize: 11,
+        }}
+      >
+        Badge
+      </span>
+    </div>
+  );
+}
+
+export function AdminApp({ initial }: { initial: ContentData }) {
+  const router = useRouter();
+  const [screen, setScreen] = useState<Screen>("dashboard");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [data, setData] = useState(() => clone(initial));
+  const [saved, setSaved] = useState(() => JSON.stringify(initial));
+  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [error, setError] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [uploading, setUploading] = useState(false);
+
+  const dirty = useMemo(() => JSON.stringify(data) !== saved, [data, saved]);
+  const site = data.site;
+  const heroMedia = site.heroMedia ?? DEFAULT_HERO_MEDIA;
+  const firstName = site.name.split(" ")[0] || site.name;
+
+  useEffect(() => {
+    function onLeave(e: BeforeUnloadEvent) {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", onLeave);
+    return () => window.removeEventListener("beforeunload", onLeave);
+  }, [dirty]);
+
+  async function save() {
+    setStatus("saving");
+    setError("");
+    const res = await fetch("/api/cms/content", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ content: data }),
+    });
+    const body = (await res.json().catch(() => ({}))) as { error?: string; content?: ContentData };
+    if (!res.ok) {
+      setStatus("error");
+      setError(body.error || "Save failed.");
+      return;
+    }
+    const next = body.content ? clone(body.content) : data;
+    setData(next);
+    setSaved(JSON.stringify(next));
+    setStatus("saved");
+    setNotice("Content updated.");
+    router.refresh();
+  }
+
+  async function logout() {
+    await fetch("/api/cms/logout", { method: "POST" });
+    router.push("/admin/login");
+    router.refresh();
+  }
+
+  function setHeroMedia(patch: Partial<HeroMedia>) {
+    setData({
+      ...data,
+      site: { ...site, heroMedia: { ...heroMedia, ...patch } },
+    });
+  }
+
+  async function uploadHeroFile(file: File) {
+    setUploading(true);
+    setError("");
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/cms/upload", { method: "POST", body: form });
+    const body = (await res.json().catch(() => ({}))) as { error?: string; url?: string; kind?: "image" | "video" };
+    setUploading(false);
+    if (!res.ok || !body.url) {
+      setError(body.error || "Upload failed.");
+      return;
+    }
+    setHeroMedia({ url: body.url, kind: body.kind ?? "image" });
+  }
+
+  function go(next: Screen, id: string | null = null) {
+    setScreen(next);
+    setEditId(id);
+    setMenuOpen(false);
+    setNotice("");
+  }
+
+  function addExperience() {
+    const id = newId();
+    setData({
+      ...data,
+      experience: [
+        ...data.experience,
+        {
+          id,
+          when: "",
+          current: false,
+          role: "New role",
+          company: "",
+          summary: "",
+          bullets: [""],
+          stack: [],
+        },
+      ],
+    });
+    go("experience-edit", id);
+  }
+
+  function addProject() {
+    const id = newId();
+    setData({
+      ...data,
+      projects: [
+        ...data.projects,
+        { id, name: "New project", blurb: "", tags: [], github: "", demo: "" },
+      ],
+    });
+    go("projects-edit", id);
+  }
+
+  function addMemory() {
+    const id = newId();
+    const memories = data.memories ?? [];
+    setData({
+      ...data,
+      memories: [
+        ...memories,
+        {
+          id,
+          title: "New memory",
+          note: "",
+          date: "",
+          category: "Tiny Joy",
+          icon: "✨",
+          photoUrl: "",
+          color: "#A78BFA",
+        },
+      ],
+    });
+    go("memories-edit", id);
+  }
+
+  async function uploadMemoryPhoto(file: File, id: string) {
+    setUploading(true);
+    setError("");
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch("/api/cms/upload", { method: "POST", body: form });
+    const body = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
+    setUploading(false);
+    if (!res.ok || !body.url) {
+      setError(body.error || "Photo upload failed.");
+      return;
+    }
+    const memories = (data.memories ?? []).map((m) => (m.id === id ? { ...m, photoUrl: body.url } : m));
+    setData({ ...data, memories });
+  }
+
+  const expIndex = data.experience.findIndex((j) => j.id === editId);
+  const job = expIndex >= 0 ? data.experience[expIndex] : null;
+  const projIndex = data.projects.findIndex((p) => p.id === editId);
+  const project = projIndex >= 0 ? data.projects[projIndex] : null;
+  const memoriesList = data.memories ?? [];
+  const memIndex = memoriesList.findIndex((m) => m.id === editId);
+  const memory = memIndex >= 0 ? memoriesList[memIndex] : null;
+
+  const menu = [
+    { id: "dashboard" as const, label: "Dashboard", icon: <IconDash />, match: screen === "dashboard" },
+    { id: "experience" as const, label: "Experience", icon: <IconPin />, match: screen.startsWith("experience") },
+    { id: "projects" as const, label: "Projects", icon: <IconPages />, match: screen.startsWith("projects") },
+    { id: "skills" as const, label: "Skills", icon: <IconStar />, match: screen === "skills" },
+    { id: "memories" as const, label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
+    { id: "hero" as const, label: "Hero", icon: <IconHero />, match: screen === "hero" },
+    { id: "appearance" as const, label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
+    { id: "site" as const, label: "Settings", icon: <IconSettings />, match: screen === "site" },
+  ];
+
+  return (
+    <div className={`wp-app${menuOpen ? " is-menu-open" : ""}`}>
+      <header className="wp-bar">
+        <div className="wp-bar-left">
+          <button
+            type="button"
+            className="wp-bar-item wp-bar-fold"
+            aria-label="Menu"
+            onClick={() => setMenuOpen((v) => !v)}
+          >
+            <IconMenu />
+          </button>
+          <Link href="/" className="wp-bar-item" title="View site">
+            <LogoMark className="h-5 w-5" />
+            <span>{site.name}</span>
+          </Link>
+          <Link href="/" className="wp-bar-item">
+            <IconHome className="wp-menu-icon" />
+            <span>Visit Site</span>
+          </Link>
+          <div className="wp-drop">
+            <button type="button" className="wp-bar-item">
+              <IconPlus />
+              New
+            </button>
+            <div className="wp-drop-menu">
+              <button type="button" onClick={addExperience}>
+                Experience
+              </button>
+              <button type="button" onClick={addProject}>
+                Project
+              </button>
+              <button type="button" onClick={addMemory}>
+                Memory
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="wp-bar-right">
+          <button type="button" className="wp-bar-item" onClick={() => void save()} disabled={!dirty || status === "saving"}>
+            {status === "saving" ? "Updating…" : dirty ? "Update" : "Updated"}
+          </button>
+          <span className="wp-bar-item">Howdy, {firstName}</span>
+          <button type="button" className="wp-bar-item" onClick={() => void logout()}>
+            Log Out
+          </button>
+        </div>
+      </header>
+
+      <div className="wp-layout">
+        <aside className="wp-menu">
+          <ul className="wp-menu-list">
+            {menu.map((item) => (
+              <li key={item.id} className={item.match ? "is-current" : undefined}>
+                <button type="button" onClick={() => go(item.id)}>
+                  {item.icon}
+                  {item.label}
+                </button>
+              </li>
+            ))}
+            <li className="wp-menu-sep" />
+            <li>
+              <Link href="/memories" target="_blank">
+                <IconJar />
+                Memory Jar
+              </Link>
+            </li>
+            <li>
+              <Link href="/">
+                <IconHome />
+                View Site
+              </Link>
+            </li>
+          </ul>
+        </aside>
+
+        <main className="wp-content">
+          {error ? <div className="wp-notice is-error">{error}</div> : null}
+          {notice && !error ? <div className="wp-notice is-success">{notice}</div> : null}
+
+          {screen === "dashboard" ? (
+            <>
+              <h1 className="wp-screen-title">Dashboard</h1>
+              <p className="wp-sub">Welcome to your portfolio admin.</p>
+              <div className="wp-widgets">
+                <Metabox title="At a Glance">
+                  <ul className="wp-glance">
+                    <li>
+                      <button type="button" onClick={() => go("experience")}>
+                        {data.experience.length} Experience
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" onClick={() => go("projects")}>
+                        {data.projects.length} Projects
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" onClick={() => go("skills")}>
+                        {data.skills.reduce((n, g) => n + g.items.length, 0)} Skills
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" onClick={() => go("memories")}>
+                        {memoriesList.length} Memories
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" onClick={() => go("hero")}>
+                        Hero
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" onClick={() => go("appearance")}>
+                        Appearance
+                      </button>
+                    </li>
+                  </ul>
+                </Metabox>
+                <Metabox title="Site identity">
+                  <p>
+                    <strong>{site.name}</strong>
+                    <br />
+                    {site.title}
+                  </p>
+                  <p style={{ marginTop: 12 }}>
+                    <button type="button" className="wp-btn wp-btn-primary" onClick={() => go("site")}>
+                      Edit settings
+                    </button>
+                  </p>
+                </Metabox>
+                <Metabox title="Quick draft">
+                  <p className="wp-sub" style={{ marginBottom: 12 }}>
+                    Add a new role, project, or memory without leaving the dashboard.
+                  </p>
+                  <button type="button" className="wp-btn" onClick={addExperience} style={{ marginRight: 8 }}>
+                    Add experience
+                  </button>
+                  <button type="button" className="wp-btn" onClick={addProject} style={{ marginRight: 8 }}>
+                    Add project
+                  </button>
+                  <button type="button" className="wp-btn" onClick={addMemory}>
+                    Add memory
+                  </button>
+                </Metabox>
+              </div>
+            </>
+          ) : null}
+
+          {screen === "site" ? (
+            <>
+              <h1 className="wp-screen-title">General Settings</h1>
+              <p className="wp-sub">These fields appear on the public portfolio.</p>
+              <Metabox title="Identity">
+                <table className="wp-form-table">
+                  <tbody>
+                    <Field label="Site title">
+                      <TextInput value={site.name} onChange={(name) => setData({ ...data, site: { ...site, name } })} />
+                    </Field>
+                    <Field label="Initials">
+                      <TextInput
+                        value={site.initials}
+                        onChange={(initials) => setData({ ...data, site: { ...site, initials } })}
+                      />
+                    </Field>
+                    <Field label="Browser title">
+                      <TextInput value={site.title} onChange={(title) => setData({ ...data, site: { ...site, title } })} />
+                    </Field>
+                    <Field label="Tagline" wide>
+                      <TextArea
+                        value={site.description}
+                        onChange={(description) => setData({ ...data, site: { ...site, description } })}
+                        rows={3}
+                      />
+                    </Field>
+                  </tbody>
+                </table>
+              </Metabox>
+              <Metabox title="Hero">
+                <p style={{ margin: "0 0 12px" }}>
+                  Live template: <strong>{HERO_TEMPLATES.find((t) => t.id === site.heroTemplate)?.name}</strong>
+                  {" · "}
+                  <button type="button" className="wp-add" onClick={() => go("hero")}>
+                    Change layout
+                  </button>
+                </p>
+                <table className="wp-form-table">
+                  <tbody>
+                    <Field label="Kicker">
+                      <TextInput value={site.kicker} onChange={(kicker) => setData({ ...data, site: { ...site, kicker } })} />
+                    </Field>
+                    <Field label="Greeting">
+                      <TextInput
+                        value={site.greeting}
+                        onChange={(greeting) => setData({ ...data, site: { ...site, greeting } })}
+                      />
+                    </Field>
+                    <Field label="Typed roles" wide>
+                      <StringList
+                        values={site.roles}
+                        onChange={(roles) => setData({ ...data, site: { ...site, roles } })}
+                        addLabel="Add role"
+                        placeholder="Product Manager"
+                      />
+                    </Field>
+                    <Field label="One-liner" wide>
+                      <TextArea value={site.line} onChange={(line) => setData({ ...data, site: { ...site, line } })} rows={3} />
+                    </Field>
+                    <Field
+                      label="Piano Music YouTube URL"
+                      wide
+                      hint={pianoMusicHint(site.pianoYoutubeUrl ?? "")}
+                    >
+                      <TextInput
+                        value={site.pianoYoutubeUrl ?? ""}
+                        onChange={(pianoYoutubeUrl) =>
+                          setData({ ...data, site: { ...site, pianoYoutubeUrl } })
+                        }
+                        placeholder="https://www.youtube.com/watch?v=…"
+                      />
+                    </Field>
+                    <Field label="Goodreads profile URL" wide hint={goodreadsHint(site.goodreadsUrl ?? "")}>
+                      <TextInput
+                        value={site.goodreadsUrl ?? ""}
+                        onChange={(goodreadsUrl) => setData({ ...data, site: { ...site, goodreadsUrl } })}
+                        placeholder="https://www.goodreads.com/user/show/…"
+                      />
+                    </Field>
+                  </tbody>
+                </table>
+              </Metabox>
+              <Metabox title="About">
+                <table className="wp-form-table">
+                  <tbody>
+                    <Field label="About" wide>
+                      <TextArea value={site.about} onChange={(about) => setData({ ...data, site: { ...site, about } })} rows={6} />
+                    </Field>
+                    <Field label="Philosophy kicker">
+                      <TextInput
+                        value={site.philosophyKicker}
+                        onChange={(philosophyKicker) => setData({ ...data, site: { ...site, philosophyKicker } })}
+                      />
+                    </Field>
+                    <Field label="Philosophy title">
+                      <TextInput
+                        value={site.philosophyTitle}
+                        onChange={(philosophyTitle) => setData({ ...data, site: { ...site, philosophyTitle } })}
+                      />
+                    </Field>
+                    <Field label="Philosophy" wide>
+                      <TextArea
+                        value={site.philosophy}
+                        onChange={(philosophy) => setData({ ...data, site: { ...site, philosophy } })}
+                        rows={4}
+                      />
+                    </Field>
+                    <Field label="Experience intro" wide>
+                      <TextArea
+                        value={site.experienceIntro}
+                        onChange={(experienceIntro) => setData({ ...data, site: { ...site, experienceIntro } })}
+                        rows={3}
+                      />
+                    </Field>
+                  </tbody>
+                </table>
+              </Metabox>
+              <Metabox title="Stats">
+                {site.stats.map((stat, i) => (
+                  <div key={i} className="row" style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
+                    <input
+                      type="number"
+                      min={0}
+                      value={stat.value}
+                      className="wp-input wp-input-small"
+                      onChange={(e) => {
+                        const stats = [...site.stats];
+                        stats[i] = { ...stat, value: Number(e.target.value) };
+                        setData({ ...data, site: { ...site, stats } });
+                      }}
+                    />
+                    <TextInput
+                      value={stat.suffix}
+                      placeholder="+"
+                      small
+                      onChange={(suffix) => {
+                        const stats = [...site.stats];
+                        stats[i] = { ...stat, suffix };
+                        setData({ ...data, site: { ...site, stats } });
+                      }}
+                    />
+                    <TextInput
+                      value={stat.label}
+                      onChange={(label) => {
+                        const stats = [...site.stats];
+                        stats[i] = { ...stat, label };
+                        setData({ ...data, site: { ...site, stats } });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="wp-btn"
+                      onClick={() =>
+                        setData({ ...data, site: { ...site, stats: site.stats.filter((_, j) => j !== i) } })
+                      }
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="wp-add"
+                  onClick={() =>
+                    setData({
+                      ...data,
+                      site: { ...site, stats: [...site.stats, { value: 0, suffix: "+", label: "New stat" }] },
+                    })
+                  }
+                >
+                  + Add stat
+                </button>
+              </Metabox>
+              <Metabox title="Contact">
+                <table className="wp-form-table">
+                  <tbody>
+                    <Field label="Contact line">
+                      <TextInput
+                        value={site.contactLine}
+                        onChange={(contactLine) => setData({ ...data, site: { ...site, contactLine } })}
+                      />
+                    </Field>
+                    <Field label="Email">
+                      <TextInput
+                        type="email"
+                        value={site.email}
+                        onChange={(email) => setData({ ...data, site: { ...site, email } })}
+                      />
+                    </Field>
+                    <Field label="Resume URL">
+                      <TextInput value={site.resume} onChange={(resume) => setData({ ...data, site: { ...site, resume } })} />
+                    </Field>
+                    <Field label="LinkedIn">
+                      <TextInput
+                        value={site.linkedin}
+                        onChange={(linkedin) => setData({ ...data, site: { ...site, linkedin } })}
+                      />
+                    </Field>
+                    <Field label="GitHub">
+                      <TextInput value={site.github} onChange={(github) => setData({ ...data, site: { ...site, github } })} />
+                    </Field>
+                  </tbody>
+                </table>
+              </Metabox>
+              <p>
+                <button type="button" className="wp-btn wp-btn-primary wp-btn-large" onClick={() => void save()} disabled={!dirty}>
+                  Save Changes
+                </button>
+              </p>
+            </>
+          ) : null}
+
+          {screen === "hero" ? (
+            <>
+              <h1 className="wp-screen-title">Hero</h1>
+              <p className="wp-sub">
+                Pick one template. Only the live layout appears on the public site. Copy is shared across all of them.{" "}
+                <a href="/" target="_blank" rel="noreferrer">
+                  Preview site
+                </a>
+              </p>
+              <Metabox title="Templates">
+                <div className="wp-template-grid">
+                  {HERO_TEMPLATES.map((tpl) => {
+                    const live = site.heroTemplate === tpl.id;
+                    return (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        className={`wp-template-card${live ? " is-live" : ""}`}
+                        onClick={() =>
+                          setData({ ...data, site: { ...site, heroTemplate: tpl.id } })
+                        }
+                      >
+                        <HeroThumb id={tpl.id} site={site} theme={data.theme} />
+                        <div className="wp-template-meta">
+                          <h3>{tpl.name}</h3>
+                          <p>{tpl.description}</p>
+                          {live ? (
+                            <span className="wp-live-badge">Live</span>
+                          ) : (
+                            <span className="wp-btn wp-btn-primary">Activate</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Metabox>
+              <Metabox title="Media">
+                <MediaLayoutPreview site={site} theme={data.theme} media={heroMedia} />
+                {(site.heroTemplate === "world" || site.heroTemplate === "nook") && heroMedia.kind !== "none" ? (
+                  <p className="wp-description" style={{ margin: "0 0 12px" }}>
+                    A 3D hero is live, so this media is hidden on the public site until you activate another
+                    template.
+                  </p>
+                ) : null}
+                <table className="wp-form-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Type</th>
+                      <td>
+                        {(["none", "image", "video"] as const).map((kind) => (
+                          <label key={kind} className="wp-check">
+                            <input
+                              type="radio"
+                              name="heroMediaKind"
+                              checked={heroMedia.kind === kind}
+                              onChange={() => setHeroMedia({ kind })}
+                            />
+                            {kind === "none" ? "None" : kind === "image" ? "Image" : "Video"}
+                          </label>
+                        ))}
+                      </td>
+                    </tr>
+                    {heroMedia.kind !== "none" ? (
+                      <>
+                        <tr>
+                          <th scope="row">Placement</th>
+                          <td>
+                            <label className="wp-check">
+                              <input
+                                type="radio"
+                                name="heroMediaPlace"
+                                checked={heroMedia.place === "side"}
+                                onChange={() => setHeroMedia({ place: "side" })}
+                              />
+                              Side
+                            </label>
+                            <label className="wp-check">
+                              <input
+                                type="radio"
+                                name="heroMediaPlace"
+                                checked={heroMedia.place === "background"}
+                                onChange={() => setHeroMedia({ place: "background" })}
+                              />
+                              Background
+                            </label>
+                          </td>
+                        </tr>
+                        {heroMedia.place === "side" ? (
+                          <tr>
+                            <th scope="row">Side</th>
+                            <td>
+                              <label className="wp-check">
+                                <input
+                                  type="radio"
+                                  name="heroMediaSide"
+                                  checked={heroMedia.side === "left"}
+                                  onChange={() => setHeroMedia({ side: "left" })}
+                                />
+                                Left
+                              </label>
+                              <label className="wp-check">
+                                <input
+                                  type="radio"
+                                  name="heroMediaSide"
+                                  checked={heroMedia.side === "right"}
+                                  onChange={() => setHeroMedia({ side: "right" })}
+                                />
+                                Right
+                              </label>
+                            </td>
+                          </tr>
+                        ) : null}
+                        <Field label="File" hint="JPG, PNG, WebP, GIF, MP4, or WebM. Max 25MB.">
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg"
+                            disabled={uploading}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) void uploadHeroFile(file);
+                              e.target.value = "";
+                            }}
+                          />
+                          {uploading ? <span className="wp-description">Uploading…</span> : null}
+                        </Field>
+                        <Field
+                          label="URL"
+                          hint={
+                            mediaHint(heroMedia.url) ||
+                            "YouTube, Vimeo, a Pexels video page, a direct .mp4, or an uploaded file."
+                          }
+                        >
+                          <TextInput
+                            value={heroMedia.url}
+                            onChange={(url) => setHeroMedia({ url })}
+                            placeholder="https://www.pexels.com/video/…"
+                          />
+                        </Field>
+                        {heroMedia.url ? (
+                          <tr>
+                            <th scope="row">Asset</th>
+                            <td>
+                              <div className="wp-media-preview">
+                                <MediaVisual media={heroMedia} />
+                              </div>
+                              <p style={{ marginTop: 8 }}>
+                                <button
+                                  type="button"
+                                  className="wp-btn-link"
+                                  onClick={() => setHeroMedia({ kind: "none", url: "" })}
+                                >
+                                  Remove media
+                                </button>
+                              </p>
+                            </td>
+                          </tr>
+                        ) : null}
+                      </>
+                    ) : null}
+                  </tbody>
+                </table>
+              </Metabox>
+              <Metabox title="3D World">
+                <p style={{ margin: "0 0 12px" }}>
+                  Used when a 3D hero is live. The piano plays this track in the page — visitors never leave the
+                  site. Books open the reading page.
+                </p>
+                <table className="wp-form-table">
+                  <tbody>
+                    <Field label="Piano Music YouTube URL" wide hint={pianoMusicHint(site.pianoYoutubeUrl ?? "")}>
+                      <TextInput
+                        value={site.pianoYoutubeUrl ?? ""}
+                        onChange={(pianoYoutubeUrl) =>
+                          setData({ ...data, site: { ...site, pianoYoutubeUrl } })
+                        }
+                        placeholder="https://www.youtube.com/watch?v=…"
+                      />
+                    </Field>
+                    <Field label="Goodreads profile URL" wide hint={goodreadsHint(site.goodreadsUrl ?? "")}>
+                      <TextInput
+                        value={site.goodreadsUrl ?? ""}
+                        onChange={(goodreadsUrl) => setData({ ...data, site: { ...site, goodreadsUrl } })}
+                        placeholder="https://www.goodreads.com/user/show/…"
+                      />
+                    </Field>
+                  </tbody>
+                </table>
+              </Metabox>
+              <Metabox title="Hero copy">
+                <table className="wp-form-table">
+                  <tbody>
+                    <Field label="Kicker">
+                      <TextInput
+                        value={site.kicker}
+                        onChange={(kicker) => setData({ ...data, site: { ...site, kicker } })}
+                      />
+                    </Field>
+                    <Field label="Greeting">
+                      <TextInput
+                        value={site.greeting}
+                        onChange={(greeting) => setData({ ...data, site: { ...site, greeting } })}
+                      />
+                    </Field>
+                    <Field label="Typed roles" wide>
+                      <StringList
+                        values={site.roles}
+                        onChange={(roles) => setData({ ...data, site: { ...site, roles } })}
+                        addLabel="Add role"
+                        placeholder="Product Manager"
+                      />
+                    </Field>
+                    <Field label="One-liner" wide>
+                      <TextArea
+                        value={site.line}
+                        onChange={(line) => setData({ ...data, site: { ...site, line } })}
+                        rows={3}
+                      />
+                    </Field>
+                  </tbody>
+                </table>
+              </Metabox>
+              <p>
+                <button
+                  type="button"
+                  className="wp-btn wp-btn-primary wp-btn-large"
+                  onClick={() => void save()}
+                  disabled={!dirty}
+                >
+                  Save Changes
+                </button>
+              </p>
+            </>
+          ) : null}
+
+          {screen === "appearance" ? (
+            <>
+              <h1 className="wp-screen-title">Appearance</h1>
+              <p className="wp-sub">Colors and light/dark behavior for the public site. Each hex field shows a live preview.</p>
+              <Metabox title="Preview">
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                  <ThemePreview
+                    label="Dark"
+                    brandFrom={data.theme.brandFrom}
+                    brandTo={data.theme.brandTo}
+                    palette={data.theme.dark}
+                  />
+                  <ThemePreview
+                    label="Light"
+                    brandFrom={data.theme.brandFrom}
+                    brandTo={data.theme.brandTo}
+                    palette={data.theme.light}
+                  />
+                </div>
+              </Metabox>
+              <Metabox title="Theme options">
+                <table className="wp-form-table">
+                  <tbody>
+                    <tr>
+                      <th scope="row">Default theme</th>
+                      <td>
+                        {(["system", "dark", "light"] as ThemeMode[]).map((mode) => (
+                          <label key={mode} className="wp-check">
+                            <input
+                              type="radio"
+                              name="defaultMode"
+                              checked={data.theme.defaultMode === mode}
+                              onChange={() =>
+                                setData({ ...data, theme: { ...data.theme, defaultMode: mode } })
+                              }
+                            />
+                            {mode === "system" ? "Match the visitor’s system" : mode === "dark" ? "Dark" : "Light"}
+                          </label>
+                        ))}
+                      </td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Visitor toggle</th>
+                      <td>
+                        <label className="wp-check">
+                          <input
+                            type="checkbox"
+                            checked={data.theme.allowToggle}
+                            onChange={(e) =>
+                              setData({ ...data, theme: { ...data.theme, allowToggle: e.target.checked } })
+                            }
+                          />
+                          Show light/dark toggle in the header
+                        </label>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </Metabox>
+              <Metabox title="Brand colors">
+                <table className="wp-form-table">
+                  <tbody>
+                    <Field label="Brand from" hint="Logo, buttons, timeline start">
+                      <HexColorInput
+                        value={data.theme.brandFrom}
+                        onChange={(brandFrom) => setData({ ...data, theme: { ...data.theme, brandFrom } })}
+                      />
+                    </Field>
+                    <Field label="Brand to" hint="Gradient end">
+                      <HexColorInput
+                        value={data.theme.brandTo}
+                        onChange={(brandTo) => setData({ ...data, theme: { ...data.theme, brandTo } })}
+                      />
+                    </Field>
+                  </tbody>
+                </table>
+              </Metabox>
+              {(["dark", "light"] as const).map((mode) => (
+                <Metabox key={mode} title={mode === "dark" ? "Dark palette" : "Light palette"}>
+                  <table className="wp-form-table">
+                    <tbody>
+                      {THEME_PALETTE_FIELDS.map((field) => (
+                        <Field key={field.key} label={field.label}>
+                          <HexColorInput
+                            value={data.theme[mode][field.key]}
+                            onChange={(value) =>
+                              setData({
+                                ...data,
+                                theme: {
+                                  ...data.theme,
+                                  [mode]: { ...data.theme[mode], [field.key]: value },
+                                },
+                              })
+                            }
+                          />
+                        </Field>
+                      ))}
+                    </tbody>
+                  </table>
+                </Metabox>
+              ))}
+              <p>
+                <button
+                  type="button"
+                  className="wp-btn wp-btn-primary wp-btn-large"
+                  onClick={() => void save()}
+                  disabled={!dirty}
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  className="wp-btn"
+                  style={{ marginLeft: 8 }}
+                  onClick={() => setData({ ...data, theme: structuredClone(DEFAULT_THEME) })}
+                >
+                  Reset to defaults
+                </button>
+              </p>
+            </>
+          ) : null}
+
+          {screen === "experience" ? (
+            <>
+              <h1 className="wp-screen-title">
+                Experience
+                <button type="button" className="wp-btn wp-btn-primary" onClick={addExperience}>
+                  Add New
+                </button>
+              </h1>
+              <table className="wp-list-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Company</th>
+                    <th>Status</th>
+                    <th>When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.experience.map((item, i) => (
+                    <tr key={item.id}>
+                      <td>
+                        <button type="button" className="row-title" onClick={() => go("experience-edit", item.id)}>
+                          {item.role || "(no title)"}
+                        </button>
+                        <div className="wp-row-actions">
+                          <button type="button" onClick={() => go("experience-edit", item.id)}>
+                            Edit
+                          </button>
+                          {" | "}
+                          <button
+                            type="button"
+                            onClick={() => setData({ ...data, experience: move(data.experience, i, -1) })}
+                            disabled={i === 0}
+                          >
+                            Up
+                          </button>
+                          {" | "}
+                          <button
+                            type="button"
+                            onClick={() => setData({ ...data, experience: move(data.experience, i, 1) })}
+                            disabled={i === data.experience.length - 1}
+                          >
+                            Down
+                          </button>
+                          {" | "}
+                          <button
+                            type="button"
+                            className="trash"
+                            onClick={() =>
+                              setData({ ...data, experience: data.experience.filter((_, j) => j !== i) })
+                            }
+                          >
+                            Trash
+                          </button>
+                        </div>
+                      </td>
+                      <td>{item.company}</td>
+                      <td>
+                        <span className={`wp-status${item.current ? " is-publish" : ""}`}>
+                          {item.current ? "Current" : "Past"}
+                        </span>
+                      </td>
+                      <td>{item.when}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          ) : null}
+
+          {screen === "experience-edit" && job ? (
+            <>
+              <h1 className="wp-screen-title">{job.role === "New role" ? "Add New Experience" : "Edit Experience"}</h1>
+              <div className="wp-edit">
+                <div>
+                  <input
+                    className="wp-title-input"
+                    value={job.role}
+                    placeholder="Enter title here"
+                    onChange={(e) => {
+                      const experience = [...data.experience];
+                      experience[expIndex] = { ...job, role: e.target.value };
+                      setData({ ...data, experience });
+                    }}
+                  />
+                  <Metabox title="Role details">
+                    <table className="wp-form-table">
+                      <tbody>
+                        <Field label="Company">
+                          <TextInput
+                            value={job.company}
+                            onChange={(company) => {
+                              const experience = [...data.experience];
+                              experience[expIndex] = { ...job, company };
+                              setData({ ...data, experience });
+                            }}
+                          />
+                        </Field>
+                        <Field label="When">
+                          <TextInput
+                            value={job.when}
+                            onChange={(when) => {
+                              const experience = [...data.experience];
+                              experience[expIndex] = { ...job, when };
+                              setData({ ...data, experience });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Summary" wide>
+                          <TextArea
+                            value={job.summary}
+                            onChange={(summary) => {
+                              const experience = [...data.experience];
+                              experience[expIndex] = { ...job, summary };
+                              setData({ ...data, experience });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Bullets" wide>
+                          <StringList
+                            values={job.bullets}
+                            onChange={(bullets) => {
+                              const experience = [...data.experience];
+                              experience[expIndex] = { ...job, bullets };
+                              setData({ ...data, experience });
+                            }}
+                            addLabel="Add bullet"
+                          />
+                        </Field>
+                        <Field label="Tags" wide>
+                          <StringList
+                            values={job.stack}
+                            onChange={(stack) => {
+                              const experience = [...data.experience];
+                              experience[expIndex] = { ...job, stack };
+                              setData({ ...data, experience });
+                            }}
+                            addLabel="Add tag"
+                          />
+                        </Field>
+                      </tbody>
+                    </table>
+                  </Metabox>
+                </div>
+                <Metabox title="Publish">
+                  <div className="wp-publish-misc">
+                    <p>
+                      Status:{" "}
+                      <strong>{job.current ? "Current" : "Past"}</strong>
+                    </p>
+                    <label className="wp-check">
+                      <input
+                        type="checkbox"
+                        checked={job.current}
+                        onChange={(e) => {
+                          const experience = [...data.experience];
+                          experience[expIndex] = { ...job, current: e.target.checked };
+                          setData({ ...data, experience });
+                        }}
+                      />
+                      Current role
+                    </label>
+                  </div>
+                  <div className="wp-publish-actions">
+                    <button
+                      type="button"
+                      className="wp-btn-link"
+                      onClick={() => {
+                        setData({ ...data, experience: data.experience.filter((j) => j.id !== job.id) });
+                        go("experience");
+                      }}
+                    >
+                      Move to Trash
+                    </button>
+                    <button type="button" className="wp-btn wp-btn-primary" onClick={() => void save()} disabled={!dirty}>
+                      Update
+                    </button>
+                  </div>
+                </Metabox>
+              </div>
+            </>
+          ) : null}
+
+          {screen === "projects" ? (
+            <>
+              <h1 className="wp-screen-title">
+                Projects
+                <button type="button" className="wp-btn wp-btn-primary" onClick={addProject}>
+                  Add New
+                </button>
+              </h1>
+              <table className="wp-list-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Tags</th>
+                    <th>Demo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.projects.map((item, i) => (
+                    <tr key={item.id}>
+                      <td>
+                        <button type="button" className="row-title" onClick={() => go("projects-edit", item.id)}>
+                          {item.name || "(no title)"}
+                        </button>
+                        <div className="wp-row-actions">
+                          <button type="button" onClick={() => go("projects-edit", item.id)}>
+                            Edit
+                          </button>
+                          {" | "}
+                          <button type="button" onClick={() => setData({ ...data, projects: move(data.projects, i, -1) })} disabled={i === 0}>
+                            Up
+                          </button>
+                          {" | "}
+                          <button
+                            type="button"
+                            onClick={() => setData({ ...data, projects: move(data.projects, i, 1) })}
+                            disabled={i === data.projects.length - 1}
+                          >
+                            Down
+                          </button>
+                          {" | "}
+                          {item.github ? (
+                            <>
+                              <a href={item.github} target="_blank" rel="noreferrer">
+                                GitHub
+                              </a>
+                              {" | "}
+                            </>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="trash"
+                            onClick={() => setData({ ...data, projects: data.projects.filter((_, j) => j !== i) })}
+                          >
+                            Trash
+                          </button>
+                        </div>
+                      </td>
+                      <td>{item.tags.join(", ")}</td>
+                      <td>{item.demo ? "Live" : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
+          ) : null}
+
+          {screen === "projects-edit" && project ? (
+            <>
+              <h1 className="wp-screen-title">{project.name === "New project" ? "Add New Project" : "Edit Project"}</h1>
+              <div className="wp-edit">
+                <div>
+                  <input
+                    className="wp-title-input"
+                    value={project.name}
+                    placeholder="Enter title here"
+                    onChange={(e) => {
+                      const projects = [...data.projects];
+                      projects[projIndex] = { ...project, name: e.target.value };
+                      setData({ ...data, projects });
+                    }}
+                  />
+                  <Metabox title="Project">
+                    <table className="wp-form-table">
+                      <tbody>
+                        <Field label="Description" wide>
+                          <TextArea
+                            value={project.blurb}
+                            onChange={(blurb) => {
+                              const projects = [...data.projects];
+                              projects[projIndex] = { ...project, blurb };
+                              setData({ ...data, projects });
+                            }}
+                            rows={5}
+                          />
+                        </Field>
+                        <Field label="GitHub URL">
+                          <TextInput
+                            value={project.github}
+                            onChange={(github) => {
+                              const projects = [...data.projects];
+                              projects[projIndex] = { ...project, github };
+                              setData({ ...data, projects });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Live demo">
+                          <TextInput
+                            value={project.demo}
+                            onChange={(demo) => {
+                              const projects = [...data.projects];
+                              projects[projIndex] = { ...project, demo };
+                              setData({ ...data, projects });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Tags" wide>
+                          <StringList
+                            values={project.tags}
+                            onChange={(tags) => {
+                              const projects = [...data.projects];
+                              projects[projIndex] = { ...project, tags };
+                              setData({ ...data, projects });
+                            }}
+                            addLabel="Add tag"
+                          />
+                        </Field>
+                      </tbody>
+                    </table>
+                  </Metabox>
+                </div>
+                <Metabox title="Publish">
+                  <div className="wp-publish-misc">
+                    <p>
+                      Demo: <strong>{project.demo ? "Live" : "None"}</strong>
+                    </p>
+                  </div>
+                  <div className="wp-publish-actions">
+                    <button
+                      type="button"
+                      className="wp-btn-link"
+                      onClick={() => {
+                        setData({ ...data, projects: data.projects.filter((p) => p.id !== project.id) });
+                        go("projects");
+                      }}
+                    >
+                      Move to Trash
+                    </button>
+                    <button type="button" className="wp-btn wp-btn-primary" onClick={() => void save()} disabled={!dirty}>
+                      Update
+                    </button>
+                  </div>
+                </Metabox>
+              </div>
+            </>
+          ) : null}
+
+          {screen === "skills" ? (
+            <>
+              <h1 className="wp-screen-title">
+                Skills
+                <button
+                  type="button"
+                  className="wp-btn wp-btn-primary"
+                  onClick={() => setData({ ...data, skills: [...data.skills, { title: "New group", items: [] }] })}
+                >
+                  Add New
+                </button>
+              </h1>
+              {data.skills.map((group, gi) => (
+                <Metabox key={`${group.title}-${gi}`} title={group.title || "Skill group"}>
+                  <table className="wp-form-table">
+                    <tbody>
+                      <Field label="Group title">
+                        <TextInput
+                          value={group.title}
+                          onChange={(title) => {
+                            const skills = [...data.skills];
+                            skills[gi] = { ...group, title };
+                            setData({ ...data, skills });
+                          }}
+                        />
+                      </Field>
+                    </tbody>
+                  </table>
+                  {group.items.map((item, ii) => (
+                    <div
+                      key={`${item.name}-${ii}`}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "minmax(120px,1.1fr) minmax(110px,0.8fr) minmax(180px,1.3fr) auto",
+                        gap: 8,
+                        marginBottom: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <TextInput
+                        value={item.name}
+                        onChange={(name) => {
+                          const skills = [...data.skills];
+                          const items = [...group.items];
+                          items[ii] = { ...item, name };
+                          skills[gi] = { ...group, items };
+                          setData({ ...data, skills });
+                        }}
+                      />
+                      <select
+                        className="wp-select"
+                        value={item.icon}
+                        onChange={(e) => {
+                          const skills = [...data.skills];
+                          const items = [...group.items];
+                          items[ii] = { ...item, icon: e.target.value as SkillIcon };
+                          skills[gi] = { ...group, items };
+                          setData({ ...data, skills });
+                        }}
+                      >
+                        {SKILL_ICONS.map((icon) => (
+                          <option key={icon} value={icon}>
+                            {icon}
+                          </option>
+                        ))}
+                      </select>
+                      <HexColorInput
+                        value={item.color ?? ""}
+                        placeholder="#61DAFB"
+                        onChange={(color) => {
+                          const skills = [...data.skills];
+                          const items = [...group.items];
+                          items[ii] = { ...item, color: color || undefined };
+                          skills[gi] = { ...group, items };
+                          setData({ ...data, skills });
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="wp-btn"
+                        onClick={() => {
+                          const skills = [...data.skills];
+                          skills[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
+                          setData({ ...data, skills });
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  <p>
+                    <button
+                      type="button"
+                      className="wp-add"
+                      onClick={() => {
+                        const skills = [...data.skills];
+                        skills[gi] = { ...group, items: [...group.items, { name: "New skill", icon: "empty" }] };
+                        setData({ ...data, skills });
+                      }}
+                    >
+                      + Add skill
+                    </button>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="wp-add"
+                      onClick={() => setData({ ...data, skills: move(data.skills, gi, -1) })}
+                    >
+                      Move up
+                    </button>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="wp-add"
+                      onClick={() => setData({ ...data, skills: move(data.skills, gi, 1) })}
+                    >
+                      Move down
+                    </button>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="wp-btn-link"
+                      onClick={() => setData({ ...data, skills: data.skills.filter((_, j) => j !== gi) })}
+                    >
+                      Trash group
+                    </button>
+                  </p>
+                </Metabox>
+              ))}
+              <p>
+                <button type="button" className="wp-btn wp-btn-primary wp-btn-large" onClick={() => void save()} disabled={!dirty}>
+                  Save Changes
+                </button>
+              </p>
+            </>
+          ) : null}
+
+          {screen === "memories" ? (
+            <>
+              <h1 className="wp-screen-title">
+                Memory Jar
+                <button type="button" className="wp-btn wp-btn-primary" onClick={addMemory}>
+                  Add New
+                </button>
+                <Link href="/memories" target="_blank" className="wp-btn" style={{ marginLeft: 8 }}>
+                  View Live Jar ↗
+                </Link>
+              </h1>
+              <p className="wp-sub">
+                Memories hidden inside your interactive Memory Jar. When visitors tap the jar, memories are unlocked one by one.
+              </p>
+              <table className="wp-list-table">
+                <thead>
+                  <tr>
+                    <th>Memory</th>
+                    <th>Category</th>
+                    <th>When</th>
+                    <th>Photo</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {memoriesList.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+                        No memories in the jar yet.{" "}
+                        <button type="button" className="wp-btn wp-btn-primary" onClick={addMemory}>
+                          Add your first memory
+                        </button>
+                      </td>
+                    </tr>
+                  ) : (
+                    memoriesList.map((item, i) => (
+                      <tr key={item.id}>
+                        <td>
+                          <button type="button" className="row-title" onClick={() => go("memories-edit", item.id)}>
+                            <span style={{ marginRight: 6, display: "inline-block" }}>{item.icon || "✨"}</span>
+                            {item.title || item.note.slice(0, 30) || "(untitled memory)"}
+                          </button>
+                          <div style={{ fontSize: "0.85rem", color: "#646970", marginTop: 2, maxHeight: "2.4em", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {item.note || "(empty note)"}
+                          </div>
+                          <div className="wp-row-actions">
+                            <button type="button" onClick={() => go("memories-edit", item.id)}>
+                              Edit
+                            </button>
+                            {" | "}
+                            <button
+                              type="button"
+                              onClick={() => setData({ ...data, memories: move(memoriesList, i, -1) })}
+                              disabled={i === 0}
+                            >
+                              Up
+                            </button>
+                            {" | "}
+                            <button
+                              type="button"
+                              onClick={() => setData({ ...data, memories: move(memoriesList, i, 1) })}
+                              disabled={i === memoriesList.length - 1}
+                            >
+                              Down
+                            </button>
+                            {" | "}
+                            <button
+                              type="button"
+                              className="trash"
+                              onClick={() =>
+                                setData({ ...data, memories: memoriesList.filter((_, j) => j !== i) })
+                              }
+                            >
+                              Trash
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          {item.category ? (
+                            <span className="wp-status is-publish" style={{ fontSize: "0.75rem" }}>
+                              {item.category}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td>{item.date || "—"}</td>
+                        <td>
+                          {item.photoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.photoUrl}
+                              alt=""
+                              style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4 }}
+                            />
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </>
+          ) : null}
+
+          {screen === "memories-edit" && memory ? (
+            <>
+              <h1 className="wp-screen-title">
+                {memory.title === "New memory" ? "Add New Memory" : `Edit Memory: ${memory.title || "Untitled"}`}
+              </h1>
+              <div className="wp-edit">
+                <div>
+                  <input
+                    className="wp-title-input"
+                    value={memory.title ?? ""}
+                    placeholder="Enter memory title (optional)"
+                    onChange={(e) => {
+                      const memories = [...memoriesList];
+                      memories[memIndex] = { ...memory, title: e.target.value };
+                      setData({ ...data, memories });
+                    }}
+                  />
+                  <Metabox title="Memory Content">
+                    <table className="wp-form-table">
+                      <tbody>
+                        <Field label="Memory Note" wide hint="The story, feeling, or moment that will appear when this memory is revealed.">
+                          <TextArea
+                            value={memory.note}
+                            rows={6}
+                            placeholder="Describe this moment, what made it special, or what you learned..."
+                            onChange={(note) => {
+                              const memories = [...memoriesList];
+                              memories[memIndex] = { ...memory, note };
+                              setData({ ...data, memories });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Date / When" hint="e.g. Summer 2023, Rainy Tuesday, First launch">
+                          <TextInput
+                            value={memory.date ?? ""}
+                            placeholder="e.g. Autumn 2024"
+                            onChange={(date) => {
+                              const memories = [...memoriesList];
+                              memories[memIndex] = { ...memory, date };
+                              setData({ ...data, memories });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Category">
+                          <div>
+                            <TextInput
+                              value={memory.category ?? ""}
+                              placeholder="e.g. Milestone, Tiny Joy, Craft, Life"
+                              onChange={(category) => {
+                                const memories = [...memoriesList];
+                                memories[memIndex] = { ...memory, category };
+                                setData({ ...data, memories });
+                              }}
+                            />
+                            <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
+                              {["Milestone", "Tiny Joy", "Craft", "Discovery", "Learning", "Life"].map((cat) => (
+                                <button
+                                  key={cat}
+                                  type="button"
+                                  className="wp-btn"
+                                  style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+                                  onClick={() => {
+                                    const memories = [...memoriesList];
+                                    memories[memIndex] = { ...memory, category: cat };
+                                    setData({ ...data, memories });
+                                  }}
+                                >
+                                  {cat}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </Field>
+                        <Field label="Icon / Emoji" hint="Displayed on the star capsule and card header">
+                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <TextInput
+                              value={memory.icon ?? "✨"}
+                              placeholder="✨"
+                              small
+                              onChange={(icon) => {
+                                const memories = [...memoriesList];
+                                memories[memIndex] = { ...memory, icon };
+                                setData({ ...data, memories });
+                              }}
+                            />
+                            <div style={{ display: "flex", gap: 4 }}>
+                              {["✨", "⭐", "🚀", "🎹", "💡", "☕", "🌱", "🎨", "💖", "📖"].map((em) => (
+                                <button
+                                  key={em}
+                                  type="button"
+                                  className="wp-btn"
+                                  style={{ padding: "4px 8px", fontSize: "1rem" }}
+                                  onClick={() => {
+                                    const memories = [...memoriesList];
+                                    memories[memIndex] = { ...memory, icon: em };
+                                    setData({ ...data, memories });
+                                  }}
+                                >
+                                  {em}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </Field>
+                        <Field label="Glow Accent Color" hint="Custom glow/highlight color for this memory card">
+                          <HexColorInput
+                            value={memory.color ?? "#A78BFA"}
+                            onChange={(color) => {
+                              const memories = [...memoriesList];
+                              memories[memIndex] = { ...memory, color };
+                              setData({ ...data, memories });
+                            }}
+                          />
+                        </Field>
+                        <Field label="Photo Attachment" hint="Optional polaroid-style image for this memory">
+                          <div>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={uploading}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) void uploadMemoryPhoto(file, memory.id);
+                                e.target.value = "";
+                              }}
+                            />
+                            {uploading ? <span className="wp-description" style={{ marginLeft: 8 }}>Uploading…</span> : null}
+                            <div style={{ marginTop: 8 }}>
+                              <TextInput
+                                value={memory.photoUrl ?? ""}
+                                placeholder="Or enter an image URL: https://…"
+                                onChange={(photoUrl) => {
+                                  const memories = [...memoriesList];
+                                  memories[memIndex] = { ...memory, photoUrl };
+                                  setData({ ...data, memories });
+                                }}
+                              />
+                            </div>
+                            {memory.photoUrl ? (
+                              <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 12 }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={memory.photoUrl}
+                                  alt="Memory preview"
+                                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc" }}
+                                />
+                                <button
+                                  type="button"
+                                  className="wp-btn-link"
+                                  onClick={() => {
+                                    const memories = [...memoriesList];
+                                    memories[memIndex] = { ...memory, photoUrl: "" };
+                                    setData({ ...data, memories });
+                                  }}
+                                >
+                                  Remove photo
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        </Field>
+                      </tbody>
+                    </table>
+                  </Metabox>
+                </div>
+                <Metabox title="Publish">
+                  <div className="wp-publish-actions">
+                    <button
+                      type="button"
+                      className="wp-btn-link"
+                      onClick={() => {
+                        setData({ ...data, memories: memoriesList.filter((m) => m.id !== memory.id) });
+                        go("memories");
+                      }}
+                    >
+                      Move to Trash
+                    </button>
+                    <button type="button" className="wp-btn wp-btn-primary" onClick={() => void save()} disabled={!dirty}>
+                      Update
+                    </button>
+                  </div>
+                </Metabox>
+              </div>
+            </>
+          ) : null}
+
+          <p className="wp-sub" style={{ marginTop: 28 }}>
+            Saves to <code>src/content/data.json</code>. Commit that file when you deploy.
+          </p>
+        </main>
+      </div>
+    </div>
+  );
+}

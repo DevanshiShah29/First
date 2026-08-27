@@ -1,0 +1,153 @@
+import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
+
+function prettyDate(raw: string) {
+  if (!raw) return "";
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function Stars({ value }: { value: number }) {
+  if (value <= 0) return null;
+  return (
+    <p className="reading-stars" aria-label={`${value} out of 5 stars`}>
+      <span>{"★".repeat(value)}</span>
+      <span className="is-off">{"★".repeat(5 - value)}</span>
+    </p>
+  );
+}
+
+function Cover({ book, className }: { book: GoodreadsBook; className?: string }) {
+  if (!book.cover) return <div className={`${className ?? ""} reading-cover is-empty`} aria-hidden />;
+  return (
+    // Goodreads covers are remote and change per edition.
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={book.cover} alt="" className={`${className ?? ""} reading-cover`} />
+  );
+}
+
+function Meta({ book }: { book: GoodreadsBook }) {
+  const bits = [book.author, book.year, book.pages ? `${book.pages} pages` : "", prettyDate(book.readAt)].filter(
+    Boolean,
+  );
+  return <p className="reading-meta">{bits.join(" · ")}</p>;
+}
+
+function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: boolean }) {
+  return (
+    <article className={`reading-card${featured ? " is-featured" : ""}`}>
+      <a href={book.url} target="_blank" rel="noopener noreferrer" className="reading-cover-link">
+        <Cover book={book} />
+      </a>
+      <div>
+        <h3>
+          <a href={book.url} target="_blank" rel="noopener noreferrer">
+            {book.title}
+          </a>
+        </h3>
+        <Meta book={book} />
+        <Stars value={book.rating} />
+        {book.shelves ? <p className="reading-shelves">{book.shelves.replace(/,/g, " · ")}</p> : null}
+        {book.review ? <blockquote className="reading-review">{book.review}</blockquote> : null}
+      </div>
+    </article>
+  );
+}
+
+export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
+  const total = library.currentlyReading.length + library.read.length + library.toRead.length;
+
+  if (!library.configured) {
+    return (
+      <section id="library" className="section-shell py-20 sm:py-28">
+        <p className="text-[0.7rem] uppercase tracking-[0.2em] text-accent-text">From the desk</p>
+        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Reading</h1>
+        <p className="mt-5 max-w-xl text-muted">The bookshelf is taking a break. Add a Goodreads profile in the CMS to fill this page.</p>
+      </section>
+    );
+  }
+
+  if (total === 0) {
+    return (
+      <section id="library" className="section-shell py-20 sm:py-28">
+        <p className="text-[0.7rem] uppercase tracking-[0.2em] text-accent-text">From the desk</p>
+        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Reading</h1>
+        <p className="mt-5 max-w-xl text-muted">
+          Couldn’t load books from Goodreads right now.{" "}
+          <a className="text-accent-text" href={library.profileUrl} target="_blank" rel="noopener noreferrer">
+            Open the profile
+          </a>
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <div id="library" className="pb-20 sm:pb-28">
+      <section className="section-shell pt-16 sm:pt-24">
+        <p className="text-[0.7rem] uppercase tracking-[0.2em] text-accent-text">From the desk</p>
+        <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">Reading</h1>
+        <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
+          Everything on my Goodreads shelves — what I’m in the middle of, what I’ve finished, and what I want next,
+          including the notes I left on the books.
+        </p>
+        <p className="mt-4 text-sm text-muted-soft">{total} books pulled from Goodreads</p>
+        <nav className="mt-8 flex flex-wrap gap-3 text-sm" aria-label="Shelves">
+          {library.currentlyReading.length ? (
+            <a href="#currently-reading" className="nav-link">
+              Reading ({library.currentlyReading.length})
+            </a>
+          ) : null}
+          <a href="#read" className="nav-link">
+            Read ({library.read.length})
+          </a>
+          <a href="#want-to-read" className="nav-link">
+            Want to read ({library.toRead.length})
+          </a>
+        </nav>
+      </section>
+
+      {library.currentlyReading.length ? (
+        <section id="currently-reading" className="section-shell pt-16">
+          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Currently reading</h2>
+          <div className="mt-8 grid gap-6">
+            {library.currentlyReading.map((book) => (
+              <BookCard key={book.id} book={book} featured />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <section id="read" className="section-shell pt-16">
+        <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Read</h2>
+        <div className="mt-8 grid gap-6">
+          {library.read.map((book) => (
+            <BookCard key={book.id} book={book} />
+          ))}
+        </div>
+      </section>
+
+      <section id="want-to-read" className="section-shell pt-16">
+        <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Want to read</h2>
+        <div className="reading-want mt-8">
+          {library.toRead.map((book) => (
+            <a key={book.id} href={book.url} target="_blank" rel="noopener noreferrer" className="reading-want-card">
+              <Cover book={book} />
+              <strong>{book.title}</strong>
+              <span>{book.author}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      {library.profileUrl ? (
+        <p className="section-shell mt-14 text-sm text-muted">
+          Source:{" "}
+          <a className="text-accent-text" href={library.profileUrl} target="_blank" rel="noopener noreferrer">
+            Goodreads profile
+          </a>
+        </p>
+      ) : null}
+    </div>
+  );
+}

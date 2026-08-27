@@ -87,12 +87,159 @@ function pianoMusicHint(url: string) {
   return "Could not find a YouTube video ID. Use a watch, share, Shorts, or embed URL.";
 }
 
-function Metabox({ title, children }: { title: string; children: ReactNode }) {
+function Metabox({
+  title,
+  children,
+  defaultOpen = true,
+  isOpen: controlledOpen,
+  badge,
+  actions,
+  id,
+  className = "",
+}: {
+  title: string | ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  isOpen?: boolean;
+  badge?: ReactNode;
+  actions?: ReactNode;
+  id?: string;
+  className?: string;
+}) {
+  const storageKey = useMemo(() => {
+    if (id) return `wp_metabox_${id}`;
+    if (typeof title === "string") return `wp_metabox_${title.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
+    return null;
+  }, [id, title]);
+
+  const [internalOpen, setInternalOpen] = useState(() => {
+    if (typeof window === "undefined" || !storageKey) return defaultOpen;
+    try {
+      const stored = localStorage.getItem(storageKey);
+      if (stored !== null) return stored === "true";
+    } catch {
+      // Ignore
+    }
+    return defaultOpen;
+  });
+
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+
+  const toggle = () => {
+    const next = !open;
+    setInternalOpen(next);
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, String(next));
+      } catch {
+        // Ignore
+      }
+    }
+  };
+
+  const titleString = typeof title === "string" ? title : "";
+
   return (
-    <section className="wp-metabox">
-      <h2 className="wp-metabox-h">{title}</h2>
-      <div className="wp-metabox-b">{children}</div>
+    <section className={`wp-metabox${!open ? " is-collapsed" : ""}${className ? ` ${className}` : ""}`}>
+      <div
+        className="wp-metabox-h"
+        onClick={toggle}
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            toggle();
+          }
+        }}
+      >
+        <div className="wp-metabox-h-title">
+          <h2 className="wp-metabox-title-text">{title}</h2>
+          {badge ? <span className="wp-metabox-badge">{badge}</span> : null}
+        </div>
+        <div className="wp-metabox-h-actions" onClick={(e) => e.stopPropagation()}>
+          {actions}
+          <button
+            type="button"
+            className="wp-metabox-toggle"
+            aria-label={open ? `Collapse ${titleString || "section"}` : `Expand ${titleString || "section"}`}
+            title={open ? "Click to collapse" : "Click to expand"}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggle();
+            }}
+          >
+            <svg
+              className={`wp-metabox-toggle-icon${!open ? " is-collapsed" : ""}`}
+              viewBox="0 0 20 20"
+              width="20"
+              height="20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div className="wp-metabox-b" hidden={!open}>
+        {children}
+      </div>
     </section>
+  );
+}
+
+function SectionTools({
+  onExpandAll,
+  onCollapseAll,
+}: {
+  onExpandAll: () => void;
+  onCollapseAll: () => void;
+}) {
+  return (
+    <div className="wp-section-tools">
+      <span>Sections:</span>
+      <button type="button" onClick={onExpandAll}>
+        Expand all
+      </button>
+      <span>·</span>
+      <button type="button" onClick={onCollapseAll}>
+        Collapse all
+      </button>
+    </div>
+  );
+}
+
+type BreadcrumbItem = {
+  label: string;
+  onClick?: () => void;
+  current?: boolean;
+};
+
+function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <nav className="wp-breadcrumbs" aria-label="Breadcrumbs">
+      <ol className="wp-breadcrumbs-list">
+        {items.map((item, i) => {
+          const isLast = i === items.length - 1 || item.current;
+          return (
+            <li key={i} className={`wp-breadcrumbs-item${isLast ? " is-current" : ""}`}>
+              {isLast || !item.onClick ? (
+                <span aria-current={isLast ? "page" : undefined}>{item.label}</span>
+              ) : (
+                <button type="button" onClick={item.onClick} className="wp-breadcrumbs-link">
+                  {item.label}
+                </button>
+              )}
+              {!isLast ? <span className="wp-breadcrumbs-sep" aria-hidden>›</span> : null}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
   );
 }
 
@@ -443,6 +590,37 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [sectionState, setSectionState] = useState<Record<string, boolean>>({});
+
+  function expandAll(ids: string[]) {
+    setSectionState((prev) => {
+      const next = { ...prev };
+      ids.forEach((id) => {
+        next[id] = true;
+        try {
+          localStorage.setItem(`wp_metabox_${id}`, "true");
+        } catch {
+          // Ignore
+        }
+      });
+      return next;
+    });
+  }
+
+  function collapseAll(ids: string[]) {
+    setSectionState((prev) => {
+      const next = { ...prev };
+      ids.forEach((id) => {
+        next[id] = false;
+        try {
+          localStorage.setItem(`wp_metabox_${id}`, "false");
+        } catch {
+          // Ignore
+        }
+      });
+      return next;
+    });
+  }
 
   const dirty = useMemo(() => JSON.stringify(data) !== saved, [data, saved]);
   const site = data.site;
@@ -606,6 +784,77 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "site" as const, label: "Settings", icon: <IconSettings />, match: screen === "site" },
   ];
 
+  const breadcrumbs = useMemo<BreadcrumbItem[]>(() => {
+    switch (screen) {
+      case "dashboard":
+        return [{ label: "Dashboard", current: true }];
+      case "site":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "General Settings", current: true },
+        ];
+      case "hero":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Hero", current: true },
+        ];
+      case "appearance":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Appearance", current: true },
+        ];
+      case "experience":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Experience", current: true },
+        ];
+      case "experience-edit":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Experience", onClick: () => go("experience") },
+          {
+            label: job ? (job.role === "New role" ? "Add New Experience" : job.role || "Untitled Role") : "Edit Experience",
+            current: true,
+          },
+        ];
+      case "projects":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Projects", current: true },
+        ];
+      case "projects-edit":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Projects", onClick: () => go("projects") },
+          {
+            label: project ? (project.name === "New project" ? "Add New Project" : project.name || "Untitled Project") : "Edit Project",
+            current: true,
+          },
+        ];
+      case "skills":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Skills", current: true },
+        ];
+      case "memories":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Memory Jar", current: true },
+        ];
+      case "memories-edit":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Memory Jar", onClick: () => go("memories") },
+          {
+            label: memory ? (memory.title === "New memory" ? "Add New Memory" : memory.title || "Untitled Memory") : "Edit Memory",
+            current: true,
+          },
+        ];
+      default:
+        return [{ label: "Dashboard", current: true }];
+    }
+  }, [screen, job, project, memory]);
+
   return (
     <div className={`wp-app${menuOpen ? " is-menu-open" : ""}`}>
       <header className="wp-bar">
@@ -683,6 +932,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
         </aside>
 
         <main className="wp-content">
+          <Breadcrumbs items={breadcrumbs} />
           {error ? <div className="wp-notice is-error">{error}</div> : null}
           {notice && !error ? <div className="wp-notice is-success">{notice}</div> : null}
 
@@ -691,7 +941,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               <h1 className="wp-screen-title">Dashboard</h1>
               <p className="wp-sub">Welcome to your portfolio admin.</p>
               <div className="wp-widgets">
-                <Metabox title="At a Glance">
+                <Metabox id="dash_glance" title="At a Glance">
                   <ul className="wp-glance">
                     <li>
                       <button type="button" onClick={() => go("experience")}>
@@ -725,7 +975,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </li>
                   </ul>
                 </Metabox>
-                <Metabox title="Site identity">
+                <Metabox id="dash_identity" title="Site identity">
                   <p>
                     <strong>{site.name}</strong>
                     <br />
@@ -737,7 +987,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </button>
                   </p>
                 </Metabox>
-                <Metabox title="Quick draft">
+                <Metabox id="dash_draft" title="Quick draft">
                   <p className="wp-sub" style={{ marginBottom: 12 }}>
                     Add a new role, project, or memory without leaving the dashboard.
                   </p>
@@ -759,7 +1009,15 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <>
               <h1 className="wp-screen-title">General Settings</h1>
               <p className="wp-sub">These fields appear on the public portfolio.</p>
-              <Metabox title="Identity">
+              <SectionTools
+                onExpandAll={() =>
+                  expandAll(["site_identity", "site_hero", "site_about", "site_stats", "site_contact"])
+                }
+                onCollapseAll={() =>
+                  collapseAll(["site_identity", "site_hero", "site_about", "site_stats", "site_contact"])
+                }
+              />
+              <Metabox id="site_identity" title="Identity" isOpen={sectionState["site_identity"]}>
                 <table className="wp-form-table">
                   <tbody>
                     <Field label="Site title">
@@ -784,7 +1042,12 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   </tbody>
                 </table>
               </Metabox>
-              <Metabox title="Hero">
+              <Metabox
+                id="site_hero"
+                title="Hero"
+                badge={HERO_TEMPLATES.find((t) => t.id === site.heroTemplate)?.name}
+                isOpen={sectionState["site_hero"]}
+              >
                 <p style={{ margin: "0 0 12px" }}>
                   Live template: <strong>{HERO_TEMPLATES.find((t) => t.id === site.heroTemplate)?.name}</strong>
                   {" · "}
@@ -837,7 +1100,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   </tbody>
                 </table>
               </Metabox>
-              <Metabox title="About">
+              <Metabox id="site_about" title="About" isOpen={sectionState["site_about"]}>
                 <table className="wp-form-table">
                   <tbody>
                     <Field label="About" wide>
@@ -872,7 +1135,12 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   </tbody>
                 </table>
               </Metabox>
-              <Metabox title="Stats">
+              <Metabox
+                id="site_stats"
+                title="Stats"
+                badge={`${site.stats.length} ${site.stats.length === 1 ? "stat" : "stats"}`}
+                isOpen={sectionState["site_stats"]}
+              >
                 {site.stats.map((stat, i) => (
                   <div key={i} className="row" style={{ display: "flex", gap: 8, marginBottom: 8, flexWrap: "wrap" }}>
                     <input
@@ -928,7 +1196,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   + Add stat
                 </button>
               </Metabox>
-              <Metabox title="Contact">
+              <Metabox id="site_contact" title="Contact" isOpen={sectionState["site_contact"]}>
                 <table className="wp-form-table">
                   <tbody>
                     <Field label="Contact line">
@@ -976,7 +1244,16 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   Preview site
                 </a>
               </p>
-              <Metabox title="Templates">
+              <SectionTools
+                onExpandAll={() => expandAll(["hero_templates", "hero_media", "hero_world", "hero_copy"])}
+                onCollapseAll={() => collapseAll(["hero_templates", "hero_media", "hero_world", "hero_copy"])}
+              />
+              <Metabox
+                id="hero_templates"
+                title="Templates"
+                badge={HERO_TEMPLATES.find((t) => t.id === site.heroTemplate)?.name}
+                isOpen={sectionState["hero_templates"]}
+              >
                 <div className="wp-template-grid">
                   {HERO_TEMPLATES.map((tpl) => {
                     const live = site.heroTemplate === tpl.id;
@@ -1004,7 +1281,12 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   })}
                 </div>
               </Metabox>
-              <Metabox title="Media">
+              <Metabox
+                id="hero_media"
+                title="Media"
+                badge={heroMedia.kind !== "none" ? `${heroMedia.kind} (${heroMedia.place})` : "none"}
+                isOpen={sectionState["hero_media"]}
+              >
                 <MediaLayoutPreview site={site} theme={data.theme} media={heroMedia} />
                 {(site.heroTemplate === "world" || site.heroTemplate === "nook") && heroMedia.kind !== "none" ? (
                   <p className="wp-description" style={{ margin: "0 0 12px" }}>
@@ -1130,7 +1412,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   </tbody>
                 </table>
               </Metabox>
-              <Metabox title="3D World">
+              <Metabox id="hero_world" title="3D World" isOpen={sectionState["hero_world"]}>
                 <p style={{ margin: "0 0 12px" }}>
                   Used when a 3D hero is live. The piano plays this track in the page — visitors never leave the
                   site. Books open the reading page.
@@ -1156,7 +1438,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   </tbody>
                 </table>
               </Metabox>
-              <Metabox title="Hero copy">
+              <Metabox id="hero_copy" title="Hero copy" isOpen={sectionState["hero_copy"]}>
                 <table className="wp-form-table">
                   <tbody>
                     <Field label="Kicker">
@@ -1206,7 +1488,15 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <>
               <h1 className="wp-screen-title">Appearance</h1>
               <p className="wp-sub">Colors and light/dark behavior for the public site. Each hex field shows a live preview.</p>
-              <Metabox title="Preview">
+              <SectionTools
+                onExpandAll={() =>
+                  expandAll(["app_preview", "app_options", "app_brand", "app_palette_dark", "app_palette_light"])
+                }
+                onCollapseAll={() =>
+                  collapseAll(["app_preview", "app_options", "app_brand", "app_palette_dark", "app_palette_light"])
+                }
+              />
+              <Metabox id="app_preview" title="Preview" isOpen={sectionState["app_preview"]}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                   <ThemePreview
                     label="Dark"
@@ -1222,7 +1512,12 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   />
                 </div>
               </Metabox>
-              <Metabox title="Theme options">
+              <Metabox
+                id="app_options"
+                title="Theme options"
+                badge={data.theme.defaultMode}
+                isOpen={sectionState["app_options"]}
+              >
                 <table className="wp-form-table">
                   <tbody>
                     <tr>
@@ -1261,7 +1556,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   </tbody>
                 </table>
               </Metabox>
-              <Metabox title="Brand colors">
+              <Metabox id="app_brand" title="Brand colors" isOpen={sectionState["app_brand"]}>
                 <table className="wp-form-table">
                   <tbody>
                     <Field label="Brand from" hint="Logo, buttons, timeline start">
@@ -1280,7 +1575,13 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                 </table>
               </Metabox>
               {(["dark", "light"] as const).map((mode) => (
-                <Metabox key={mode} title={mode === "dark" ? "Dark palette" : "Light palette"}>
+                <Metabox
+                  key={mode}
+                  id={`app_palette_${mode}`}
+                  title={mode === "dark" ? "Dark palette" : "Light palette"}
+                  badge={mode}
+                  isOpen={sectionState[`app_palette_${mode}`]}
+                >
                   <table className="wp-form-table">
                     <tbody>
                       {THEME_PALETTE_FIELDS.map((field) => (
@@ -1409,7 +1710,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       setData({ ...data, experience });
                     }}
                   />
-                  <Metabox title="Role details">
+                  <Metabox id="exp_details" title="Role details" badge={job.company || undefined}>
                     <table className="wp-form-table">
                       <tbody>
                         <Field label="Company">
@@ -1468,7 +1769,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </table>
                   </Metabox>
                 </div>
-                <Metabox title="Publish">
+                <Metabox id="exp_publish" title="Publish" badge={job.current ? "Current" : "Past"}>
                   <div className="wp-publish-misc">
                     <p>
                       Status:{" "}
@@ -1588,7 +1889,11 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       setData({ ...data, projects });
                     }}
                   />
-                  <Metabox title="Project">
+                  <Metabox
+                    id="proj_details"
+                    title="Project"
+                    badge={project.tags.length ? `${project.tags.length} ${project.tags.length === 1 ? "tag" : "tags"}` : undefined}
+                  >
                     <table className="wp-form-table">
                       <tbody>
                         <Field label="Description" wide>
@@ -1637,7 +1942,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </table>
                   </Metabox>
                 </div>
-                <Metabox title="Publish">
+                <Metabox id="proj_publish" title="Publish" badge={project.demo ? "Live Demo" : "No Demo"}>
                   <div className="wp-publish-misc">
                     <p>
                       Demo: <strong>{project.demo ? "Live" : "None"}</strong>
@@ -1675,8 +1980,42 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                   Add New
                 </button>
               </h1>
+              <SectionTools
+                onExpandAll={() => expandAll(data.skills.map((_, gi) => `skill_group_${gi}`))}
+                onCollapseAll={() => collapseAll(data.skills.map((_, gi) => `skill_group_${gi}`))}
+              />
               {data.skills.map((group, gi) => (
-                <Metabox key={`${group.title}-${gi}`} title={group.title || "Skill group"}>
+                <Metabox
+                  key={`${group.title}-${gi}`}
+                  id={`skill_group_${gi}`}
+                  title={group.title || "Skill group"}
+                  badge={`${group.items.length} ${group.items.length === 1 ? "skill" : "skills"}`}
+                  isOpen={sectionState[`skill_group_${gi}`]}
+                  actions={
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      <button
+                        type="button"
+                        className="wp-btn"
+                        onClick={() => setData({ ...data, skills: move(data.skills, gi, -1) })}
+                        disabled={gi === 0}
+                        title="Move group up"
+                        style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="wp-btn"
+                        onClick={() => setData({ ...data, skills: move(data.skills, gi, 1) })}
+                        disabled={gi === data.skills.length - 1}
+                        title="Move group down"
+                        style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  }
+                >
                   <table className="wp-form-table">
                     <tbody>
                       <Field label="Group title">
@@ -1923,7 +2262,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       setData({ ...data, memories });
                     }}
                   />
-                  <Metabox title="Memory Content">
+                  <Metabox id="mem_details" title="Memory Content" badge={memory.category || undefined}>
                     <table className="wp-form-table">
                       <tbody>
                         <Field label="Memory Note" wide hint="The story, feeling, or moment that will appear when this memory is revealed.">
@@ -2071,7 +2410,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </table>
                   </Metabox>
                 </div>
-                <Metabox title="Publish">
+                <Metabox id="mem_publish" title="Publish">
                   <div className="wp-publish-actions">
                     <button
                       type="button"

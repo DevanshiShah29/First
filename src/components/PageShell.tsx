@@ -75,7 +75,7 @@ export function PageShell({
           </ul>
         ) : null}
       </header>
-      <main>{children}</main>
+      <main className="w-full">{children}</main>
       <SiteFooter site={site} />
     </div>
   );

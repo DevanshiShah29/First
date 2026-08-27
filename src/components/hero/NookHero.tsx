@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
+import { useRouter } from "next/navigation";
 import { useReducedMotion } from "motion/react";
 import type { SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
@@ -25,7 +26,7 @@ const desktopSpots: Spot[] = [
   { id: "plants", label: "Plants", left: "58%", top: "1%", w: "28%", h: "20%" },
   { id: "piano", label: "Piano", left: "22%", top: "28%", w: "20%", h: "28%" },
   { id: "yoga", label: "Yoga", left: "0%", top: "48%", w: "12%", h: "42%" },
-  { id: "jar", label: "Memory jar", left: "32%", top: "48%", w: "11%", h: "24%" },
+  { id: "jar", label: "Memory jar", left: "28%", top: "42%", w: "17%", h: "32%" },
   { id: "laptop", label: "Coding", left: "48%", top: "46%", w: "18%", h: "20%" },
   { id: "journal", label: "Journal", left: "48%", top: "68%", w: "16%", h: "16%" },
   { id: "paint", label: "Paint & craft", left: "72%", top: "28%", w: "26%", h: "64%" },
@@ -41,7 +42,7 @@ const mobileSpots: Spot[] = [
   { id: "cook", label: "Cooking", left: "60%", top: "12%", w: "36%", h: "16%" },
   { id: "books", label: "Reading", left: "16%", top: "44%", w: "30%", h: "18%" },
   { id: "piano", label: "Piano", left: "1%", top: "66%", w: "32%", h: "26%" },
-  { id: "jar", label: "Memory jar", left: "32%", top: "78%", w: "18%", h: "16%" },
+  { id: "jar", label: "Memory jar", left: "24%", top: "72%", w: "24%", h: "22%" },
   { id: "yoga", label: "Yoga", left: "52%", top: "68%", w: "40%", h: "28%" },
 ];
 
@@ -117,6 +118,7 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
 
 export function NookHero({ site }: { site: SiteContent }) {
   const reduce = useReducedMotion();
+  const router = useRouter();
   const stage = useRef<HTMLDivElement>(null);
   const audioHost = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -267,7 +269,15 @@ export function NookHero({ site }: { site: SiteContent }) {
                   onPointerLeave={() => setActive((cur) => (cur === spot.id ? null : cur))}
                   onFocus={() => setActive(spot.id)}
                   onBlur={() => setActive((cur) => (cur === spot.id ? null : cur))}
-                  onClick={isPiano ? onPianoToggle : isBook ? onBooksClick : undefined}
+                  onClick={
+                    isPiano
+                      ? onPianoToggle
+                      : isBook
+                        ? onBooksClick
+                        : isJar
+                          ? () => router.push("/memories")
+                          : undefined
+                  }
                 >
                   {on ? (
                     <>

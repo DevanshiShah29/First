@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
 
 const hoverSel = "a, button, [role='button'], summary, .card-surface, .btn-primary";
 const textSel = "input, textarea, select, [contenteditable='true']";
 
 export function Cursor() {
+  const pathname = usePathname();
   const reduce = useReducedMotion();
   const [hover, setHover] = useState(false);
   const [text, setText] = useState(false);
   const [down, setDown] = useState(false);
+  const isJarPage = pathname?.startsWith("/memories") || pathname === "/memory-jar";
   const x = useMotionValue(-80);
   const y = useMotionValue(-80);
   const trailX = useSpring(x, { stiffness: 180, damping: 22, mass: 0.4 });
@@ -61,31 +64,51 @@ export function Cursor() {
     <>
       <motion.div
         aria-hidden
-        className="cursor-trail"
+        className={`cursor-trail${isJarPage ? " is-jar" : ""}`}
         style={{ x: gx, y: gy, opacity: text ? 0 : hover ? 0.55 : 0.28 }}
       />
       <motion.div
         aria-hidden
-        className={`cursor-pointer${hover ? " is-hover" : ""}`}
+        className={`cursor-pointer${hover ? " is-hover" : ""}${isJarPage ? " is-jar" : ""}`}
         style={{ x, y, opacity: text ? 0 : 1 }}
         animate={{ scale: down ? 0.82 : hover ? 1.12 : 1 }}
         transition={{ type: "spring", stiffness: 420, damping: 26 }}
       >
-        <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
-          <defs>
-            <linearGradient id="cursor-fill" x1="6" y1="2" x2="24" y2="28">
-              <stop offset="0%" stopColor="var(--brand-from, #7c3aed)" />
-              <stop offset="100%" stopColor="var(--brand-to, #6366f1)" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M5 3.2 27.2 15.1c.9.5.8 1.8-.2 2.1l-8.2 2.5-2.5 8.2c-.3 1-1.6 1.1-2.1.2L5 3.2Z"
-            fill="url(#cursor-fill)"
-            stroke="var(--background)"
-            strokeWidth="1.4"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {isJarPage ? (
+          <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+            <defs>
+              <linearGradient id="cursor-star-fill" x1="6" y1="2" x2="26" y2="28">
+                <stop offset="0%" stopColor="#FDE68A" />
+                <stop offset="55%" stopColor="var(--brand-from, #7c3aed)" />
+                <stop offset="100%" stopColor="var(--brand-to, #6366f1)" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M16 2.8l3.9 9.3 9.3 3.9-9.3 3.9-3.9 9.3-3.9-9.3-9.3-3.9 9.3-3.9 3.9-9.3Z"
+              fill="url(#cursor-star-fill)"
+              stroke="var(--background)"
+              strokeWidth="1.2"
+              strokeLinejoin="round"
+            />
+            <circle cx="16" cy="16" r="1.7" fill="#fff" fillOpacity="0.9" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 32 32" width="22" height="22" fill="none">
+            <defs>
+              <linearGradient id="cursor-fill" x1="6" y1="2" x2="24" y2="28">
+                <stop offset="0%" stopColor="var(--brand-from, #7c3aed)" />
+                <stop offset="100%" stopColor="var(--brand-to, #6366f1)" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M5 3.2 27.2 15.1c.9.5.8 1.8-.2 2.1l-8.2 2.5-2.5 8.2c-.3 1-1.6 1.1-2.1.2L5 3.2Z"
+              fill="url(#cursor-fill)"
+              stroke="var(--background)"
+              strokeWidth="1.4"
+              strokeLinejoin="round"
+            />
+          </svg>
+        )}
       </motion.div>
     </>
   );

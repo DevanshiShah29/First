@@ -2,8 +2,66 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence } from "motion/react";
 import type { ContentData, MemoryItem } from "@/content/types";
+
+// Fallback memories in case content has not been seeded yet
+const DEFAULT_MEMORIES: MemoryItem[] = [
+  {
+    id: "mem-1",
+    title: "First Shipped Feature",
+    note: "Staying up until 2:30 AM watching the very first real user click through a flow I spent weeks designing. Seeing them find exactly what they needed without hesitation felt like pure magic.",
+    date: "Summer 2023",
+    category: "Milestone",
+    icon: "🚀",
+    color: "#7C3AED",
+  },
+  {
+    id: "mem-2",
+    title: "Late Night Piano Chords",
+    note: "Learning Ludovico Einaudi’s 'Nuvole Bianche' measure by measure on a quiet rainy evening. The moment muscle memory took over and the music flowed on its own.",
+    date: "October 2023",
+    category: "Craft",
+    icon: "🎹",
+    color: "#6366F1",
+  },
+  {
+    id: "mem-3",
+    title: "The Sketchbook on the Train",
+    note: "Filling 14 pages of rough wireframes and margin doodles on the morning commute. The most elegant product architecture often starts on wrinkled paper with a ballpoint pen.",
+    date: "Spring 2024",
+    category: "Discovery",
+    icon: "✨",
+    color: "#A78BFA",
+  },
+  {
+    id: "mem-4",
+    title: "Warm Chai & Bookmarks",
+    note: "Finishing 'The Design of Everyday Things' over hot ginger chai on a chilly Sunday. Looking at Norman doors and tea kettles with entirely new eyes forever after.",
+    date: "Winter 2024",
+    category: "Tiny Joy",
+    icon: "☕",
+    color: "#F59E0B",
+  },
+  {
+    id: "mem-5",
+    title: "Team Breakthrough Moment",
+    note: "When our team was stuck on a thorny scope dispute for three days, and we drew the simple 'who is this NOT for' matrix on a whiteboard. The collective sigh of relief in that room was unforgettable.",
+    date: "Autumn 2024",
+    category: "Milestone",
+    icon: "💡",
+    color: "#10B981",
+  },
+  {
+    id: "mem-6",
+    title: "Stargazing After a Tough Launch",
+    note: "Sitting on the rooftop terrace after a high-stakes release week, watching the night sky. Remembering how vast the universe is, and how sweet every tiny finished craft really is.",
+    date: "Recent",
+    category: "Life",
+    icon: "⭐",
+    color: "#EC4899",
+  },
+];
 
 // Ambient sound synthesizer using Web Audio API
 class JarAudio {
@@ -29,7 +87,7 @@ class JarAudio {
     try {
       this.init();
       if (!this.ctx) return;
-      const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98]; // C5, E5, G5, C6, E6, G6
+      const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98];
       const freq = notes[noteIndex % notes.length];
 
       const osc = this.ctx.createOscillator();
@@ -39,7 +97,7 @@ class JarAudio {
       osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
 
       gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.2, this.ctx.currentTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.18, this.ctx.currentTime + 0.04);
       gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1.2);
 
       osc.connect(gain);
@@ -48,7 +106,7 @@ class JarAudio {
       osc.start();
       osc.stop(this.ctx.currentTime + 1.25);
     } catch {
-      // AudioContext might be blocked until user interaction
+      // Audio context might be restricted before interaction
     }
   }
 
@@ -61,7 +119,7 @@ class JarAudio {
       const gain = this.ctx.createGain();
       osc.type = "triangle";
       osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(820, this.ctx.currentTime + 0.1);
       gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 0.2);
       osc.connect(gain);
@@ -76,87 +134,159 @@ class JarAudio {
 
 const audio = new JarAudio();
 
-const STAR_COLORS = ["#A78BFA", "#FBBF24", "#F472B6", "#34D399", "#60A5FA", "#F87171", "#C084FC"];
+const STAR_PALETTE = [
+  { name: "lavender", base: "#A78BFA", light: "#DDD6FE", deep: "#7C3AED", ink: "#342E38" },
+  { name: "yellow", base: "#FBBF24", light: "#FEF08A", deep: "#D97706", ink: "#3A3428" },
+  { name: "pink", base: "#F472B6", light: "#FBCFE8", deep: "#DB2777", ink: "#3A322C" },
+  { name: "mint", base: "#34D399", light: "#A7F3D0", deep: "#059669", ink: "#2A3430" },
+  { name: "sky", base: "#60A5FA", light: "#BFDBFE", deep: "#2563EB", ink: "#2C3238" },
+  { name: "coral", base: "#FB7185", light: "#FECDD3", deep: "#E11D48", ink: "#3A3028" },
+  { name: "peach", base: "#FDBA74", light: "#FED7AA", deep: "#EA580C", ink: "#3A3228" },
+];
+
+/**
+ * 3D Origami Folded Lucky Star SVG Group (Renderable inside SVG viewBox)
+ */
+function OrigamiStarGroup({
+  cx,
+  cy,
+  size = 32,
+  color,
+  rotation = 0,
+}: {
+  cx: number;
+  cy: number;
+  size?: number;
+  color?: string;
+  rotation?: number;
+}) {
+  const palette = STAR_PALETTE.find((p) => p.name === color || p.base === color) || STAR_PALETTE[0];
+  const starColor = color?.startsWith("#") ? color : palette.base;
+  const scale = size / 100;
+
+  return (
+    <g transform={`translate(${cx}, ${cy}) rotate(${rotation}) scale(${scale}) translate(-50, -50)`}>
+      {/* 10 Facets of Origami Star (Center: 50,50) */}
+      <polygon points="50,50 50,8 63,38" fill={starColor} fillOpacity="0.95" />
+      <polygon points="50,50 63,38 92,38" fill={starColor} fillOpacity="0.65" />
+      <polygon points="50,50 92,38 67,58" fill={starColor} fillOpacity="0.88" />
+      <polygon points="50,50 67,58 76,90" fill={starColor} fillOpacity="0.55" />
+      <polygon points="50,50 76,90 50,71" fill={starColor} fillOpacity="0.82" />
+      <polygon points="50,50 50,71 24,90" fill={starColor} fillOpacity="0.6" />
+      <polygon points="50,50 24,90 33,58" fill={starColor} fillOpacity="0.85" />
+      <polygon points="50,50 33,58 8,38" fill={starColor} fillOpacity="0.68" />
+      <polygon points="50,50 8,38 37,38" fill={starColor} fillOpacity="0.92" />
+      <polygon points="50,50 37,38 50,8" fill={starColor} fillOpacity="0.75" />
+
+      {/* Crease line strokes for paper fold look */}
+      <line x1="50" y1="50" x2="50" y2="8" stroke="rgba(255,255,255,0.45)" strokeWidth="1.2" />
+      <line x1="50" y1="50" x2="92" y2="38" stroke="rgba(255,255,255,0.45)" strokeWidth="1.2" />
+      <line x1="50" y1="50" x2="76" y2="90" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" />
+      <line x1="50" y1="50" x2="24" y2="90" stroke="rgba(255,255,255,0.35)" strokeWidth="1.2" />
+      <line x1="50" y1="50" x2="8" y2="38" stroke="rgba(255,255,255,0.45)" strokeWidth="1.2" />
+
+      {/* Center vertex highlight */}
+      <circle cx="50" cy="50" r="1.8" fill="#ffffff" fillOpacity="0.9" />
+    </g>
+  );
+}
+
+/**
+ * Standalone 3D Origami Folded Paper Star SVG
+ */
+function OrigamiStar({
+  size = 32,
+  color,
+  className = "",
+}: {
+  size?: number;
+  color?: string;
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      width={size}
+      height={size}
+      className={`drop-shadow-sm transition-transform ${className}`}
+    >
+      <OrigamiStarGroup cx={50} cy={50} size={100} color={color} />
+    </svg>
+  );
+}
 
 export function MemoryJarExperience({ content }: { content: ContentData }) {
-  const reduce = useReducedMotion();
-  const memories = useMemo(
-    () => (content.memories && content.memories.length > 0 ? content.memories : []),
-    [content.memories]
-  );
+  const memories = useMemo(() => {
+    if (content.memories && content.memories.length > 0) {
+      return content.memories;
+    }
+    return DEFAULT_MEMORIES;
+  }, [content.memories]);
 
-  // Unlocked memory IDs
-  const [unlockedIds, setUnlockedIds] = useState<string[]>([]);
-  // Currently active memory card
   const [activeMemory, setActiveMemory] = useState<MemoryItem | null>(null);
-  // Opening animation states
-  const [isOpening, setIsOpening] = useState(false);
+  const [isStirring, setIsStirring] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
-  const [jarHovered, setJarHovered] = useState(false);
-  const [showAllTray, setShowAllTray] = useState(true);
-  const unopenedMemories = useMemo(
-    () => memories.filter((m) => !unlockedIds.includes(m.id)),
-    [memories, unlockedIds]
-  );
-  const openedMemories = useMemo(
-    () => memories.filter((m) => unlockedIds.includes(m.id)),
-    [memories, unlockedIds]
-  );
 
-  const isAllUnlocked = memories.length > 0 && unopenedMemories.length === 0;
+  // Background floating drifting stars in modal backdrop like alittlejarofstars
+  const backdropStars = useMemo(() => {
+    return Array.from({ length: 32 }).map((_, i) => {
+      const seed = (i * 23) % 100;
+      return {
+        id: i,
+        top: 6 + ((i * 17 + seed) % 86),
+        left: 4 + ((i * 29 + (seed % 34)) % 92),
+        size: 16 + (i % 4) * 8,
+        delay: (i * 0.3) % 4,
+        dur: 4.5 + (i % 3) * 0.7,
+        color: STAR_PALETTE[i % STAR_PALETTE.length].base,
+        drift: ["animate-paper-drift-a", "animate-paper-drift-b", "animate-paper-drift-c"][i % 3],
+        depth: 0.3 + ((i % 5) * 0.14),
+      };
+    });
+  }, []);
 
-  // Toggle sound
   function toggleSound() {
     audio.enabled = !soundOn;
     setSoundOn(!soundOn);
   }
 
-  // Open next memory from jar
-  function openNextMemory() {
-    if (isOpening) return;
-    if (unopenedMemories.length === 0) {
-      if (memories.length > 0) {
-        const randomMem = memories[Math.floor(Math.random() * memories.length)];
-        audio.playChime(0);
-        setActiveMemory(randomMem);
-      }
-      return;
-    }
+  // Handle tap on the jar to draw a memory
+  function onJarTap() {
+    if (isStirring) return;
 
-    setIsOpening(true);
+    setIsStirring(true);
     audio.playPop();
 
-    const nextMem = unopenedMemories[0];
-    const newUnlocked = [...unlockedIds, nextMem.id];
+    // Pick random memory
+    const chosenIndex = Math.floor(Math.random() * memories.length);
+    const chosen = memories[chosenIndex];
 
     setTimeout(() => {
-      audio.playChime(newUnlocked.length);
-      setUnlockedIds(newUnlocked);
+      setIsStirring(false);
+      audio.playChime(chosenIndex);
+      setActiveMemory(chosen);
+    }, 280);
+  }
+
+  // Unfold another memory from within the modal
+  function onUnfoldAnother() {
+    if (memories.length === 0) return;
+    const currentId = activeMemory?.id;
+    const remaining = memories.filter((m) => m.id !== currentId);
+    const nextMem = remaining.length > 0
+      ? remaining[Math.floor(Math.random() * remaining.length)]
+      : memories[0];
+
+    audio.playPop();
+    setActiveMemory(null);
+
+    setTimeout(() => {
+      audio.playChime(Math.floor(Math.random() * 6));
       setActiveMemory(nextMem);
-      setIsOpening(false);
-    }, 650);
+    }, 160);
   }
 
-  // Refill jar (reset progress)
-  function refillJar() {
-    audio.playPop();
-    setUnlockedIds([]);
-    setActiveMemory(null);
-  }
-
-  // Put currently active memory back
-  function putBackMemory(memId: string) {
-    audio.playPop();
-    setUnlockedIds((prev) => prev.filter((id) => id !== memId));
-    setActiveMemory(null);
-  }
-
-  // Close active card modal
-  function closeActiveMemory() {
-    setActiveMemory(null);
-  }
-
-  // Keyboard shortcut: Esc to close card
+  // Keyboard shortcut: Esc to close
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
@@ -167,587 +297,306 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  const totalStars = memories.length;
+  const jarStatusText =
+    totalStars === 0
+      ? "your jar is quiet — add your first memory in /admin."
+      : totalStars === 1
+        ? "one paper star waits inside."
+        : `${totalStars} stars captured inside.`;
+
   return (
-    <div className="relative min-h-[calc(100vh-4.5rem)] overflow-hidden px-4 py-8 md:py-12">
-      {/* Background ambient glowing orbs */}
-      <div
-        className="pointer-events-none absolute -top-24 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full opacity-30 blur-3xl transition-opacity duration-1000"
-        style={{
-          background: "radial-gradient(circle, var(--brand-from, #7c3aed), transparent 70%)",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute bottom-12 left-1/4 h-80 w-80 rounded-full opacity-20 blur-3xl"
-        style={{
-          background: "radial-gradient(circle, var(--brand-to, #6366f1), transparent 70%)",
-        }}
-      />
+    <div className="w-full min-h-[calc(100vh-12rem)] flex flex-col justify-between items-center mx-auto px-4 py-6 sm:py-10">
+      {/* Top Header Navigation Strip */}
+      <header className="section-shell flex w-full max-w-4xl items-center justify-between mx-auto">
+        <Link
+          href="/"
+          className="group inline-flex items-center gap-2 rounded-full border border-line bg-card/60 px-4 py-2 text-xs sm:text-sm text-muted backdrop-blur-md transition hover:border-accent-hover hover:text-foreground"
+        >
+          <span className="transition-transform group-hover:-translate-x-1">←</span>
+          <span>Studio</span>
+        </Link>
 
-      <div className="section-shell relative z-10 mx-auto max-w-5xl">
-        {/* Top bar controls */}
-        <div className="mb-6 flex items-center justify-between">
-          <Link
-            href="/"
-            className="group inline-flex items-center gap-2 rounded-full border border-line bg-card/60 px-4 py-2 text-sm text-muted backdrop-blur-md transition hover:border-accent-hover hover:text-foreground"
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleSound}
+            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/60 px-3.5 py-1.5 text-xs text-muted backdrop-blur-md transition hover:text-foreground cursor-pointer"
+            aria-label={soundOn ? "Mute sound" : "Unmute sound"}
           >
-            <span className="transition-transform group-hover:-translate-x-1">←</span>
-            <span>Back to Studio</span>
-          </Link>
+            <span>{soundOn ? "🔔 Sound on" : "🔕 Muted"}</span>
+          </button>
+        </div>
+      </header>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleSound}
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/60 px-3.5 py-1.5 text-xs text-muted backdrop-blur-md transition hover:text-foreground"
-              title={soundOn ? "Mute sound" : "Unmute sound"}
-              aria-label={soundOn ? "Mute sound" : "Unmute sound"}
-            >
-              <span>{soundOn ? "🔔 Sound on" : "🔕 Muted"}</span>
-            </button>
-
-            {unlockedIds.length > 0 ? (
-              <button
-                type="button"
-                onClick={refillJar}
-                className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/60 px-3.5 py-1.5 text-xs text-muted backdrop-blur-md transition hover:border-accent-hover hover:text-foreground"
-                title="Put all memories back into the jar"
-              >
-                <span>↺ Refill jar</span>
-              </button>
-            ) : null}
-          </div>
+      {/* Center Stage: Title + Mason Jar + Status */}
+      <section className="w-full max-w-xl flex flex-col items-center justify-center text-center mx-auto my-auto py-8">
+        {/* Title area */}
+        <div className="mb-4 text-center mx-auto">
+          <h1 className="text-3xl sm:text-5xl font-serif tracking-tight text-foreground text-center">
+            {totalStars === 0 ? "your jar" : "tap the jar"}
+          </h1>
+          <p className="mt-2 font-mono text-xs sm:text-sm text-muted text-center">
+            {isStirring ? (
+              <span className="italic text-accent-text">shhh… a star is drifting up ✨</span>
+            ) : (
+              jarStatusText
+            )}
+          </p>
         </div>
 
-        {/* Header Title */}
-        <header className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-line bg-chip px-3.5 py-1 text-xs font-medium text-accent-text">
-            <span>✨</span>
-            <span>Intimate Collection</span>
-          </div>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
-            The Memory Jar
-          </h1>
-          <p className="mx-auto mt-3 max-w-lg text-base text-muted sm:text-lg">
-            There are a few memories hiding in here...
-          </p>
-        </header>
+         <svg
+           onClick={onJarTap}
+          className={` h-80 w-60 sm:h-96 sm:w-72  ${
+            isStirring ? "animate-jar-stir" : "animate-float-gentle"
+          }`}
+          aria-label="Tap the memory jar to open a star"
+            viewBox="0 0 240 320"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <linearGradient id="jarGlassFlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255, 255, 255, 0.45)" />
+                <stop offset="35%" stopColor="rgba(255, 255, 255, 0.08)" />
+                <stop offset="70%" stopColor="rgba(167, 139, 250, 0.14)" />
+                <stop offset="100%" stopColor="rgba(255, 255, 255, 0.3)" />
+              </linearGradient>
 
-        {/* Main Jar Interactive Stage */}
-        <div className="relative mx-auto flex flex-col items-center justify-center py-4 sm:py-8">
-          {/* Subtle instruction pulse */}
-          <div className="mb-4 flex items-center gap-2 text-xs uppercase tracking-widest text-accent-text/80">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent-text animate-ping" />
-            <span>Click the jar to open one ✨</span>
-          </div>
+              <linearGradient id="corkStopperFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#966B44" />
+                <stop offset="50%" stopColor="#D4A373" />
+                <stop offset="100%" stopColor="#7E542F" />
+              </linearGradient>
 
-          {/* Interactive Jar */}
-          <div className="relative flex items-center justify-center">
-            {/* Ambient Aura */}
-            <motion.div
-              animate={{
-                scale: jarHovered || isOpening ? 1.12 : [1, 1.05, 1],
-                opacity: jarHovered || isOpening ? 0.8 : [0.35, 0.55, 0.35],
-              }}
-              transition={{
-                duration: jarHovered || isOpening ? 0.3 : 4,
-                repeat: jarHovered || isOpening ? 0 : Infinity,
-                ease: "easeInOut",
-              }}
-              className="pointer-events-none absolute -inset-6 rounded-full blur-2xl"
-              style={{
-                background:
-                  "radial-gradient(circle, var(--brand-from, #7c3aed) 0%, rgba(99, 102, 241, 0.3) 50%, transparent 75%)",
-              }}
+              <radialGradient id="nebulaCoreFlow" cx="50%" cy="65%" r="55%">
+                <stop offset="0%" stopColor="var(--brand-from, #7C3AED)" stopOpacity="0.45" />
+                <stop offset="60%" stopColor="var(--brand-to, #6366F1)" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+              </radialGradient>
+
+              <linearGradient id="specularGlazeFlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="rgba(255, 255, 255, 0.75)" />
+                <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
+              </linearGradient>
+            </defs>
+
+            {/* Pedestal Mat underneath the jar */}
+            <ellipse cx="120" cy="306" rx="90" ry="10" fill="var(--brand-from, #7C3AED)" fillOpacity="0.15" />
+
+            {/* Cork Lid */}
+            <g className="transition-transform duration-300 group-hover:-translate-y-1">
+              <path
+                d="M80 34 H160 V52 C160 55 156 58 150 58 H90 C84 58 80 55 80 52 Z"
+                fill="url(#corkStopperFlow)"
+                stroke="#5C3B1E"
+                strokeWidth="1.5"
+              />
+              <ellipse cx="120" cy="34" rx="44" ry="8" fill="#D4A373" stroke="#7E542F" strokeWidth="1.5" />
+            </g>
+
+            {/* Glass Jar Neck Lip */}
+            <ellipse
+              cx="120"
+              cy="56"
+              rx="48"
+              ry="9"
+              fill="url(#jarGlassFlow)"
+              stroke="rgba(255, 255, 255, 0.55)"
+              strokeWidth="2.5"
             />
 
-            {/* Jar Trigger Button */}
-            <motion.button
-              type="button"
-              onClick={openNextMemory}
-              onMouseEnter={() => setJarHovered(true)}
-              onMouseLeave={() => setJarHovered(false)}
-              onFocus={() => setJarHovered(true)}
-              onBlur={() => setJarHovered(false)}
-              disabled={isOpening}
-              whileHover={reduce ? {} : { scale: 1.03, y: -4 }}
-              whileTap={reduce ? {} : { scale: 0.97, y: 2 }}
-              className="group relative block cursor-pointer rounded-3xl p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-text"
-              aria-label={
-                unopenedMemories.length > 0
-                  ? `Open memory from jar. ${unopenedMemories.length} unopened memories remaining.`
-                  : "All memories opened. Click to open a memory again."
-              }
-            >
-              {/* Glass Jar SVG Rendering */}
-              <div className="relative h-72 w-52 sm:h-84 sm:w-60">
-                <svg
-                  viewBox="0 0 240 320"
-                  className="h-full w-full drop-shadow-2xl"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <defs>
-                    {/* Glass gradient */}
-                    <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(255, 255, 255, 0.35)" />
-                      <stop offset="30%" stopColor="rgba(255, 255, 255, 0.08)" />
-                      <stop offset="70%" stopColor="rgba(124, 58, 237, 0.06)" />
-                      <stop offset="100%" stopColor="rgba(255, 255, 255, 0.2)" />
-                    </linearGradient>
+            {/* Jar Body Shape */}
+            <path
+              d="M72 58 C55 64 35 90 35 130 C35 190 38 270 50 290 C58 302 78 308 120 308 C162 308 182 302 190 290 C202 270 205 190 205 130 C205 90 185 64 168 58 Z"
+              fill="url(#jarGlassFlow)"
+              stroke="rgba(255, 255, 255, 0.45)"
+              strokeWidth="2"
+            />
 
-                    {/* Cork texture gradient */}
-                    <linearGradient id="corkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#A77B51" />
-                      <stop offset="50%" stopColor="#D4A373" />
-                      <stop offset="100%" stopColor="#8C6239" />
-                    </linearGradient>
+            {/* Inner Nebula Glow fill */}
+            <path
+              d="M72 65 C55 70 42 95 42 135 C42 190 44 265 55 282 C62 292 80 298 120 298 C160 298 178 292 185 282 C196 265 198 190 198 135 C198 95 185 70 168 65 Z"
+              fill="url(#nebulaCoreFlow)"
+            />
 
-                    {/* Inner nebula glow */}
-                    <radialGradient id="jarGlow" cx="50%" cy="65%" r="50%">
-                      <stop offset="0%" stopColor="var(--brand-from, #7c3aed)" stopOpacity="0.45" />
-                      <stop offset="60%" stopColor="var(--brand-to, #6366f1)" stopOpacity="0.2" />
-                      <stop offset="100%" stopColor="transparent" stopOpacity="0" />
-                    </radialGradient>
+            {/* 3D Folded Origami Stars rendered directly inside jar coordinates */}
+            {memories.map((mem, idx) => {
+              const color = mem.color || STAR_PALETTE[idx % STAR_PALETTE.length].base;
+              const seed = (idx * 47) % 100;
+              const cx = 75 + ((idx * 33 + seed) % 95);
+              const cy = 120 + ((idx * 28 + (seed % 40)) % 145);
+              const size = 30 + (idx % 3) * 4;
+              const rot = (idx * 42) % 360;
 
-                    {/* Specular highlight */}
-                    <linearGradient id="specular" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(255, 255, 255, 0.6)" />
-                      <stop offset="100%" stopColor="rgba(255, 255, 255, 0)" />
-                    </linearGradient>
-                  </defs>
+              return (
+                <OrigamiStarGroup
+                  key={mem.id}
+                  cx={cx}
+                  cy={cy}
+                  size={size}
+                  color={color}
+                  rotation={rot}
+                />
+              );
+            })}
 
-                  {/* Cork Lid (Animates up when opening) */}
-                  <motion.g
-                    animate={
-                      isOpening
-                        ? { y: -24, rotate: -6 }
-                        : jarHovered
-                          ? { y: -4 }
-                          : { y: 0, rotate: 0 }
-                    }
-                    transition={{ duration: 0.35, ease: "easeOut" }}
-                  >
-                    {/* Cork Stopper Base */}
-                    <path
-                      d="M80 34 H160 V52 C160 55 156 58 150 58 H90 C84 58 80 55 80 52 Z"
-                      fill="url(#corkGrad)"
-                      stroke="#6B4423"
-                      strokeWidth="1.5"
-                    />
-                    {/* Cork Stopper Top Rim */}
-                    <ellipse
-                      cx="120"
-                      cy="34"
-                      rx="44"
-                      ry="8"
-                      fill="#D4A373"
-                      stroke="#8C6239"
-                      strokeWidth="1.5"
-                    />
-                    {/* Cork texture dots */}
-                    <circle cx="102" cy="42" r="1.5" fill="#6B4423" opacity="0.6" />
-                    <circle cx="135" cy="46" r="1.2" fill="#6B4423" opacity="0.5" />
-                    <circle cx="118" cy="38" r="1.4" fill="#6B4423" opacity="0.6" />
-                    <circle cx="145" cy="40" r="1" fill="#6B4423" opacity="0.4" />
-                  </motion.g>
+            {/* Curved Specular Glass Highlights */}
+            <path
+              d="M52 105 C48 130 48 180 52 245 C54 265 57 275 62 280 C60 270 56 250 56 230 C53 180 54 130 58 105 Z"
+              fill="url(#specularGlazeFlow)"
+              opacity="0.85"
+            />
+            <path
+              d="M188 120 C191 145 191 195 187 250 C185 260 183 268 180 272 C183 265 185 250 185 235 C187 195 187 145 184 120 Z"
+              fill="url(#specularGlazeFlow)"
+              opacity="0.45"
+            />
 
-                  {/* Glass Jar Neck & Lip */}
-                  <ellipse
-                    cx="120"
-                    cy="56"
-                    rx="48"
-                    ry="9"
-                    fill="url(#glassGrad)"
-                    stroke="rgba(255, 255, 255, 0.45)"
-                    strokeWidth="2.5"
-                  />
+            {/* Jar Base Ring */}
+            <ellipse
+              cx="120"
+              cy="295"
+              rx="68"
+              ry="9"
+              fill="none"
+              stroke="rgba(255, 255, 255, 0.35)"
+              strokeWidth="1.5"
+            />
 
-                  {/* Jar Body Outer Path */}
-                  <path
-                    d="M72 58 C55 64 35 90 35 130 C35 190 38 270 50 290 C58 302 78 308 120 308 C162 308 182 302 190 290 C202 270 205 190 205 130 C205 90 185 64 168 58 Z"
-                    fill="url(#glassGrad)"
-                    stroke="rgba(255, 255, 255, 0.35)"
-                    strokeWidth="2"
-                  />
+            {/* Ambient Sparkles */}
+            <text x="18" y="48" fill="var(--brand-from, #A78BFA)" fontSize="18" fillOpacity="0.85">✦</text>
+            <text x="215" y="110" fill="var(--brand-from, #A78BFA)" fontSize="14" fillOpacity="0.75">✦</text>
+            <text x="15" y="270" fill="var(--brand-from, #A78BFA)" fontSize="16" fillOpacity="0.65">✦</text>
+          </svg>
 
-                  {/* Inner Nebula Glow fill */}
-                  <path
-                    d="M72 65 C55 70 42 95 42 135 C42 190 44 265 55 282 C62 292 80 298 120 298 C160 298 178 292 185 282 C196 265 198 190 198 135 C198 95 185 70 168 65 Z"
-                    fill="url(#jarGlow)"
-                  />
+        {/* Mason Jar Button */}
+      
+      </section>
 
-                  {/* Specular Highlight (Curved left reflection) */}
-                  <path
-                    d="M52 105 C48 130 48 180 52 245 C54 265 57 275 62 280 C60 270 56 250 56 230 C53 180 54 130 58 105 Z"
-                    fill="url(#specular)"
-                    opacity="0.75"
-                  />
+      {/* Footer */}
+      <footer className="py-2 text-center">
+        <p className="font-mono text-xs text-muted-soft">
+          ✦ Every star holds a tiny story
+        </p>
+      </footer>
 
-                  {/* Right slim reflection */}
-                  <path
-                    d="M188 120 C191 145 191 195 187 250 C185 260 183 268 180 272 C183 265 185 250 185 235 C187 195 187 145 184 120 Z"
-                    fill="url(#specular)"
-                    opacity="0.4"
-                  />
-
-                  {/* Jar Base Ring */}
-                  <ellipse
-                    cx="120"
-                    cy="295"
-                    rx="68"
-                    ry="9"
-                    fill="none"
-                    stroke="rgba(255, 255, 255, 0.25)"
-                    strokeWidth="1.5"
-                  />
-                </svg>
-
-                {/* Floating Stars & Tiny Glowing Fireflies INSIDE the Jar */}
-                <div className="pointer-events-none absolute inset-x-7 bottom-6 top-16 overflow-hidden rounded-[2.5rem]">
-                  {/* Floating unopened memory star capsules */}
-                  {unopenedMemories.map((mem, idx) => {
-                    const color = mem.color || STAR_COLORS[idx % STAR_COLORS.length];
-                    const seed = (idx * 37) % 100;
-                    const left = 20 + ((idx * 26 + seed) % 60);
-                    const top = 30 + ((idx * 22 + (seed % 40)) % 55);
-                    const size = 26 + (idx % 3) * 3;
-
-                    return (
-                      <motion.div
-                        key={mem.id}
-                        animate={
-                          reduce
-                            ? {}
-                            : {
-                                y: [0, -10, 4, 0],
-                                x: [0, 6, -6, 0],
-                                rotate: [0, 15, -15, 0],
-                              }
-                        }
-                        transition={{
-                          duration: 3.5 + (idx % 4) * 0.8,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay: idx * 0.3,
-                        }}
-                        style={{
-                          left: `${left}%`,
-                          top: `${top}%`,
-                          width: `${size}px`,
-                          height: `${size}px`,
-                        }}
-                        className="absolute flex items-center justify-center -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-                      >
-                        {/* Glow halo */}
-                        <span
-                          className="absolute inset-0 rounded-full blur-sm opacity-80 animate-pulse"
-                          style={{ background: color }}
-                        />
-                        {/* Star icon / capsule */}
-                        <span
-                          className="relative flex h-full w-full items-center justify-center rounded-full border border-white/60 bg-white/20 text-xs shadow-sm backdrop-blur-xs"
-                          style={{
-                            borderColor: color,
-                            boxShadow: `0 0 10px ${color}`,
-                          }}
-                        >
-                          {mem.icon || "✨"}
-                        </span>
-                      </motion.div>
-                    );
-                  })}
-
-                  {/* Tiny ambient floating sparkles */}
-                  {Array.from({ length: 12 }).map((_, i) => {
-                    const delay = (i * 0.4) % 3;
-                    const left = 15 + ((i * 17) % 70);
-                    const top = 20 + ((i * 23) % 65);
-                    const size = 3 + (i % 3) * 2;
-                    return (
-                      <motion.div
-                        key={i}
-                        animate={
-                          reduce
-                            ? {}
-                            : {
-                                opacity: [0.2, 0.9, 0.2],
-                                scale: [0.8, 1.4, 0.8],
-                                y: [0, -12, 0],
-                              }
-                        }
-                        transition={{
-                          duration: 2.2 + (i % 3),
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                          delay,
-                        }}
-                        style={{
-                          left: `${left}%`,
-                          top: `${top}%`,
-                          width: `${size}px`,
-                          height: `${size}px`,
-                        }}
-                        className="absolute rounded-full bg-white shadow-[0_0_8px_#ffffff]"
-                      />
-                    );
-                  })}
-                </div>
-
-                {/* Star shooting out of the jar when opening */}
-                <AnimatePresence>
-                  {isOpening && (
-                    <motion.div
-                      initial={{ scale: 0.2, y: 40, opacity: 1, rotate: 0 }}
-                      animate={{ scale: 1.8, y: -120, opacity: 1, rotate: 360 }}
-                      exit={{ scale: 2.2, opacity: 0 }}
-                      transition={{ duration: 0.65, ease: "easeOut" }}
-                      className="pointer-events-none absolute left-1/2 top-10 -translate-x-1/2"
-                    >
-                      <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-lg shadow-[0_0_25px_var(--brand-from)]">
-                        ✨
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Jar base pedestal shadow */}
-              <div className="mx-auto mt-2 h-4 w-40 rounded-full bg-black/20 blur-md dark:bg-black/40" />
-            </motion.button>
-          </div>
-
-          {/* Jar status / count badge */}
-          <div className="mt-4 flex flex-col items-center gap-1.5 text-center">
-            <span className="rounded-full border border-line bg-card/80 px-4 py-1.5 text-xs font-medium text-foreground backdrop-blur-md shadow-xs">
-              {isAllUnlocked ? (
-                <span className="text-accent-text font-semibold">
-                  ✦ All {memories.length} memories discovered! ✨
-                </span>
-              ) : (
-                <span>
-                  ✦ <strong>{unopenedMemories.length}</strong>{" "}
-                  {unopenedMemories.length === 1 ? "memory" : "memories"} nestled inside (
-                  <strong>{unlockedIds.length}</strong> opened)
-                </span>
-              )}
-            </span>
-          </div>
-        </div>
-
-        {/* Constellation / Discovered Memories Shelf */}
-        {openedMemories.length > 0 && (
-          <div className="mt-10 border-t border-line/60 pt-8">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
-                Discovered Memories ({openedMemories.length})
-              </h2>
-              <button
-                type="button"
-                onClick={() => setShowAllTray(!showAllTray)}
-                className="text-xs text-accent-text hover:underline"
-              >
-                {showAllTray ? "Hide shelf" : "Show shelf"}
-              </button>
-            </div>
-
-            {showAllTray && (
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {openedMemories.map((mem) => {
-                  const isCurrent = activeMemory?.id === mem.id;
-                  return (
-                    <button
-                      key={mem.id}
-                      type="button"
-                      onClick={() => {
-                        audio.playChime(0);
-                        setActiveMemory(mem);
-                      }}
-                      className={`group relative flex flex-col items-start rounded-2xl border p-4 text-left transition-all backdrop-blur-md ${
-                        isCurrent
-                          ? "border-accent-text bg-card shadow-lg ring-2 ring-accent-text/30"
-                          : "border-line bg-card/70 hover:border-accent-hover hover:bg-card hover:shadow-md"
-                      }`}
-                    >
-                      <div className="flex w-full items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className="flex h-7 w-7 items-center justify-center rounded-full text-sm shadow-xs"
-                            style={{
-                              backgroundColor: mem.color ? `${mem.color}25` : "var(--chip)",
-                              color: mem.color || "var(--accent-text)",
-                            }}
-                          >
-                            {mem.icon || "✨"}
-                          </span>
-                          <span className="text-xs font-medium text-muted">
-                            {mem.category || "Memory"}
-                          </span>
-                        </div>
-                        {mem.date && (
-                          <span className="text-[11px] text-muted-soft">{mem.date}</span>
-                        )}
-                      </div>
-
-                      <h3 className="mt-2 text-sm font-semibold text-foreground group-hover:text-accent-text">
-                        {mem.title || mem.note.slice(0, 32)}
-                      </h3>
-                      <p className="mt-1 line-clamp-2 text-xs text-muted leading-relaxed">
-                        {mem.note}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Empty jar state message if no memories in data */}
-        {memories.length === 0 && (
-          <div className="mx-auto mt-8 max-w-md rounded-2xl border border-line bg-card p-6 text-center text-sm text-muted">
-            <p>The memory jar is currently quiet.</p>
-            <p className="mt-2">
-              Log into{" "}
-              <Link href="/admin" className="text-accent-text underline">
-                /admin
-              </Link>{" "}
-              to add your personal memories!
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Active Unfolded Memory Card Modal */}
+      {/* Pop-up Paper Sheet Modal matching alittlejarofstars.com */}
       <AnimatePresence>
         {activeMemory && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={closeActiveMemory}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-
-            {/* Memory Card */}
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0, y: 30 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl border border-line bg-card p-6 shadow-2xl sm:p-8"
-              style={{
-                borderColor: activeMemory.color
-                  ? `color-mix(in srgb, ${activeMemory.color} 40%, var(--border))`
-                  : "var(--border)",
-                boxShadow: activeMemory.color
-                  ? `0 20px 50px color-mix(in srgb, ${activeMemory.color} 15%, transparent)`
-                  : undefined,
-              }}
-            >
-              {/* Decorative top accent gradient bar */}
-              <div
-                className="absolute inset-x-0 top-0 h-1.5"
-                style={{
-                  background: activeMemory.color
-                    ? `linear-gradient(90deg, ${activeMemory.color}, var(--brand-to, #6366f1))`
-                    : "linear-gradient(90deg, var(--brand-from, #7c3aed), var(--brand-to, #6366f1))",
-                }}
-              />
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={closeActiveMemory}
-                className="absolute right-4 top-4 rounded-full p-2 text-muted transition hover:bg-chip hover:text-foreground"
-                aria-label="Close memory"
-              >
-                ✕
-              </button>
-
-              {/* Memory Card Header */}
-              <div className="flex items-center gap-3">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto backdrop-blur-md bg-black/75"
+            onClick={() => setActiveMemory(null)}
+          >
+            {/* Drifting background origami stars layer */}
+            <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
+              {backdropStars.map((s) => (
                 <span
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-2xl shadow-inner"
+                  key={s.id}
+                  className={`fixed ${s.drift}`}
                   style={{
-                    backgroundColor: activeMemory.color ? `${activeMemory.color}22` : "var(--chip)",
+                    top: `${s.top}%`,
+                    left: `${s.left}%`,
+                    opacity: s.depth,
+                    animationDelay: `${s.delay}s`,
+                    animationDuration: `${s.dur}s`,
                   }}
                 >
-                  {activeMemory.icon || "✨"}
+                  <OrigamiStar size={s.size} color={s.color} />
                 </span>
-                <div>
-                  <div className="flex items-center gap-2">
-                    {activeMemory.category && (
-                      <span className="rounded-full bg-chip px-2.5 py-0.5 text-xs font-semibold text-accent-text">
-                        {activeMemory.category}
-                      </span>
-                    )}
-                    {activeMemory.date && (
-                      <span className="text-xs text-muted">{activeMemory.date}</span>
-                    )}
-                  </div>
-                  {activeMemory.title && (
-                    <h2 className="mt-1 text-xl font-bold tracking-tight text-foreground sm:text-2xl">
-                      {activeMemory.title}
-                    </h2>
-                  )}
-                </div>
-              </div>
+              ))}
+            </div>
 
-              {/* Memory Note Body */}
-              <div className="my-5 rounded-2xl bg-inset/60 p-4 text-base leading-relaxed text-foreground sm:p-5 sm:text-lg">
-                <p className="whitespace-pre-wrap font-serif italic text-foreground/90">
+            {/* The Unfolded Textured Paper Sheet Note (star-paper-sheet) */}
+            <div
+              className="w-full max-w-md sm:max-w-lg animate-paper-unfold my-auto"
+              style={{ transform: "rotate(-1.2deg)" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Paper Container with multi-layered drop shadow & organic border radius */}
+              <div
+                className="rounded-[22px_26px_20px_24px/24px_20px_26px_22px] border border-line bg-card p-6 sm:p-9 shadow-2xl transition-all"
+                style={{
+                  boxShadow: "0 20px 45px rgba(0, 0, 0, 0.4), 2px 4px 14px rgba(60, 40, 20, 0.15)",
+                  backgroundImage:
+                    "repeating-linear-gradient(to bottom, transparent, transparent 27px, color-mix(in srgb, var(--brand-from, #7C3AED) 8%, transparent) 27px, color-mix(in srgb, var(--brand-from, #7C3AED) 8%, transparent) 28px)",
+                }}
+              >
+                 <button
+                    type="button"
+                    onClick={() => setActiveMemory(null)}
+                    className="rounded-full p-2 text-muted hover:text-foreground hover:bg-chip/80 transition-colors cursor-pointer"
+                    aria-label="Tuck it back into the jar"
+                  >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 6 6 18" />
+                      <path d="m6 6 12 12" />
+                    </svg>
+                  </button>
+              
+
+                {/* Top Row: Star badge + Round close button */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-8" />
+                  <OrigamiStar
+                    size={46}
+                    color={activeMemory.color || STAR_PALETTE[0].base}
+                  />
+                 
+                </div>
+
+                {/* Optional Polaroid Photo Snapshot Attachment */}
+                {activeMemory.photoUrl && (
+                  <div
+                    className="my-4 overflow-hidden rounded-xl border-6 border-white bg-white p-1 shadow-lg dark:border-zinc-800 dark:bg-zinc-800"
+                    style={{ transform: "rotate(1.2deg)", boxShadow: "2px 4px 10px rgba(0,0,0,0.18)" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={activeMemory.photoUrl}
+                      alt={activeMemory.title || "Memory photo"}
+                      className="max-h-50 w-full rounded-lg object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Intimate Story Quote in serif italic typography */}
+                <p className="my-5 text-center font-serif italic text-lg leading-relaxed text-foreground whitespace-pre-wrap break-words px-2">
                   “{activeMemory.note}”
                 </p>
-              </div>
 
-              {/* Optional Photo Attachment */}
-              {activeMemory.photoUrl && (
-                <div className="mb-5 overflow-hidden rounded-2xl border border-line bg-chip p-2">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={activeMemory.photoUrl}
-                    alt={activeMemory.title || "Memory snapshot"}
-                    className="max-h-60 w-full rounded-xl object-cover"
-                  />
-                </div>
-              )}
-
-              {/* Footer Actions */}
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-line/60 pt-4">
-                <button
-                  type="button"
-                  onClick={() => putBackMemory(activeMemory.id)}
-                  className="rounded-full px-3 py-1.5 text-xs text-muted transition hover:bg-chip hover:text-foreground"
-                >
-                  Put back in jar
-                </button>
-
-                <div className="flex items-center gap-2">
-                  {unopenedMemories.length > 0 ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        closeActiveMemory();
-                        setTimeout(() => openNextMemory(), 200);
-                      }}
-                      className="btn-primary inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-white shadow-md"
-                    >
-                      <span>Open next memory ✨</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={closeActiveMemory}
-                      className="rounded-full border border-line px-4 py-2 text-sm font-medium text-foreground transition hover:bg-chip"
-                    >
-                      Done reading
-                    </button>
+                {/* Date & Category Tag */}
+                <div className="flex items-center justify-center gap-2 font-mono text-xs text-muted mt-4">
+                  {activeMemory.category && (
+                    <span className="rounded-full bg-chip px-3 py-1 font-medium text-accent-text">
+                      {activeMemory.category}
+                    </span>
+                  )}
+                  {activeMemory.date && (
+                    <span className="text-muted-soft">{activeMemory.date}</span>
                   )}
                 </div>
+
+                {/* Footer Action Buttons with alittlejarofstars pill button styling */}
+                <div className="mt-8 flex  items-center justify-center gap-3.5 border-t border-line/60 pt-6">
+                  <button
+                    type="button"
+                    onClick={() => setActiveMemory(null)}
+                    className=""
+                  >
+                    tuck it back
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={onUnfoldAnother}
+                    className=""
+                  >
+                    unfold another ✨
+                  </button>
+                </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>

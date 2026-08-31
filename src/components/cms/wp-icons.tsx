@@ -105,3 +105,11 @@ export function IconJar({ className }: IconProps) {
   );
 }
 
+export function IconCode({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="m6.5 13.5-4-3.5 4-3.5 1 1-2.8 2.5 2.8 2.5-1 1zm7 0-1-1 2.8-2.5-2.8-2.5 1-1 4 3.5-4 3.5zm-4.7 1.5-1.6-.5 3.5-10 1.6.5-3.5 10z" />
+    </Svg>
+  );
+}
+

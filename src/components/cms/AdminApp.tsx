@@ -23,6 +23,7 @@ import { mediaHint, parsePlayableMedia, youtubeVideoId } from "@/lib/media-url";
 import { Field, HexColorInput, StringList, TextArea, TextInput } from "./fields";
 import {
   IconAppearance,
+  IconCode,
   IconDash,
   IconHero,
   IconHome,
@@ -45,6 +46,7 @@ type Screen =
   | "projects"
   | "projects-edit"
   | "skills"
+  | "technologies"
   | "memories"
   | "memories-edit";
 
@@ -1233,6 +1235,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "experience" as const, label: "Experience", icon: <IconPin />, match: screen.startsWith("experience") },
     { id: "projects" as const, label: "Projects", icon: <IconPages />, match: screen.startsWith("projects") },
     { id: "skills" as const, label: "Skills", icon: <IconStar />, match: screen === "skills" },
+    { id: "technologies" as const, label: "Technologies", icon: <IconCode />, match: screen === "technologies" },
     { id: "memories" as const, label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
     { id: "hero" as const, label: "Hero", icon: <IconHero />, match: screen === "hero" },
     { id: "appearance" as const, label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
@@ -1290,6 +1293,11 @@ export function AdminApp({ initial }: { initial: ContentData }) {
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },
           { label: "Skills", current: true },
+        ];
+      case "technologies":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Technologies", current: true },
         ];
       case "memories":
         return [
@@ -1410,7 +1418,12 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </li>
                     <li>
                       <button type="button" onClick={() => go("skills")}>
-                        {data.skills.reduce((n, g) => n + g.items.length, 0)} Skills
+                        {(data.skills ?? []).reduce((n, g) => n + g.items.length, 0)} Skills
+                      </button>
+                    </li>
+                    <li>
+                      <button type="button" onClick={() => go("technologies")}>
+                        {(data.technologies ?? []).reduce((n, g) => n + g.items.length, 0)} Technologies
                       </button>
                     </li>
                     <li>
@@ -2443,16 +2456,21 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                 <button
                   type="button"
                   className="wp-btn wp-btn-primary"
-                  onClick={() => setData({ ...data, skills: [...data.skills, { title: "New group", items: [] }] })}
+                  onClick={() =>
+                    setData({
+                      ...data,
+                      skills: [...(data.skills ?? []), { title: "New skill group", items: [] }],
+                    })
+                  }
                 >
                   Add New
                 </button>
               </h1>
               <SectionTools
-                onExpandAll={() => expandAll(data.skills.map((_, gi) => `skill_group_${gi}`))}
-                onCollapseAll={() => collapseAll(data.skills.map((_, gi) => `skill_group_${gi}`))}
+                onExpandAll={() => expandAll((data.skills ?? []).map((_, gi) => `skill_group_${gi}`))}
+                onCollapseAll={() => collapseAll((data.skills ?? []).map((_, gi) => `skill_group_${gi}`))}
               />
-              {data.skills.map((group, gi) => (
+              {(data.skills ?? []).map((group, gi) => (
                 <Metabox
                   key={`${group.title}-${gi}`}
                   id={`skill_group_${gi}`}
@@ -2475,7 +2493,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         type="button"
                         className="wp-btn"
                         onClick={() => setData({ ...data, skills: move(data.skills, gi, 1) })}
-                        disabled={gi === data.skills.length - 1}
+                        disabled={gi === (data.skills?.length ?? 0) - 1}
                         title="Move group down"
                         style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
                       >
@@ -2490,7 +2508,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         <TextInput
                           value={group.title}
                           onChange={(title) => {
-                            const skills = [...data.skills];
+                            const skills = [...(data.skills ?? [])];
                             skills[gi] = { ...group, title };
                             setData({ ...data, skills });
                           }}
@@ -2512,7 +2530,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       <TextInput
                         value={item.name}
                         onChange={(name) => {
-                          const skills = [...data.skills];
+                          const skills = [...(data.skills ?? [])];
                           const items = [...group.items];
                           items[ii] = { ...item, name };
                           skills[gi] = { ...group, items };
@@ -2523,7 +2541,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         className="wp-select"
                         value={item.icon}
                         onChange={(e) => {
-                          const skills = [...data.skills];
+                          const skills = [...(data.skills ?? [])];
                           const items = [...group.items];
                           items[ii] = { ...item, icon: e.target.value as SkillIcon };
                           skills[gi] = { ...group, items };
@@ -2538,9 +2556,9 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       </select>
                       <HexColorInput
                         value={item.color ?? ""}
-                        placeholder="#61DAFB"
+                        placeholder="#A78BFA"
                         onChange={(color) => {
-                          const skills = [...data.skills];
+                          const skills = [...(data.skills ?? [])];
                           const items = [...group.items];
                           items[ii] = { ...item, color: color || undefined };
                           skills[gi] = { ...group, items };
@@ -2554,7 +2572,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                           disabled={ii === 0}
                           title="Move skill up"
                           onClick={() => {
-                            const skills = [...data.skills];
+                            const skills = [...(data.skills ?? [])];
                             skills[gi] = { ...group, items: move(group.items, ii, -1) };
                             setData({ ...data, skills });
                           }}
@@ -2568,7 +2586,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                           disabled={ii === group.items.length - 1}
                           title="Move skill down"
                           onClick={() => {
-                            const skills = [...data.skills];
+                            const skills = [...(data.skills ?? [])];
                             skills[gi] = { ...group, items: move(group.items, ii, 1) };
                             setData({ ...data, skills });
                           }}
@@ -2580,7 +2598,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                           type="button"
                           className="wp-btn"
                           onClick={() => {
-                            const skills = [...data.skills];
+                            const skills = [...(data.skills ?? [])];
                             skills[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
                             setData({ ...data, skills });
                           }}
@@ -2595,7 +2613,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       type="button"
                       className="wp-add"
                       onClick={() => {
-                        const skills = [...data.skills];
+                        const skills = [...(data.skills ?? [])];
                         skills[gi] = { ...group, items: [...group.items, { name: "New skill", icon: "empty" }] };
                         setData({ ...data, skills });
                       }}
@@ -2606,7 +2624,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     <button
                       type="button"
                       className="wp-add"
-                      onClick={() => setData({ ...data, skills: move(data.skills, gi, -1) })}
+                      onClick={() => setData({ ...data, skills: move(data.skills ?? [], gi, -1) })}
                     >
                       Move up
                     </button>
@@ -2614,7 +2632,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     <button
                       type="button"
                       className="wp-add"
-                      onClick={() => setData({ ...data, skills: move(data.skills, gi, 1) })}
+                      onClick={() => setData({ ...data, skills: move(data.skills ?? [], gi, 1) })}
                     >
                       Move down
                     </button>
@@ -2622,7 +2640,9 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     <button
                       type="button"
                       className="wp-btn-link"
-                      onClick={() => setData({ ...data, skills: data.skills.filter((_, j) => j !== gi) })}
+                      onClick={() =>
+                        setData({ ...data, skills: (data.skills ?? []).filter((_, j) => j !== gi) })
+                      }
                     >
                       Trash group
                     </button>
@@ -2630,7 +2650,240 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                 </Metabox>
               ))}
               <p>
-                <button type="button" className="wp-btn wp-btn-primary wp-btn-large" onClick={() => void save()} disabled={!dirty}>
+                <button
+                  type="button"
+                  className="wp-btn wp-btn-primary wp-btn-large"
+                  onClick={() => void save()}
+                  disabled={!dirty}
+                >
+                  Save Changes
+                </button>
+              </p>
+            </>
+          ) : null}
+
+          {screen === "technologies" ? (
+            <>
+              <h1 className="wp-screen-title">
+                Technologies
+                <button
+                  type="button"
+                  className="wp-btn wp-btn-primary"
+                  onClick={() =>
+                    setData({
+                      ...data,
+                      technologies: [...(data.technologies ?? []), { title: "New tech group", items: [] }],
+                    })
+                  }
+                >
+                  Add New
+                </button>
+              </h1>
+              <SectionTools
+                onExpandAll={() => expandAll((data.technologies ?? []).map((_, gi) => `tech_group_${gi}`))}
+                onCollapseAll={() => collapseAll((data.technologies ?? []).map((_, gi) => `tech_group_${gi}`))}
+              />
+              {(data.technologies ?? []).map((group, gi) => (
+                <Metabox
+                  key={`${group.title}-${gi}`}
+                  id={`tech_group_${gi}`}
+                  title={group.title || "Technology group"}
+                  badge={`${group.items.length} ${group.items.length === 1 ? "technology" : "technologies"}`}
+                  isOpen={sectionState[`tech_group_${gi}`]}
+                  actions={
+                    <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                      <button
+                        type="button"
+                        className="wp-btn"
+                        onClick={() =>
+                          setData({ ...data, technologies: move(data.technologies ?? [], gi, -1) })
+                        }
+                        disabled={gi === 0}
+                        title="Move group up"
+                        style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
+                      >
+                        ↑
+                      </button>
+                      <button
+                        type="button"
+                        className="wp-btn"
+                        onClick={() =>
+                          setData({ ...data, technologies: move(data.technologies ?? [], gi, 1) })
+                        }
+                        disabled={gi === (data.technologies?.length ?? 0) - 1}
+                        title="Move group down"
+                        style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  }
+                >
+                  <table className="wp-form-table">
+                    <tbody>
+                      <Field label="Group title">
+                        <TextInput
+                          value={group.title}
+                          onChange={(title) => {
+                            const technologies = [...(data.technologies ?? [])];
+                            technologies[gi] = { ...group, title };
+                            setData({ ...data, technologies });
+                          }}
+                        />
+                      </Field>
+                    </tbody>
+                  </table>
+                  {group.items.map((item, ii) => (
+                    <div
+                      key={`${item.name}-${ii}`}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "minmax(120px,1.1fr) minmax(110px,0.8fr) minmax(140px,1fr) auto",
+                        gap: 8,
+                        marginBottom: 8,
+                        alignItems: "center",
+                      }}
+                    >
+                      <TextInput
+                        value={item.name}
+                        placeholder="Technology name"
+                        onChange={(name) => {
+                          const technologies = [...(data.technologies ?? [])];
+                          const items = [...group.items];
+                          items[ii] = { ...item, name };
+                          technologies[gi] = { ...group, items };
+                          setData({ ...data, technologies });
+                        }}
+                      />
+                      <select
+                        className="wp-select"
+                        value={item.icon}
+                        onChange={(e) => {
+                          const technologies = [...(data.technologies ?? [])];
+                          const items = [...group.items];
+                          items[ii] = { ...item, icon: e.target.value as SkillIcon };
+                          technologies[gi] = { ...group, items };
+                          setData({ ...data, technologies });
+                        }}
+                      >
+                        {SKILL_ICONS.map((icon) => (
+                          <option key={icon} value={icon}>
+                            {icon}
+                          </option>
+                        ))}
+                      </select>
+                      <HexColorInput
+                        value={item.color ?? ""}
+                        placeholder="#61DAFB"
+                        onChange={(color) => {
+                          const technologies = [...(data.technologies ?? [])];
+                          const items = [...group.items];
+                          items[ii] = { ...item, color: color || undefined };
+                          technologies[gi] = { ...group, items };
+                          setData({ ...data, technologies });
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+                        <button
+                          type="button"
+                          className="wp-btn"
+                          disabled={ii === 0}
+                          title="Move technology up"
+                          onClick={() => {
+                            const technologies = [...(data.technologies ?? [])];
+                            technologies[gi] = { ...group, items: move(group.items, ii, -1) };
+                            setData({ ...data, technologies });
+                          }}
+                          style={{ padding: "0 8px" }}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className="wp-btn"
+                          disabled={ii === group.items.length - 1}
+                          title="Move technology down"
+                          onClick={() => {
+                            const technologies = [...(data.technologies ?? [])];
+                            technologies[gi] = { ...group, items: move(group.items, ii, 1) };
+                            setData({ ...data, technologies });
+                          }}
+                          style={{ padding: "0 8px" }}
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          className="wp-btn"
+                          onClick={() => {
+                            const technologies = [...(data.technologies ?? [])];
+                            technologies[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
+                            setData({ ...data, technologies });
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <p>
+                    <button
+                      type="button"
+                      className="wp-add"
+                      onClick={() => {
+                        const technologies = [...(data.technologies ?? [])];
+                        technologies[gi] = {
+                          ...group,
+                          items: [...group.items, { name: "New technology", icon: "empty" }],
+                        };
+                        setData({ ...data, technologies });
+                      }}
+                    >
+                      + Add technology
+                    </button>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="wp-add"
+                      onClick={() =>
+                        setData({ ...data, technologies: move(data.technologies ?? [], gi, -1) })
+                      }
+                    >
+                      Move up
+                    </button>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="wp-add"
+                      onClick={() =>
+                        setData({ ...data, technologies: move(data.technologies ?? [], gi, 1) })
+                      }
+                    >
+                      Move down
+                    </button>
+                    {" · "}
+                    <button
+                      type="button"
+                      className="wp-btn-link"
+                      onClick={() =>
+                        setData({
+                          ...data,
+                          technologies: (data.technologies ?? []).filter((_, j) => j !== gi),
+                        })
+                      }
+                    >
+                      Trash group
+                    </button>
+                  </p>
+                </Metabox>
+              ))}
+              <p>
+                <button
+                  type="button"
+                  className="wp-btn wp-btn-primary wp-btn-large"
+                  onClick={() => void save()}
+                  disabled={!dirty}
+                >
                   Save Changes
                 </button>
               </p>

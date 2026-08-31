@@ -218,6 +218,7 @@ export type ContentData = {
   experience: ExperienceItem[];
   projects: ProjectItem[];
   skills: SkillGroup[];
+  technologies?: SkillGroup[];
   theme: ThemeContent;
   memories?: MemoryItem[];
 };

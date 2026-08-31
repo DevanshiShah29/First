@@ -118,7 +118,7 @@ function scrollToHash(hash: string, instant = false) {
 }
 
 export function Site({ content }: { content: ContentData }) {
-  const { site, experience, projects, skills: skillGroups } = content;
+  const { site, experience, projects, skills: skillGroups = [], technologies: techGroups = [] } = content;
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "sent">("idle");
@@ -386,8 +386,8 @@ export function Site({ content }: { content: ContentData }) {
               <div className="accent-underline mt-3 h-1 w-48 rounded" />
             </Fade>
             <div className="mt-10 grid gap-8 lg:grid-cols-2">
-              {skillGroups.map((group, gi) => (
-                <Fade key={group.title} y={18} delay={0.08 * gi}>
+              {[...techGroups, ...skillGroups].map((group, gi) => (
+                <Fade key={`${group.title}-${gi}`} y={18} delay={0.08 * gi}>
                   <div className="card-surface rounded-2xl p-6">
                     <h3 className="text-xl font-semibold text-foreground">{group.title}</h3>
                     <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">

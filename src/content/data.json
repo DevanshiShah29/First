@@ -187,7 +187,44 @@
   ],
   "skills": [
     {
-      "title": "Technical",
+      "title": "Skills",
+      "items": [
+        {
+          "name": "Discovery",
+          "icon": "discovery",
+          "color": "#BF70FF"
+        },
+        {
+          "name": "Prioritization",
+          "icon": "prioritize",
+          "color": "#FF9999"
+        },
+        {
+          "name": "Writing specs",
+          "icon": "specs",
+          "color": "#8ED7DC"
+        },
+        {
+          "name": "Opportunity mapping",
+          "icon": "map",
+          "color": "#FDFF80"
+        },
+        {
+          "name": "Outcomes over output",
+          "icon": "target",
+          "color": "#DA8FDB"
+        },
+        {
+          "name": "Empty states",
+          "icon": "empty",
+          "color": "#88E29A"
+        }
+      ]
+    }
+  ],
+  "technologies": [
+    {
+      "title": "Technologies",
       "items": [
         {
           "name": "Next.js",
@@ -238,35 +275,6 @@
           "name": "Figma",
           "icon": "figma",
           "color": "#F24E9A"
-        }
-      ]
-    },
-    {
-      "title": "Product",
-      "items": [
-        {
-          "name": "Discovery",
-          "icon": "discovery"
-        },
-        {
-          "name": "Prioritization",
-          "icon": "prioritize"
-        },
-        {
-          "name": "Writing specs",
-          "icon": "specs"
-        },
-        {
-          "name": "Opportunity mapping",
-          "icon": "map"
-        },
-        {
-          "name": "Outcomes over output",
-          "icon": "target"
-        },
-        {
-          "name": "Empty states",
-          "icon": "empty"
         }
       ]
     }

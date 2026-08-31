@@ -135,7 +135,7 @@ function parseProjects(value: unknown): ProjectItem[] {
   });
 }
 
-function parseSkills(value: unknown): SkillGroup[] {
+function parseSkillGroups(value: unknown, defaultTitle = "Skills"): SkillGroup[] {
   if (!Array.isArray(value)) return [];
   return value.map((group) => {
     const g = asRecord(group);
@@ -145,12 +145,12 @@ function parseSkills(value: unknown): SkillGroup[] {
       const iconRaw = str(row.icon, "empty");
       const color = str(row.color);
       return {
-        name: str(row.name, "Skill"),
+        name: str(row.name, "Item"),
         icon: isSkillIcon(iconRaw) ? iconRaw : "empty",
         ...(color ? { color } : {}),
       };
     });
-    return { title: str(g.title, "Skills"), items };
+    return { title: str(g.title, defaultTitle), items };
   });
 }
 
@@ -207,7 +207,8 @@ export function parseContent(value: unknown): ContentData {
     site: parseSite(root.site),
     experience: parseExperience(root.experience),
     projects: parseProjects(root.projects),
-    skills: parseSkills(root.skills),
+    skills: parseSkillGroups(root.skills, "Skills"),
+    technologies: parseSkillGroups(root.technologies, "Technologies"),
     theme: parseTheme(root.theme),
     memories: parseMemories(root.memories),
   };

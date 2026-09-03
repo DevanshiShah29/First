@@ -43,7 +43,7 @@ export default function MemoryJarLoading() {
             There are a few memories hiding in here...
           </p>
           <p className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-soft">
-            Click the jar to open one ✨
+            Open the jar to read a memory
           </p>
         </div>
       </div>

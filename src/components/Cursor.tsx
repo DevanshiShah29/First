@@ -20,6 +20,10 @@ export function Cursor() {
   const trailY = useSpring(y, { stiffness: 180, damping: 22, mass: 0.4 });
 
   useEffect(() => {
+    if (reduce) {
+      document.documentElement.classList.remove("has-custom-cursor", "cursor-text-field");
+      return;
+    }
     const mq = window.matchMedia("(pointer: fine) and (hover: hover)");
     const enable = () => document.documentElement.classList.add("has-custom-cursor");
     const disable = () => {
@@ -55,10 +59,12 @@ export function Cursor() {
       window.removeEventListener("mousedown", downH);
       window.removeEventListener("mouseup", upH);
     };
-  }, [x, y]);
+  }, [reduce, x, y]);
 
-  const gx = reduce ? x : trailX;
-  const gy = reduce ? y : trailY;
+  if (reduce) return null;
+
+  const gx = trailX;
+  const gy = trailY;
 
   return (
     <>

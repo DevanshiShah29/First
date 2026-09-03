@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { AnimatePresence } from "motion/react";
+import { useReducedMotion } from "motion/react";
 import type { ContentData, MemoryItem } from "@/content/types";
 
 // Fallback memories in case content has not been seeded yet
@@ -209,6 +209,8 @@ function OrigamiStar({
       width={size}
       height={size}
       className={`drop-shadow-sm transition-transform ${className}`}
+      aria-hidden="true"
+      focusable="false"
     >
       <OrigamiStarGroup cx={50} cy={50} size={100} color={color} />
     </svg>
@@ -223,6 +225,9 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
     return DEFAULT_MEMORIES;
   }, [content.memories]);
 
+  const reduce = useReducedMotion();
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
   const [activeMemory, setActiveMemory] = useState<MemoryItem | null>(null);
   const [isStirring, setIsStirring] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -250,21 +255,24 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
     setSoundOn(!soundOn);
   }
 
-  // Handle tap on the jar to draw a memory
+  function openMemory(item: MemoryItem, noteIndex = 0) {
+    audio.playChime(noteIndex);
+    setActiveMemory(item);
+  }
+
   function onJarTap() {
-    if (isStirring) return;
-
-    setIsStirring(true);
-    audio.playPop();
-
-    // Pick random memory
+    if (isStirring || memories.length === 0) return;
     const chosenIndex = Math.floor(Math.random() * memories.length);
     const chosen = memories[chosenIndex];
-
-    setTimeout(() => {
+    if (reduce) {
+      openMemory(chosen, chosenIndex);
+      return;
+    }
+    setIsStirring(true);
+    audio.playPop();
+    window.setTimeout(() => {
       setIsStirring(false);
-      audio.playChime(chosenIndex);
-      setActiveMemory(chosen);
+      openMemory(chosen, chosenIndex);
     }, 280);
   }
 
@@ -278,23 +286,41 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
       : memories[0];
 
     audio.playPop();
+    if (reduce) {
+      setActiveMemory(nextMem);
+      return;
+    }
     setActiveMemory(null);
-
-    setTimeout(() => {
-      audio.playChime(Math.floor(Math.random() * 6));
+    window.setTimeout(() => {
       setActiveMemory(nextMem);
     }, 160);
   }
 
-  // Keyboard shortcut: Esc to close
   useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        setActiveMemory(null);
-      }
+    const el = dialogRef.current;
+    if (!el) return;
+    if (activeMemory) {
+      if (!el.open) el.showModal();
+    } else if (el.open) {
+      el.close();
     }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeMemory]);
+
+  useEffect(() => {
+    const el = dialogRef.current;
+    if (!el) return;
+    function onClose() {
+      setActiveMemory(null);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setActiveMemory(null);
+    }
+    el.addEventListener("close", onClose);
+    el.addEventListener("keydown", onKey);
+    return () => {
+      el.removeEventListener("close", onClose);
+      el.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   const totalStars = memories.length;
@@ -307,27 +333,28 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
 
   return (
     <div className="w-full min-h-[calc(100vh-12rem)] flex flex-col justify-between items-center mx-auto px-4 py-6 sm:py-10">
-      {/* Top Header Navigation Strip */}
-      <header className="section-shell flex w-full max-w-4xl items-center justify-between mx-auto">
+      <div className="section-shell mx-auto flex w-full max-w-4xl items-center justify-between">
         <Link
           href="/"
-          className="group inline-flex items-center gap-2 rounded-full border border-line bg-card/60 px-4 py-2 text-xs sm:text-sm text-muted backdrop-blur-md transition hover:border-accent-hover hover:text-foreground"
+          className="group inline-flex items-center gap-2 rounded-full border border-line bg-card/60 px-4 py-2 text-xs text-muted backdrop-blur-md transition hover:border-accent-hover hover:text-foreground sm:text-sm"
         >
-          <span className="transition-transform group-hover:-translate-x-1">←</span>
+          <span aria-hidden="true" className="transition-transform group-hover:-translate-x-1">
+            ←
+          </span>
           <span>Studio</span>
         </Link>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleSound}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/60 px-3.5 py-1.5 text-xs text-muted backdrop-blur-md transition hover:text-foreground cursor-pointer"
-            aria-label={soundOn ? "Mute sound" : "Unmute sound"}
-          >
-            <span>{soundOn ? "🔔 Sound on" : "🔕 Muted"}</span>
-          </button>
-        </div>
-      </header>
+        <button
+          type="button"
+          onClick={toggleSound}
+          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-card/60 px-3.5 py-1.5 text-xs text-muted backdrop-blur-md transition hover:text-foreground"
+          aria-pressed={soundOn}
+          aria-label={soundOn ? "Mute sound" : "Unmute sound"}
+        >
+          <span aria-hidden="true">{soundOn ? "🔔" : "🔕"}</span>
+          <span>{soundOn ? "Sound on" : "Muted"}</span>
+        </button>
+      </div>
 
       {/* Center Stage: Title + Mason Jar + Status */}
       <section className="w-full max-w-xl flex flex-col items-center justify-center text-center mx-auto my-auto py-8">
@@ -336,21 +363,31 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
           <h1 className="text-3xl sm:text-5xl font-serif tracking-tight text-foreground text-center">
             {totalStars === 0 ? "your jar" : "tap the jar"}
           </h1>
-          <p className="mt-2 font-mono text-xs sm:text-sm text-muted text-center">
+          <p className="mt-2 text-center font-mono text-xs text-muted sm:text-sm" aria-live="polite">
             {isStirring ? (
-              <span className="italic text-accent-text">shhh… a star is drifting up ✨</span>
+              <span className="italic text-accent-text">A star is coming out of the jar.</span>
             ) : (
               jarStatusText
             )}
           </p>
         </div>
 
+        <button
+          type="button"
+          onClick={onJarTap}
+          className="jar-tap"
+          aria-haspopup="dialog"
+          aria-expanded={Boolean(activeMemory)}
+          aria-controls="memory-dialog"
+          disabled={totalStars === 0 || isStirring}
+          aria-label={totalStars === 0 ? "Memory jar is empty" : "Open a memory from the jar"}
+        >
          <svg
-           onClick={onJarTap}
-          className={` h-80 w-60 sm:h-96 sm:w-72  ${
-            isStirring ? "animate-jar-stir" : "animate-float-gentle"
+          className={`h-80 w-60 sm:h-96 sm:w-72 ${
+            isStirring && !reduce ? "animate-jar-stir" : reduce ? "" : "animate-float-gentle"
           }`}
-          aria-label="Tap the memory jar to open a star"
+          aria-hidden="true"
+          focusable="false"
             viewBox="0 0 240 320"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -469,31 +506,60 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
             <text x="215" y="110" fill="var(--brand-from, #A78BFA)" fontSize="14" fillOpacity="0.75">✦</text>
             <text x="15" y="270" fill="var(--brand-from, #A78BFA)" fontSize="16" fillOpacity="0.65">✦</text>
           </svg>
+        </button>
 
-        {/* Mason Jar Button */}
-      
+        {memories.length > 0 ? (
+          <details className="mt-8 w-full max-w-lg text-left">
+            <summary className="cursor-pointer rounded-md py-2 text-sm text-muted">
+              Browse all memories
+            </summary>
+            <ol className="mt-4 space-y-6">
+              {memories.map((mem) => (
+                <li key={mem.id}>
+                  <article>
+                    <h2 className="text-lg font-semibold text-foreground">{mem.title || "Memory"}</h2>
+                    {mem.date || mem.category ? (
+                      <p className="mt-1 font-mono text-xs text-muted">
+                        {[mem.category, mem.date].filter(Boolean).join(" · ")}
+                      </p>
+                    ) : null}
+                    <p className="mt-2 text-sm leading-6 text-muted">{mem.note}</p>
+                    {mem.photoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mem.photoUrl}
+                        alt=""
+                        className="mt-3 max-h-48 w-full rounded-lg object-cover"
+                      />
+                    ) : null}
+                  </article>
+                </li>
+              ))}
+            </ol>
+          </details>
+        ) : null}
       </section>
 
-      {/* Footer */}
-      <footer className="py-2 text-center">
-        <p className="font-mono text-xs text-muted-soft">
-          ✦ Every star holds a tiny story
-        </p>
-      </footer>
+      <p className="py-2 text-center font-mono text-xs text-muted-soft">
+        <span aria-hidden="true">✦ </span>Every star holds a tiny story
+      </p>
 
-      {/* Pop-up Paper Sheet Modal matching alittlejarofstars.com */}
-      <AnimatePresence>
-        {activeMemory && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto backdrop-blur-md bg-black/75"
-            onClick={() => setActiveMemory(null)}
-          >
-            {/* Drifting background origami stars layer */}
+      <dialog
+        id="memory-dialog"
+        ref={dialogRef}
+        className="memory-dialog"
+        aria-labelledby={titleId}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setActiveMemory(null);
+        }}
+      >
+        {activeMemory ? (
+          <>
             <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
               {backdropStars.map((s) => (
                 <span
                   key={s.id}
-                  className={`fixed ${s.drift}`}
+                  className={`fixed ${reduce ? "" : s.drift}`}
                   style={{
                     top: `${s.top}%`,
                     left: `${s.left}%`,
@@ -507,99 +573,86 @@ export function MemoryJarExperience({ content }: { content: ContentData }) {
               ))}
             </div>
 
-            {/* The Unfolded Textured Paper Sheet Note (star-paper-sheet) */}
             <div
-              className="w-full max-w-md sm:max-w-lg animate-paper-unfold my-auto"
-              style={{ transform: "rotate(-1.2deg)" }}
-              onClick={(e) => e.stopPropagation()}
+              className={`relative z-10 my-auto w-full max-w-md sm:max-w-lg ${reduce ? "" : "animate-paper-unfold"}`}
             >
-              {/* Paper Container with multi-layered drop shadow & organic border radius */}
               <div
-                className="rounded-[22px_26px_20px_24px/24px_20px_26px_22px] border border-line bg-card p-6 sm:p-9 shadow-2xl transition-all"
+                className="rounded-[22px_26px_20px_24px/24px_20px_26px_22px] border border-line bg-card p-6 shadow-2xl sm:p-9"
                 style={{
                   boxShadow: "0 20px 45px rgba(0, 0, 0, 0.4), 2px 4px 14px rgba(60, 40, 20, 0.15)",
                   backgroundImage:
                     "repeating-linear-gradient(to bottom, transparent, transparent 27px, color-mix(in srgb, var(--brand-from, #7C3AED) 8%, transparent) 27px, color-mix(in srgb, var(--brand-from, #7C3AED) 8%, transparent) 28px)",
                 }}
               >
-                 <button
+                <div className="mb-4 flex items-start justify-between gap-3">
+                  <h2 id={titleId} className="text-xl font-semibold text-foreground">
+                    {activeMemory.title || "Memory"}
+                  </h2>
+                  <button
                     type="button"
                     onClick={() => setActiveMemory(null)}
-                    className="rounded-full p-2 text-muted hover:text-foreground hover:bg-chip/80 transition-colors cursor-pointer"
-                    aria-label="Tuck it back into the jar"
+                    className="icon-btn rounded-full p-2 text-muted transition-colors hover:bg-chip/80 hover:text-foreground"
+                    aria-label="Close memory"
                   >
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
                       <path d="M18 6 6 18" />
                       <path d="m6 6 12 12" />
                     </svg>
                   </button>
-              
-
-                {/* Top Row: Star badge + Round close button */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-8" />
-                  <OrigamiStar
-                    size={46}
-                    color={activeMemory.color || STAR_PALETTE[0].base}
-                  />
-                 
                 </div>
 
-                {/* Optional Polaroid Photo Snapshot Attachment */}
-                {activeMemory.photoUrl && (
-                  <div
-                    className="my-4 overflow-hidden rounded-xl border-6 border-white bg-white p-1 shadow-lg dark:border-zinc-800 dark:bg-zinc-800"
-                    style={{ transform: "rotate(1.2deg)", boxShadow: "2px 4px 10px rgba(0,0,0,0.18)" }}
-                  >
+                <div className="mb-4 flex justify-center">
+                  <OrigamiStar size={46} color={activeMemory.color || STAR_PALETTE[0].base} />
+                </div>
+
+                {activeMemory.photoUrl ? (
+                  <div className="my-4 overflow-hidden rounded-xl border-6 border-white bg-white p-1 shadow-lg dark:border-zinc-800 dark:bg-zinc-800">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={activeMemory.photoUrl}
-                      alt={activeMemory.title || "Memory photo"}
+                      alt={activeMemory.title ? `Photo for ${activeMemory.title}` : ""}
                       className="max-h-50 w-full rounded-lg object-cover"
                     />
                   </div>
-                )}
+                ) : null}
 
-                {/* Intimate Story Quote in serif italic typography */}
-                <p className="my-5 text-center font-serif italic text-lg leading-relaxed text-foreground whitespace-pre-wrap break-words px-2">
+                <p className="my-5 whitespace-pre-wrap break-words px-2 text-center font-serif text-lg italic leading-relaxed text-foreground">
                   “{activeMemory.note}”
                 </p>
 
-                {/* Date & Category Tag */}
-                <div className="flex items-center justify-center gap-2 font-mono text-xs text-muted mt-4">
-                  {activeMemory.category && (
+                <div className="mt-4 flex items-center justify-center gap-2 font-mono text-xs text-muted">
+                  {activeMemory.category ? (
                     <span className="rounded-full bg-chip px-3 py-1 font-medium text-accent-text">
                       {activeMemory.category}
                     </span>
-                  )}
-                  {activeMemory.date && (
-                    <span className="text-muted-soft">{activeMemory.date}</span>
-                  )}
+                  ) : null}
+                  {activeMemory.date ? <span className="text-muted-soft">{activeMemory.date}</span> : null}
                 </div>
 
-                {/* Footer Action Buttons with alittlejarofstars pill button styling */}
-                <div className="mt-8 flex  items-center justify-center gap-3.5 border-t border-line/60 pt-6">
-                  <button
-                    type="button"
-                    onClick={() => setActiveMemory(null)}
-                    className=""
-                  >
+                <div className="mt-8 flex items-center justify-center gap-3.5 border-t border-line/60 pt-6">
+                  <button type="button" onClick={() => setActiveMemory(null)}>
                     tuck it back
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={onUnfoldAnother}
-                    className=""
-                  >
-                    unfold another ✨
+                  <button type="button" onClick={onUnfoldAnother}>
+                    unfold another
                   </button>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </AnimatePresence>
+          </>
+        ) : null}
+      </dialog>
     </div>
   );
 }

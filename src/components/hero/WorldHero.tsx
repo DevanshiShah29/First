@@ -6,12 +6,12 @@ import type { SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
 import { youtubeVideoId } from "@/lib/media-url";
 
-type SpotId = "piano" | "headphones" | "camera" | "laptop" | "book" | "cook" | "travel";
+type SpotId = "piano" | "jar" | "camera" | "laptop" | "book" | "cook" | "travel";
 
 const spots: { id: SpotId; label: string; left: string; top: string; w: string; h: string }[] = [
-  { id: "headphones", label: "Music", left: "4%", top: "16%", w: "16%", h: "24%" },
+  { id: "jar", label: "Jar of stars", left: "9%", top: "16%", w: "10%", h: "18%" },
   { id: "piano", label: "Piano", left: "6%", top: "38%", w: "26%", h: "42%" },
-  { id: "camera", label: "Photos", left: "16%", top: "2%", w: "16%", h: "16%" },
+  { id: "camera", label: "Photos", left: "18%", top: "1%", w: "14%", h: "14%" },
   { id: "laptop", label: "Building", left: "42%", top: "40%", w: "22%", h: "24%" },
   { id: "book", label: "Reading", left: "46%", top: "68%", w: "18%", h: "20%" },
   { id: "cook", label: "Cooking", left: "68%", top: "16%", w: "24%", h: "32%" },
@@ -30,11 +30,34 @@ function Notes({ looping }: { looping?: boolean }) {
   );
 }
 
-function Equalizer() {
+const jarStars = [
+  { g: "✦", l: "22%", t: "48%", d: "0s", s: "0.28rem", c: "#fde68a" },
+  { g: "★", l: "48%", t: "58%", d: "0.12s", s: "0.22rem", c: "#e9d5ff" },
+  { g: "✧", l: "64%", t: "42%", d: "0.24s", s: "0.2rem", c: "#f5f0e0" },
+  { g: "✦", l: "34%", t: "68%", d: "0.08s", s: "0.24rem", c: "#fcd34d" },
+  { g: "★", l: "56%", t: "72%", d: "0.32s", s: "0.18rem", c: "#ddd6fe" },
+  { g: "✧", l: "40%", t: "40%", d: "0.18s", s: "0.2rem", c: "#fef3c7" },
+  { g: "✦", l: "70%", t: "62%", d: "0.4s", s: "0.16rem", c: "#c4b5fd" },
+  { g: "★", l: "28%", t: "78%", d: "0.28s", s: "0.2rem", c: "#fde68a" },
+];
+
+function JarStars() {
   return (
-    <div className="world-eq" aria-hidden>
-      {Array.from({ length: 5 }, (_, i) => (
-        <span key={i} style={{ animationDelay: `${i * 0.08}s` }} />
+    <div className="world-jar-vessel" aria-hidden>
+      {jarStars.map((star, i) => (
+        <span
+          key={i}
+          className="world-jar-star"
+          style={{
+            left: star.l,
+            top: star.t,
+            animationDelay: star.d,
+            fontSize: star.s,
+            color: star.c,
+          }}
+        >
+          {star.g}
+        </span>
       ))}
     </div>
   );
@@ -157,14 +180,25 @@ export function WorldHero({ site }: { site: SiteContent }) {
   const bookOn = active === "book" || bookRest;
   const bookTip = !goodreadsId ? "The books are taking a break 📚" : "Open my books";
 
+  const pianoHref = videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined;
+
   return (
-    <section id="top" className={`world-hero${pianoPlaying ? " is-playing" : ""}`}>
-      <h1 className="sr-only">{site.greeting}</h1>
+    <section id="top" className={`world-hero${pianoPlaying ? " is-playing" : ""}`} aria-labelledby="hero-heading">
+      <h1 id="hero-heading" className="sr-only">
+        {site.greeting}
+      </h1>
+      <p className="sr-only">
+        Interactive illustration of a desk. Activate a hotspot to hear about a hobby. The piano plays music,
+        the books open the reading list, and the jar of stars opens memories. None of this is required to use
+        the rest of the site.
+      </p>
       <div
         ref={stage}
         className="world-stage"
         onPointerMove={onMove}
-        onPointerLeave={() => setTilt({ x: 0, y: 0 })}
+        onPointerLeave={() => {
+          setTilt({ x: 0, y: 0 });
+        }}
         style={{
           transform: reduce
             ? undefined
@@ -172,39 +206,71 @@ export function WorldHero({ site }: { site: SiteContent }) {
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/hero-world.jpg" alt="" className="world-art" />
+        <img
+          src="/images/hero-world.jpg?v=paper"
+          alt="Illustrated desk with a piano, a jar of stars, camera, laptop, books, cooking, and travel souvenirs."
+          className="world-art"
+        />
         <div className="world-watermark-mask" />
         <div ref={audioHost} className="world-audio-host" aria-hidden />
+        <p role="status" aria-live="polite" className="sr-only">
+          {pianoPlaying ? "Piano music is playing." : ""}
+        </p>
 
         {spots.map((spot) => {
           const isPiano = spot.id === "piano";
           const isBook = spot.id === "book";
+          const isJar = spot.id === "jar";
           const on = isPiano ? pianoOn : isBook ? bookOn : active === spot.id;
           const bookHref = isBook && goodreadsId ? "/reading" : undefined;
-          const Spot = bookHref ? "a" : "button";
+          const href = bookHref ?? (isJar ? "/memories" : isPiano ? pianoHref : undefined);
+          const Spot = href ? "a" : "button";
+          const label = isPiano
+            ? pianoPlaying
+              ? "Pause piano music"
+              : videoId
+                ? "Play piano music"
+                : "The piano is taking a break"
+            : isBook
+              ? goodreadsId
+                ? "Open reading list"
+                : "The books are taking a break"
+              : isJar
+                ? "Open jar of stars"
+                : spot.label;
           return (
             <Spot
               key={spot.id}
-              href={bookHref}
-              type={bookHref ? undefined : "button"}
+              href={href}
+              type={href ? undefined : "button"}
+              target={isPiano && href ? "_blank" : undefined}
+              rel={isPiano && href ? "noopener noreferrer" : undefined}
               data-spot={spot.id}
               className={`world-spot${on ? " is-on" : ""}${isPiano && pianoPlaying ? " is-playing" : ""}`}
               style={{ left: spot.left, top: spot.top, width: spot.w, height: spot.h }}
-              aria-label={
-                isPiano
-                  ? pianoPlaying
-                    ? "Pause piano music"
-                    : "Play piano music"
-                  : isBook
-                    ? "Open reading list"
-                    : spot.label
-              }
-              aria-pressed={isPiano ? pianoPlaying : undefined}
-              onPointerEnter={() => onSpot(spot.id, true)}
-              onPointerLeave={() => onSpot(spot.id, false)}
+              aria-label={label}
+              aria-pressed={href ? undefined : isPiano ? pianoPlaying : on}
+              onPointerEnter={(e) => {
+                if (e.pointerType === "mouse") onSpot(spot.id, true);
+              }}
+              onPointerLeave={(e) => {
+                if (e.pointerType === "mouse") onSpot(spot.id, false);
+              }}
               onFocus={() => onSpot(spot.id, true)}
               onBlur={() => onSpot(spot.id, false)}
-              onClick={isPiano ? onPianoToggle : isBook ? onBooksClick : undefined}
+              onClick={(e) => {
+                if (isPiano) {
+                  if (videoId) e.preventDefault();
+                  onPianoToggle();
+                  return;
+                }
+                if (isBook) {
+                  onBooksClick();
+                  return;
+                }
+                if (isJar) return;
+                setActive((cur) => (cur === spot.id ? null : spot.id));
+              }}
             >
               {on ? (
                 <>
@@ -214,12 +280,17 @@ export function WorldHero({ site }: { site: SiteContent }) {
                       {pianoTip ? <span className="world-tip">{pianoTip}</span> : null}
                     </>
                   ) : null}
-                  {spot.id === "headphones" ? <Equalizer /> : null}
+                  {spot.id === "jar" ? (
+                    <>
+                      {reduce ? null : <JarStars />}
+                      <span className="world-tip">Open jar of stars ✨</span>
+                    </>
+                  ) : null}
                   {spot.id === "laptop" ? <MiniUi /> : null}
                   {spot.id === "cook" ? <Ingredients /> : null}
                   {spot.id === "travel" ? <span className="world-plane" aria-hidden /> : null}
                   {spot.id === "book" && bookTip ? <span className="world-tip">{bookTip}</span> : null}
-                  {spot.id !== "book" && spot.id !== "piano" ? (
+                  {spot.id !== "book" && spot.id !== "piano" && spot.id !== "jar" ? (
                     <span className="world-tag">{spot.label}</span>
                   ) : null}
                 </>

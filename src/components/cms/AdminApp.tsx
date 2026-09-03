@@ -7,20 +7,21 @@ import {
   DEFAULT_HERO_MEDIA,
   DEFAULT_THEME,
   HERO_TEMPLATES,
-  SKILL_ICONS,
   THEME_PALETTE_FIELDS,
   type ContentData,
   type HeroMedia,
   type HeroTemplateId,
   type SiteContent,
-  type SkillIcon,
+  type SkillItem,
   type ThemeContent,
   type ThemeMode,
 } from "@/content/types";
 import { LogoMark } from "@/components/Logo";
 import { goodreadsUserId } from "@/lib/goodreads";
 import { mediaHint, parsePlayableMedia, youtubeVideoId } from "@/lib/media-url";
+import { resumeFileLabel } from "@/lib/resume";
 import { Field, HexColorInput, StringList, TextArea, TextInput } from "./fields";
+import { SkillItemRow } from "./SkillItemRow";
 import {
   IconAppearance,
   IconCode,
@@ -142,19 +143,7 @@ function Metabox({
 
   return (
     <section className={`wp-metabox${!open ? " is-collapsed" : ""}${className ? ` ${className}` : ""}`}>
-      <div
-        className="wp-metabox-h"
-        onClick={toggle}
-        role="button"
-        tabIndex={0}
-        aria-expanded={open}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            toggle();
-          }
-        }}
-      >
+      <div className="wp-metabox-h" onClick={toggle}>
         <div className="wp-metabox-h-title">
           <h2 className="wp-metabox-title-text">{title}</h2>
           {badge ? <span className="wp-metabox-badge">{badge}</span> : null}
@@ -164,6 +153,7 @@ function Metabox({
           <button
             type="button"
             className="wp-metabox-toggle"
+            aria-expanded={open}
             aria-label={open ? `Collapse ${titleString || "section"}` : `Expand ${titleString || "section"}`}
             title={open ? "Click to collapse" : "Click to expand"}
             onClick={(e) => {
@@ -355,7 +345,9 @@ function MediaLayoutPreview({
   media: HeroMedia;
 }) {
   const template =
-    site.heroTemplate === "world" || site.heroTemplate === "nook" ? "classic" : site.heroTemplate;
+    site.heroTemplate === "world" || site.heroTemplate === "nook" || site.heroTemplate === "studio"
+      ? "classic"
+      : site.heroTemplate;
   const copy = <MediaCopy site={site} template={template} />;
 
   if (media.kind === "none") {
@@ -441,6 +433,14 @@ function HeroThumb({
       <div className="wp-template-preview is-world">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/hero-nook.jpg" alt="" />
+      </div>
+    );
+  }
+  if (id === "studio") {
+    return (
+      <div className="wp-template-preview is-world">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/hero-studio.jpg?v=studio1" alt="" />
       </div>
     );
   }
@@ -1045,9 +1045,20 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [newOpen, setNewOpen] = useState(false);
   const [notice, setNotice] = useState("");
   const [uploading, setUploading] = useState(false);
   const [sectionState, setSectionState] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      setMenuOpen(false);
+      setNewOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   function expandAll(ids: string[]) {
     setSectionState((prev) => {
@@ -1222,6 +1233,57 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     setData({ ...data, memories });
   }
 
+  async function uploadResume(file: File) {
+    setUploading(true);
+    setError("");
+    setNotice("");
+    const form = new FormData();
+    form.append("file", file);
+    form.append("folder", "resume");
+    const res = await fetch("/api/cms/upload", { method: "POST", body: form });
+    const body = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
+    setUploading(false);
+    if (!res.ok || !body.url) {
+      setError(body.error || "Resume upload failed.");
+      return;
+    }
+    setData((current) => ({
+      ...current,
+      site: { ...current.site, resume: body.url as string },
+    }));
+    setNotice("Resume uploaded. Save changes to publish the new file.");
+  }
+
+  async function uploadSkillIcon(
+    file: File,
+    kind: "skills" | "technologies",
+    gi: number,
+    ii: number,
+  ) {
+    setUploading(true);
+    setError("");
+    const form = new FormData();
+    form.append("file", file);
+    form.append("folder", "skills");
+    const res = await fetch("/api/cms/upload", { method: "POST", body: form });
+    const body = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
+    setUploading(false);
+    if (!res.ok || !body.url) {
+      setError(body.error || "Icon upload failed.");
+      return;
+    }
+    setData((current) => {
+      const groups = [...(current[kind] ?? [])];
+      const group = groups[gi];
+      if (!group) return current;
+      const items = [...group.items];
+      if (!items[ii]) return current;
+      items[ii] = { ...items[ii], iconUrl: body.url };
+      groups[gi] = { ...group, items };
+      return { ...current, [kind]: groups };
+    });
+  }
+
   const expIndex = data.experience.findIndex((j) => j.id === editId);
   const job = expIndex >= 0 ? data.experience[expIndex] : null;
   const projIndex = data.projects.findIndex((p) => p.id === editId);
@@ -1320,12 +1382,17 @@ export function AdminApp({ initial }: { initial: ContentData }) {
 
   return (
     <div className={`wp-app${menuOpen ? " is-menu-open" : ""}`}>
+      <a href="#admin-content" className="skip">
+        Skip to content
+      </a>
       <header className="wp-bar">
         <div className="wp-bar-left">
           <button
             type="button"
             className="wp-bar-item wp-bar-fold"
-            aria-label="Menu"
+            aria-label={menuOpen ? "Close admin menu" : "Open admin menu"}
+            aria-expanded={menuOpen}
+            aria-controls="admin-menu"
             onClick={() => setMenuOpen((v) => !v)}
           >
             <IconMenu />
@@ -1338,19 +1405,47 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <IconHome className="wp-menu-icon" />
             <span>Visit Site</span>
           </Link>
-          <div className="wp-drop">
-            <button type="button" className="wp-bar-item">
+          <div className={`wp-drop${newOpen ? " is-open" : ""}`}>
+            <button
+              type="button"
+              className="wp-bar-item"
+              aria-haspopup="menu"
+              aria-expanded={newOpen}
+              aria-controls="admin-new-menu"
+              onClick={() => setNewOpen((v) => !v)}
+            >
               <IconPlus />
               New
             </button>
-            <div className="wp-drop-menu">
-              <button type="button" onClick={addExperience}>
+            <div id="admin-new-menu" className="wp-drop-menu" role="menu">
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setNewOpen(false);
+                  addExperience();
+                }}
+              >
                 Experience
               </button>
-              <button type="button" onClick={addProject}>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setNewOpen(false);
+                  addProject();
+                }}
+              >
                 Project
               </button>
-              <button type="button" onClick={addMemory}>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setNewOpen(false);
+                  addMemory();
+                }}
+              >
                 Memory
               </button>
             </div>
@@ -1368,11 +1463,18 @@ export function AdminApp({ initial }: { initial: ContentData }) {
       </header>
 
       <div className="wp-layout">
-        <aside className="wp-menu">
+        <nav id="admin-menu" className="wp-menu" aria-label="Admin">
           <ul className="wp-menu-list">
             {menu.map((item) => (
               <li key={item.id} className={item.match ? "is-current" : undefined}>
-                <button type="button" onClick={() => go(item.id)}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    go(item.id);
+                  }}
+                  aria-current={item.match ? "page" : undefined}
+                >
                   {item.icon}
                   {item.label}
                 </button>
@@ -1380,9 +1482,10 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             ))}
             <li className="wp-menu-sep" />
             <li>
-              <Link href="/memories" target="_blank">
+              <Link href="/memories" target="_blank" rel="noopener noreferrer">
                 <IconJar />
                 Memory Jar
+                <span className="sr-only"> (opens in a new tab)</span>
               </Link>
             </li>
             <li>
@@ -1392,12 +1495,20 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               </Link>
             </li>
           </ul>
-        </aside>
+        </nav>
 
-        <main className="wp-content">
+        <main id="admin-content" className="wp-content" tabIndex={-1}>
           <Breadcrumbs items={breadcrumbs} />
-          {error ? <div className="wp-notice is-error">{error}</div> : null}
-          {notice && !error ? <div className="wp-notice is-success">{notice}</div> : null}
+          {error ? (
+            <div className="wp-notice is-error" role="alert">
+              {error}
+            </div>
+          ) : null}
+          {notice && !error ? (
+            <div className="wp-notice is-success" role="status">
+              {notice}
+            </div>
+          ) : null}
 
           {screen === "dashboard" ? (
             <>
@@ -1645,6 +1756,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       className="wp-btn"
                       disabled={i === 0}
                       title="Move stat up"
+                      aria-label="Move stat up"
                       onClick={() => {
                         const stats = move(site.stats, i, -1);
                         setData({ ...data, site: { ...site, stats } });
@@ -1658,6 +1770,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       className="wp-btn"
                       disabled={i === site.stats.length - 1}
                       title="Move stat down"
+                      aria-label="Move stat down"
                       onClick={() => {
                         const stats = move(site.stats, i, 1);
                         setData({ ...data, site: { ...site, stats } });
@@ -1699,15 +1812,49 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         onChange={(contactLine) => setData({ ...data, site: { ...site, contactLine } })}
                       />
                     </Field>
-                    <Field label="Email">
+                    <Field label="Email" hint="Contact form messages are emailed here.">
                       <TextInput
                         type="email"
                         value={site.email}
                         onChange={(email) => setData({ ...data, site: { ...site, email } })}
                       />
                     </Field>
-                    <Field label="Resume URL">
-                      <TextInput value={site.resume} onChange={(resume) => setData({ ...data, site: { ...site, resume } })} />
+                    <Field
+                      label="Resume"
+                      hint="Upload a PDF (max 10MB). The public Download Resume buttons always use the latest saved file."
+                      wide
+                    >
+                      <div className="wp-skill-icon-source">
+                        <label className="wp-skill-file">
+                          <span className="wp-btn">{uploading ? "Uploading…" : "Upload PDF"}</span>
+                          <input
+                            type="file"
+                            accept="application/pdf,.pdf"
+                            disabled={uploading}
+                            aria-label="Upload resume PDF"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) void uploadResume(file);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                        <TextInput
+                          value={site.resume}
+                          placeholder="or paste a PDF URL"
+                          onChange={(resume) => setData({ ...data, site: { ...site, resume } })}
+                        />
+                        {site.resume ? (
+                          <a className="wp-btn" href={site.resume} target="_blank" rel="noreferrer">
+                            View
+                          </a>
+                        ) : (
+                          <span className="wp-description">No file yet</span>
+                        )}
+                      </div>
+                      {site.resume ? (
+                        <span className="wp-description">{resumeFileLabel(site.resume)}</span>
+                      ) : null}
                     </Field>
                     <Field label="LinkedIn">
                       <TextInput
@@ -1782,7 +1929,10 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                 isOpen={sectionState["hero_media"]}
               >
                 <MediaLayoutPreview site={site} theme={data.theme} media={heroMedia} />
-                {(site.heroTemplate === "world" || site.heroTemplate === "nook") && heroMedia.kind !== "none" ? (
+                {(site.heroTemplate === "world" ||
+                  site.heroTemplate === "nook" ||
+                  site.heroTemplate === "studio") &&
+                heroMedia.kind !== "none" ? (
                   <p className="wp-description" style={{ margin: "0 0 12px" }}>
                     A 3D hero is live, so this media is hidden on the public site until you activate another
                     template.
@@ -2472,7 +2622,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               />
               {(data.skills ?? []).map((group, gi) => (
                 <Metabox
-                  key={`${group.title}-${gi}`}
+                  key={`skill_group_${gi}`}
                   id={`skill_group_${gi}`}
                   title={group.title || "Skill group"}
                   badge={`${group.items.length} ${group.items.length === 1 ? "skill" : "skills"}`}
@@ -2485,6 +2635,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         onClick={() => setData({ ...data, skills: move(data.skills, gi, -1) })}
                         disabled={gi === 0}
                         title="Move group up"
+                        aria-label="Move group up"
                         style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
                       >
                         ↑
@@ -2495,6 +2646,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         onClick={() => setData({ ...data, skills: move(data.skills, gi, 1) })}
                         disabled={gi === (data.skills?.length ?? 0) - 1}
                         title="Move group down"
+                        aria-label="Move group down"
                         style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
                       >
                         ↓
@@ -2517,96 +2669,32 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </tbody>
                   </table>
                   {group.items.map((item, ii) => (
-                    <div
-                      key={`${item.name}-${ii}`}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "minmax(120px,1.1fr) minmax(110px,0.8fr) minmax(140px,1fr) auto",
-                        gap: 8,
-                        marginBottom: 8,
-                        alignItems: "center",
+                    <SkillItemRow
+                      key={`skill-item-${gi}-${ii}`}
+                      item={item}
+                      index={ii}
+                      total={group.items.length}
+                      uploading={uploading}
+                      noun="skill"
+                      onChange={(next: SkillItem) => {
+                        const skills = [...(data.skills ?? [])];
+                        const items = [...group.items];
+                        items[ii] = next;
+                        skills[gi] = { ...group, items };
+                        setData({ ...data, skills });
                       }}
-                    >
-                      <TextInput
-                        value={item.name}
-                        onChange={(name) => {
-                          const skills = [...(data.skills ?? [])];
-                          const items = [...group.items];
-                          items[ii] = { ...item, name };
-                          skills[gi] = { ...group, items };
-                          setData({ ...data, skills });
-                        }}
-                      />
-                      <select
-                        className="wp-select"
-                        value={item.icon}
-                        onChange={(e) => {
-                          const skills = [...(data.skills ?? [])];
-                          const items = [...group.items];
-                          items[ii] = { ...item, icon: e.target.value as SkillIcon };
-                          skills[gi] = { ...group, items };
-                          setData({ ...data, skills });
-                        }}
-                      >
-                        {SKILL_ICONS.map((icon) => (
-                          <option key={icon} value={icon}>
-                            {icon}
-                          </option>
-                        ))}
-                      </select>
-                      <HexColorInput
-                        value={item.color ?? ""}
-                        placeholder="#A78BFA"
-                        onChange={(color) => {
-                          const skills = [...(data.skills ?? [])];
-                          const items = [...group.items];
-                          items[ii] = { ...item, color: color || undefined };
-                          skills[gi] = { ...group, items };
-                          setData({ ...data, skills });
-                        }}
-                      />
-                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                        <button
-                          type="button"
-                          className="wp-btn"
-                          disabled={ii === 0}
-                          title="Move skill up"
-                          onClick={() => {
-                            const skills = [...(data.skills ?? [])];
-                            skills[gi] = { ...group, items: move(group.items, ii, -1) };
-                            setData({ ...data, skills });
-                          }}
-                          style={{ padding: "0 8px" }}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          className="wp-btn"
-                          disabled={ii === group.items.length - 1}
-                          title="Move skill down"
-                          onClick={() => {
-                            const skills = [...(data.skills ?? [])];
-                            skills[gi] = { ...group, items: move(group.items, ii, 1) };
-                            setData({ ...data, skills });
-                          }}
-                          style={{ padding: "0 8px" }}
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          className="wp-btn"
-                          onClick={() => {
-                            const skills = [...(data.skills ?? [])];
-                            skills[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
-                            setData({ ...data, skills });
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
+                      onMove={(dir) => {
+                        const skills = [...(data.skills ?? [])];
+                        skills[gi] = { ...group, items: move(group.items, ii, dir) };
+                        setData({ ...data, skills });
+                      }}
+                      onRemove={() => {
+                        const skills = [...(data.skills ?? [])];
+                        skills[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
+                        setData({ ...data, skills });
+                      }}
+                      onUpload={(file) => void uploadSkillIcon(file, "skills", gi, ii)}
+                    />
                   ))}
                   <p>
                     <button
@@ -2685,7 +2773,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               />
               {(data.technologies ?? []).map((group, gi) => (
                 <Metabox
-                  key={`${group.title}-${gi}`}
+                  key={`tech_group_${gi}`}
                   id={`tech_group_${gi}`}
                   title={group.title || "Technology group"}
                   badge={`${group.items.length} ${group.items.length === 1 ? "technology" : "technologies"}`}
@@ -2700,6 +2788,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         }
                         disabled={gi === 0}
                         title="Move group up"
+                        aria-label="Move group up"
                         style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
                       >
                         ↑
@@ -2712,6 +2801,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         }
                         disabled={gi === (data.technologies?.length ?? 0) - 1}
                         title="Move group down"
+                        aria-label="Move group down"
                         style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
                       >
                         ↓
@@ -2734,97 +2824,32 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                     </tbody>
                   </table>
                   {group.items.map((item, ii) => (
-                    <div
-                      key={`${item.name}-${ii}`}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "minmax(120px,1.1fr) minmax(110px,0.8fr) minmax(140px,1fr) auto",
-                        gap: 8,
-                        marginBottom: 8,
-                        alignItems: "center",
+                    <SkillItemRow
+                      key={`tech-item-${gi}-${ii}`}
+                      item={item}
+                      index={ii}
+                      total={group.items.length}
+                      uploading={uploading}
+                      noun="technology"
+                      onChange={(next: SkillItem) => {
+                        const technologies = [...(data.technologies ?? [])];
+                        const items = [...group.items];
+                        items[ii] = next;
+                        technologies[gi] = { ...group, items };
+                        setData({ ...data, technologies });
                       }}
-                    >
-                      <TextInput
-                        value={item.name}
-                        placeholder="Technology name"
-                        onChange={(name) => {
-                          const technologies = [...(data.technologies ?? [])];
-                          const items = [...group.items];
-                          items[ii] = { ...item, name };
-                          technologies[gi] = { ...group, items };
-                          setData({ ...data, technologies });
-                        }}
-                      />
-                      <select
-                        className="wp-select"
-                        value={item.icon}
-                        onChange={(e) => {
-                          const technologies = [...(data.technologies ?? [])];
-                          const items = [...group.items];
-                          items[ii] = { ...item, icon: e.target.value as SkillIcon };
-                          technologies[gi] = { ...group, items };
-                          setData({ ...data, technologies });
-                        }}
-                      >
-                        {SKILL_ICONS.map((icon) => (
-                          <option key={icon} value={icon}>
-                            {icon}
-                          </option>
-                        ))}
-                      </select>
-                      <HexColorInput
-                        value={item.color ?? ""}
-                        placeholder="#61DAFB"
-                        onChange={(color) => {
-                          const technologies = [...(data.technologies ?? [])];
-                          const items = [...group.items];
-                          items[ii] = { ...item, color: color || undefined };
-                          technologies[gi] = { ...group, items };
-                          setData({ ...data, technologies });
-                        }}
-                      />
-                      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                        <button
-                          type="button"
-                          className="wp-btn"
-                          disabled={ii === 0}
-                          title="Move technology up"
-                          onClick={() => {
-                            const technologies = [...(data.technologies ?? [])];
-                            technologies[gi] = { ...group, items: move(group.items, ii, -1) };
-                            setData({ ...data, technologies });
-                          }}
-                          style={{ padding: "0 8px" }}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          type="button"
-                          className="wp-btn"
-                          disabled={ii === group.items.length - 1}
-                          title="Move technology down"
-                          onClick={() => {
-                            const technologies = [...(data.technologies ?? [])];
-                            technologies[gi] = { ...group, items: move(group.items, ii, 1) };
-                            setData({ ...data, technologies });
-                          }}
-                          style={{ padding: "0 8px" }}
-                        >
-                          ↓
-                        </button>
-                        <button
-                          type="button"
-                          className="wp-btn"
-                          onClick={() => {
-                            const technologies = [...(data.technologies ?? [])];
-                            technologies[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
-                            setData({ ...data, technologies });
-                          }}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
+                      onMove={(dir) => {
+                        const technologies = [...(data.technologies ?? [])];
+                        technologies[gi] = { ...group, items: move(group.items, ii, dir) };
+                        setData({ ...data, technologies });
+                      }}
+                      onRemove={() => {
+                        const technologies = [...(data.technologies ?? [])];
+                        technologies[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
+                        setData({ ...data, technologies });
+                      }}
+                      onUpload={(file) => void uploadSkillIcon(file, "technologies", gi, ii)}
+                    />
                   ))}
                   <p>
                     <button

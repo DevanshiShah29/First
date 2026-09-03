@@ -91,7 +91,7 @@ function parseSite(value: unknown): SiteContent {
     email: str(s.email),
     linkedin: str(s.linkedin),
     github: str(s.github),
-    resume: str(s.resume, "/resume.pdf"),
+    resume: str(s.resume),
     stats: statsRaw.map((item) => {
       const row = asRecord(item);
       return {
@@ -144,10 +144,12 @@ function parseSkillGroups(value: unknown, defaultTitle = "Skills"): SkillGroup[]
       const row = asRecord(item);
       const iconRaw = str(row.icon, "empty");
       const color = str(row.color);
+      const iconUrl = str(row.iconUrl);
       return {
         name: str(row.name, "Item"),
         icon: isSkillIcon(iconRaw) ? iconRaw : "empty",
         ...(color ? { color } : {}),
+        ...(iconUrl ? { iconUrl } : {}),
       };
     });
     return { title: str(g.title, defaultTitle), items };

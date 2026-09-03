@@ -4,7 +4,7 @@
     "initials": "Dev",
     "title": "Devanshi Shah | Product Manager Portfolio",
     "description": "Portfolio of Devanshi Shah — product-minded engineer turning messy problems into products people actually use.",
-    "heroTemplate": "world",
+    "heroTemplate": "studio",
     "heroMedia": {
       "kind": "video",
       "url": "https://img.magnific.com/premium-vector/software-developer-vector-illustration-communication-technology-cyber-security_1249867-5467.jpg?semt=ais_test_b&w=740&q=80",
@@ -29,7 +29,7 @@
     "email": "devanshifour@gmail.com",
     "linkedin": "https://www.linkedin.com/in/devanshishah",
     "github": "https://github.com/DevanshiShah29",
-    "resume": "/resume.pdf",
+    "resume": "/uploads/resume/resume.pdf?v=1788188455495",
     "stats": [
       {
         "value": 15,
@@ -227,19 +227,20 @@
       "title": "Technologies",
       "items": [
         {
-          "name": "Next.js",
+          "name": "Next.",
           "icon": "next",
           "color": "#FFFFFF"
         },
         {
           "name": "TypeScript",
           "icon": "typescript",
-          "color": "#3178C6"
+          "iconUrl": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Typescript_logo_2020.svg/960px-Typescript_logo_2020.svg.png?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=thumbnail"
         },
         {
           "name": "React",
           "icon": "react",
-          "color": "#61dafb"
+          "color": "#61dafb",
+          "iconUrl": "/uploads/skills/1788184761842-react-svgrepo-com.svg"
         },
         {
           "name": "HTML/CSS",
@@ -252,9 +253,10 @@
           "color": "#06B6D4"
         },
         {
-          "name": "Node.js",
+          "name": "Node.js new",
           "icon": "node",
-          "color": "#339933"
+          "color": "#47A248",
+          "iconUrl": "/uploads/skills/1788183617269-nodejs-icon-svgrepo-com.svg"
         },
         {
           "name": "Express",
@@ -274,7 +276,7 @@
         {
           "name": "Figma",
           "icon": "figma",
-          "color": "#F24E9A"
+          "iconUrl": "/uploads/skills/1788184839676-figma-svgrepo-com.svg"
         }
       ]
     }
@@ -299,7 +301,7 @@
       "foreground": "#121218",
       "card": "#FFFFFF",
       "cardHover": "#F3F1FF",
-      "chip": "#F4F3FA",
+      "chip": "#FBFAFF",
       "accentText": "#6D28D9",
       "accentHover": "#5B21B6",
       "badge": "#6D28D9"

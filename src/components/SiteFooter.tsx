@@ -1,6 +1,7 @@
 import type { MouseEvent } from "react";
 import Link from "next/link";
 import type { SiteContent } from "@/content/types";
+import { NewTabHint } from "./a11y";
 import { Logo } from "./Logo";
 import { IconGitHub, IconLinkedIn, IconMail } from "./icons";
 import { siteMap } from "@/lib/sitemap";
@@ -33,10 +34,11 @@ export function SiteFooter({
                   href={site.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
+                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
                   aria-label="LinkedIn profile"
                 >
                   <IconLinkedIn size={20} />
+                  <NewTabHint />
                 </a>
               ) : null}
               {site.github ? (
@@ -44,17 +46,18 @@ export function SiteFooter({
                   href={site.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
+                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
                   aria-label="GitHub profile"
                 >
                   <IconGitHub size={20} />
+                  <NewTabHint />
                 </a>
               ) : null}
               {site.email ? (
                 <a
                   href={`mailto:${site.email}`}
-                  className="rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
-                  aria-label="Email contact"
+                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
+                  aria-label={`Email ${site.email}`}
                 >
                   <IconMail size={20} />
                 </a>
@@ -63,8 +66,10 @@ export function SiteFooter({
           </div>
 
           {groups.map((group) => (
-            <div key={group.title}>
-              <p className="text-[0.7rem] uppercase tracking-[0.18em] text-muted-soft">{group.title}</p>
+            <nav key={group.title} aria-label={group.title}>
+              <h2 className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-soft">
+                {group.title}
+              </h2>
               <ul className="mt-4 space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.href + link.label}>
@@ -76,11 +81,12 @@ export function SiteFooter({
                       onClick={link.external ? undefined : (e) => onClick(e, link.href)}
                     >
                       {link.label}
+                      {link.external && link.href.startsWith("http") ? <NewTabHint /> : null}
                     </a>
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           ))}
         </div>
       </div>

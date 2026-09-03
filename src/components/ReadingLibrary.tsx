@@ -1,4 +1,5 @@
 import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
+import { NewTabHint } from "./a11y";
 
 function prettyDate(raw: string) {
   if (!raw) return "";
@@ -10,19 +11,34 @@ function prettyDate(raw: string) {
 function Stars({ value }: { value: number }) {
   if (value <= 0) return null;
   return (
-    <p className="reading-stars" aria-label={`${value} out of 5 stars`}>
-      <span>{"★".repeat(value)}</span>
-      <span className="is-off">{"★".repeat(5 - value)}</span>
+    <p className="reading-stars">
+      <span className="sr-only">{`${value} out of 5 stars`}</span>
+      <span aria-hidden="true">
+        <span>{"★".repeat(value)}</span>
+        <span className="is-off">{"★".repeat(5 - value)}</span>
+      </span>
     </p>
   );
 }
 
-function Cover({ book, className }: { book: GoodreadsBook; className?: string }) {
+function Cover({
+  book,
+  className,
+  decorative = false,
+}: {
+  book: GoodreadsBook;
+  className?: string;
+  decorative?: boolean;
+}) {
   if (!book.cover) return <div className={`${className ?? ""} reading-cover is-empty`} aria-hidden />;
   return (
     // Goodreads covers are remote and change per edition.
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={book.cover} alt="" className={`${className ?? ""} reading-cover`} />
+    <img
+      src={book.cover}
+      alt={decorative ? "" : `${book.title} cover`}
+      className={`${className ?? ""} reading-cover`}
+    />
   );
 }
 
@@ -36,13 +52,12 @@ function Meta({ book }: { book: GoodreadsBook }) {
 function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: boolean }) {
   return (
     <article className={`reading-card${featured ? " is-featured" : ""}`}>
-      <a href={book.url} target="_blank" rel="noopener noreferrer" className="reading-cover-link">
-        <Cover book={book} />
-      </a>
+      <Cover book={book} />
       <div>
         <h3>
           <a href={book.url} target="_blank" rel="noopener noreferrer">
             {book.title}
+            <NewTabHint />
           </a>
         </h3>
         <Meta book={book} />
@@ -76,6 +91,7 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
           Couldn’t load books from Goodreads right now.{" "}
           <a className="text-accent-text" href={library.profileUrl} target="_blank" rel="noopener noreferrer">
             Open the profile
+            <NewTabHint />
           </a>
         </p>
       </section>
@@ -132,9 +148,10 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
         <div className="reading-want mt-8">
           {library.toRead.map((book) => (
             <a key={book.id} href={book.url} target="_blank" rel="noopener noreferrer" className="reading-want-card">
-              <Cover book={book} />
+              <Cover book={book} decorative />
               <strong>{book.title}</strong>
               <span>{book.author}</span>
+              <NewTabHint />
             </a>
           ))}
         </div>
@@ -145,6 +162,7 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
           Source:{" "}
           <a className="text-accent-text" href={library.profileUrl} target="_blank" rel="noopener noreferrer">
             Goodreads profile
+            <NewTabHint />
           </a>
         </p>
       ) : null}

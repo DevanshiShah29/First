@@ -104,6 +104,7 @@ export function HexColorInput({
         placeholder={placeholder}
         spellCheck={false}
         autoComplete="off"
+        aria-label="Hex color value"
         onChange={(e) => onChange(e.target.value)}
       />
     </div>
@@ -148,6 +149,7 @@ export function StringList({
             className="wp-btn"
             disabled={i === 0}
             title="Move up"
+            aria-label="Move up"
             onClick={() => moveItem(i, -1)}
             style={{ padding: "0 8px" }}
           >
@@ -158,6 +160,7 @@ export function StringList({
             className="wp-btn"
             disabled={i === values.length - 1}
             title="Move down"
+            aria-label="Move down"
             onClick={() => moveItem(i, 1)}
             style={{ padding: "0 8px" }}
           >

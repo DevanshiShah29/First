@@ -141,22 +141,78 @@ const product: Record<string, ReactNode> = {
   ),
 };
 
+const MARK_SIZE = 28;
+
+function isSvgSrc(src: string) {
+  return /\.svg(\?|#|$)/i.test(src) || /^data:image\/svg/i.test(src);
+}
+
+function isLocalSrc(src: string) {
+  return src.startsWith("/") || src.startsWith("data:");
+}
+
+function CustomSkillMark({
+  src,
+  color,
+  className,
+}: {
+  src: string;
+  color?: string;
+  className?: string;
+}) {
+  if (color && isSvgSrc(src) && isLocalSrc(src)) {
+    return (
+      <span
+        aria-hidden="true"
+        className={className}
+        style={{
+          width: MARK_SIZE,
+          height: MARK_SIZE,
+          display: "inline-block",
+          flexShrink: 0,
+          backgroundColor: resolvedSkillColor(color),
+          WebkitMask: `url("${src}") center / contain no-repeat`,
+          mask: `url("${src}") center / contain no-repeat`,
+        }}
+      />
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      width={MARK_SIZE}
+      height={MARK_SIZE}
+      aria-hidden="true"
+      className={className}
+      style={{ width: MARK_SIZE, height: MARK_SIZE, objectFit: "contain", display: "block", flexShrink: 0 }}
+    />
+  );
+}
+
 export function SkillMark({
   icon,
   color,
+  src,
   className,
 }: {
   icon: SkillIcon;
   color?: string;
+  src?: string;
   className?: string;
 }) {
+  const custom = src?.trim();
+  if (custom) {
+    return <CustomSkillMark src={custom} color={color} className={className} />;
+  }
   const brandPath = brand[icon as keyof typeof brand];
   if (brandPath) {
     return (
       <svg
         viewBox="0 0 24 24"
-        width="28"
-        height="28"
+        width={MARK_SIZE}
+        height={MARK_SIZE}
         fill="currentColor"
         aria-hidden="true"
         className={className}
@@ -167,7 +223,7 @@ export function SkillMark({
     );
   }
   return (
-    <Svg width={28} height={28} className={className} style={{ color: resolvedSkillColor(color) }}>
+    <Svg width={MARK_SIZE} height={MARK_SIZE} className={className} style={{ color: resolvedSkillColor(color) }}>
       {product[icon]}
     </Svg>
   );

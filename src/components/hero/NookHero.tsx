@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { useRouter } from "next/navigation";
 import { useReducedMotion } from "motion/react";
 import type { SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
@@ -118,7 +117,6 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
 
 export function NookHero({ site }: { site: SiteContent }) {
   const reduce = useReducedMotion();
-  const router = useRouter();
   const stage = useRef<HTMLDivElement>(null);
   const audioHost = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -204,10 +202,18 @@ export function NookHero({ site }: { site: SiteContent }) {
       : "Play something 🎵";
   const bookOn = active === "books" || bookRest;
   const bookTip = !goodreadsId ? "The books are taking a break 📚" : "Open my books";
+  const pianoHref = videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined;
 
   return (
-    <section id="top" className={`world-hero is-nook${pianoPlaying ? " is-playing" : ""}`}>
-      <h1 className="sr-only">{site.greeting}</h1>
+    <section id="top" className={`world-hero is-nook${pianoPlaying ? " is-playing" : ""}`} aria-labelledby="hero-heading">
+      <h1 id="hero-heading" className="sr-only">
+        {site.greeting}
+      </h1>
+      <p className="sr-only">
+        Interactive illustration of a cozy nook. Activate a hotspot to hear about a hobby. The piano plays music,
+        the books open the reading list, and the jar opens memories. None of this is required to use the rest of
+        the site.
+      </p>
       <div
         ref={stage}
         className="world-stage"
@@ -221,10 +227,17 @@ export function NookHero({ site }: { site: SiteContent }) {
       >
         <picture>
           <source media="(max-width: 720px)" srcSet="/images/hero-nook-portrait.jpg" />
-          <img src="/images/hero-nook.jpg" alt="" className="world-art" />
+          <img
+            src="/images/hero-nook.jpg"
+            alt="Illustrated cozy nook with a piano, books, a memory jar, plants, a laptop, and art supplies."
+            className="world-art"
+          />
         </picture>
         <div className="world-watermark-mask" />
         <div ref={audioHost} className="world-audio-host" aria-hidden />
+        <p role="status" aria-live="polite" className="sr-only">
+          {pianoPlaying ? "Piano music is playing." : ""}
+        </p>
 
         {(["desktop", "mobile"] as const).map((layout) => (
           <div key={layout} className={`nook-spots nook-spots-${layout}`}>
@@ -233,7 +246,14 @@ export function NookHero({ site }: { site: SiteContent }) {
               const isBook = spot.id === "books";
               const isJar = spot.id === "jar";
               const on = isPiano ? pianoOn : isBook ? bookOn : active === spot.id;
-              const href = isBook && goodreadsId ? "/reading" : isJar ? "/memories" : undefined;
+              const href =
+                isBook && goodreadsId
+                  ? "/reading"
+                  : isJar
+                    ? "/memories"
+                    : isPiano
+                      ? pianoHref
+                      : undefined;
               const Spot = href ? "a" : "button";
               const tip =
                 isPiano && pianoTip
@@ -245,39 +265,52 @@ export function NookHero({ site }: { site: SiteContent }) {
                       : on
                         ? spot.label
                         : null;
+              const label = isPiano
+                ? pianoPlaying
+                  ? "Pause piano music"
+                  : videoId
+                    ? "Play piano music"
+                    : "The piano is taking a break"
+                : isBook
+                  ? goodreadsId
+                    ? "Open reading list"
+                    : "The books are taking a break"
+                  : isJar
+                    ? "Open memory jar"
+                    : spot.label;
               return (
                 <Spot
                   key={`${layout}-${spot.id}`}
                   href={href}
                   type={href ? undefined : "button"}
+                  target={isPiano && href ? "_blank" : undefined}
+                  rel={isPiano && href ? "noopener noreferrer" : undefined}
                   data-spot={spot.id}
                   className={`world-spot${on ? " is-on" : ""}${isPiano && pianoPlaying ? " is-playing" : ""}`}
                   style={{ left: spot.left, top: spot.top, width: spot.w, height: spot.h }}
-                  aria-label={
-                    isPiano
-                      ? pianoPlaying
-                        ? "Pause piano music"
-                        : "Play piano music"
-                      : isBook
-                        ? "Open reading list"
-                        : isJar
-                          ? "Open memory jar"
-                          : spot.label
-                  }
-                  aria-pressed={isPiano ? pianoPlaying : undefined}
-                  onPointerEnter={() => setActive(spot.id)}
-                  onPointerLeave={() => setActive((cur) => (cur === spot.id ? null : cur))}
+                  aria-label={label}
+                  aria-pressed={href ? undefined : isPiano ? pianoPlaying : on}
+                  onPointerEnter={(e) => {
+                    if (e.pointerType === "mouse") setActive(spot.id);
+                  }}
+                  onPointerLeave={(e) => {
+                    if (e.pointerType === "mouse") setActive((cur) => (cur === spot.id ? null : cur));
+                  }}
                   onFocus={() => setActive(spot.id)}
                   onBlur={() => setActive((cur) => (cur === spot.id ? null : cur))}
-                  onClick={
-                    isPiano
-                      ? onPianoToggle
-                      : isBook
-                        ? onBooksClick
-                        : isJar
-                          ? () => router.push("/memories")
-                          : undefined
-                  }
+                  onClick={(e) => {
+                    if (isPiano) {
+                      if (videoId) e.preventDefault();
+                      onPianoToggle();
+                      return;
+                    }
+                    if (isBook) {
+                      onBooksClick();
+                      return;
+                    }
+                    if (isJar) return;
+                    setActive((cur) => (cur === spot.id ? null : spot.id));
+                  }}
                 >
                   {on ? (
                     <>

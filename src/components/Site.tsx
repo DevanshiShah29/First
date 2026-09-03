@@ -1,69 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
+import { useReducedMotion } from "motion/react";
 import type { ContentData } from "@/content/types";
+import { resumeDownloadProps } from "@/lib/resume";
+import { scrollToHash } from "@/lib/scroll";
+import { NewTabHint, SkipLink } from "./a11y";
+import { ContactScene } from "./ContactScene";
 import { Cursor } from "./Cursor";
 import { Fade } from "./Fade";
 import { Hero } from "./hero/Hero";
-import { Logo } from "./Logo";
-import { SiteFooter } from "./SiteFooter";
-import { ThemeToggle } from "./ThemeToggle";
 import {
-  IconClose,
   IconCode,
+  IconDownload,
   IconExternal,
   IconGitHub,
   IconLinkedIn,
   IconMail,
-  IconMenu,
   SkillMark,
 } from "./icons";
-
-const nav = [
-  { href: "#about", label: "About" },
-  { href: "#projects", label: "Projects" },
-  { href: "#skills", label: "Skills" },
-  { href: "#contact", label: "Contact" },
-] as const;
+import { SiteFooter } from "./SiteFooter";
+import { SiteHeader } from "./SiteHeader";
 
 const fieldClass =
-  "w-full rounded-lg border border-line bg-inset px-4 py-3 text-sm text-foreground outline-none transition focus:border-violet-500/60 focus:shadow-[0_0_0_3px_rgba(124,58,237,0.1)]";
+  "mt-1.5 w-full rounded-lg border border-line bg-inset px-4 py-3 text-sm text-foreground transition focus-visible:border-violet-500/60";
 
 function CountUp({ value, suffix }: { value: number; suffix: string }) {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLSpanElement>(null);
-  const [n, setN] = useState(reduce ? value : 0);
-
-  useEffect(() => {
-    if (reduce) return;
-    const el = ref.current;
-    if (!el) return;
-    let frame = 0;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        io.disconnect();
-        const start = performance.now();
-        const tick = (now: number) => {
-          const t = Math.min(1, (now - start) / 900);
-          setN(Math.round((1 - (1 - t) ** 3) * value));
-          if (t < 1) frame = requestAnimationFrame(tick);
-        };
-        frame = requestAnimationFrame(tick);
-      },
-      { threshold: 0.4 },
-    );
-    io.observe(el);
-    return () => {
-      io.disconnect();
-      cancelAnimationFrame(frame);
-    };
-  }, [reduce, value]);
-
   return (
-    <span ref={ref}>
-      {n}
+    <span>
+      {value}
       {suffix}
     </span>
   );
@@ -84,52 +49,21 @@ function SocialRound({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="rounded-full border border-line bg-chip p-3 transition-all duration-300 hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-accent-hover"
+      className="icon-btn rounded-full border border-line bg-chip p-3 transition-all duration-300 hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-accent-hover"
       aria-label={label}
     >
       {children}
+      {external ? <NewTabHint /> : null}
     </a>
   );
-}
-
-function sectionTop(el: HTMLElement) {
-  let y = 0;
-  let node: HTMLElement | null = el;
-  while (node) {
-    y += node.offsetTop;
-    node = node.offsetParent as HTMLElement | null;
-  }
-  return y;
-}
-
-function scrollToHash(hash: string, instant = false) {
-  if (hash === "#top" || hash === "#") {
-    window.scrollTo({ top: 0, behavior: instant ? "auto" : "smooth" });
-    return;
-  }
-  const el = document.getElementById(hash.replace(/^#/, ""));
-  if (!el) return;
-  const header = document.getElementById("site-header");
-  const offset = (header?.getBoundingClientRect().height ?? 72) + 12;
-  window.scrollTo({
-    top: Math.max(0, sectionTop(el) - offset),
-    behavior: instant ? "auto" : "smooth",
-  });
 }
 
 export function Site({ content }: { content: ContentData }) {
   const { site, experience, projects, skills: skillGroups = [], technologies: techGroups = [] } = content;
   const reduce = useReducedMotion();
-  const [open, setOpen] = useState(false);
-  const [status, setStatus] = useState<"idle" | "sent">("idle");
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [formError, setFormError] = useState("");
+  const resume = resumeDownloadProps(site.resume, site.name);
 
   useEffect(() => {
     if (!window.location.hash) return;
@@ -141,102 +75,55 @@ export function Site({ content }: { content: ContentData }) {
   function onSectionLink(e: MouseEvent<HTMLAnchorElement>, href: string) {
     if (!href.startsWith("#")) return;
     e.preventDefault();
-    const menuOpen = open;
-    setOpen(false);
-    window.setTimeout(
-      () => {
-        scrollToHash(href, Boolean(reduce));
-        history.replaceState(null, "", href);
-      },
-      menuOpen ? 80 : 0,
-    );
+    scrollToHash(href, Boolean(reduce));
+    history.replaceState(null, "", href);
   }
 
-  function onSubmit(e: FormEvent<HTMLFormElement>) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const name = String(data.get("name") ?? "").trim();
-    const email = String(data.get("email") ?? "").trim();
-    const message = String(data.get("message") ?? "").trim();
-    const subject = encodeURIComponent(`Portfolio note from ${name || "someone"}`);
-    const body = encodeURIComponent(`${message}\n\n— ${name} <${email}>`);
-    window.location.href = `mailto:${site.email}?subject=${subject}&body=${body}`;
-    setStatus("sent");
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    setStatus("sending");
+    setFormError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: String(data.get("name") ?? ""),
+          email: String(data.get("email") ?? ""),
+          message: String(data.get("message") ?? ""),
+          company: String(data.get("company") ?? ""),
+        }),
+      });
+      const payload = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        setStatus("error");
+        setFormError(payload?.error || "Could not send your message. Please email me directly.");
+        return;
+      }
+      form.reset();
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+      setFormError("Could not send your message. Please email me directly.");
+    }
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Cursor />
-      <a href="#about" className="skip" onClick={(e) => onSectionLink(e, "#about")}>
-        Skip to content
-      </a>
+      <SkipLink />
+      <SiteHeader name={site.name} allowToggle={content.theme.allowToggle} variant="home" />
 
-      <motion.header
-        id="site-header"
-        className="sticky top-0 z-50 border-b border-line bg-header backdrop-blur-xl"
-        initial={reduce ? false : { opacity: 0, y: -24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      >
-        <nav className="section-shell flex h-18 items-center justify-between">
-          <a
-            href="#top"
-            className="group inline-flex items-center"
-            onClick={(e) => onSectionLink(e, "#top")}
-          >
-            <Logo name={site.name} />
-          </a>
-          <div className="flex items-center gap-3">
-            <ul className="hidden items-center gap-8 md:flex">
-              {nav.map((item) => (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    className="nav-link text-sm"
-                    onClick={(e) => onSectionLink(e, item.href)}
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            {content.theme.allowToggle ? <ThemeToggle /> : null}
-            <button
-              type="button"
-              className="inline-flex rounded-md border border-line p-2 text-foreground md:hidden"
-              aria-label={open ? "Close navigation menu" : "Toggle navigation menu"}
-              aria-expanded={open}
-              onClick={() => setOpen((v) => !v)}
-            >
-              {open ? <IconClose /> : <IconMenu />}
-            </button>
-          </div>
-        </nav>
-        {open ? (
-          <ul className="section-shell flex flex-col gap-3 border-t border-line py-4 md:hidden">
-            {nav.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  className="block py-1 text-sm text-muted transition hover:text-accent-hover"
-                  onClick={(e) => onSectionLink(e, item.href)}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </motion.header>
-
-      <main>
+      <main id="main-content" tabIndex={-1}>
         <Hero site={site} onProjects={(e) => onSectionLink(e, "#projects")} />
 
-        <section className="py-16 sm:py-24">
+        <section id="about" tabIndex={-1} aria-labelledby="about-heading" className="py-16 sm:py-24">
           <div className="section-shell">
             <Fade y={28} className="grid gap-10 lg:grid-cols-2 lg:gap-16">
               <div>
-                <h2 id="about" className="text-3xl font-semibold text-foreground sm:text-4xl">
+                <h2 id="about-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                   About Me
                 </h2>
                 <p className="mt-6 text-base leading-8 text-muted">{site.about}</p>
@@ -271,10 +158,10 @@ export function Site({ content }: { content: ContentData }) {
           </div>
         </section>
 
-        <section className="py-16 sm:py-24">
+        <section id="experience" tabIndex={-1} aria-labelledby="experience-heading" className="py-16 sm:py-24">
           <div className="section-shell">
             <Fade y={22}>
-              <h2 id="experience" className="text-3xl font-semibold text-foreground sm:text-4xl">
+              <h2 id="experience-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Experience
               </h2>
               <div className="accent-underline mt-3 h-1 w-28 rounded" />
@@ -297,10 +184,10 @@ export function Site({ content }: { content: ContentData }) {
                     <h3 className="mt-2 text-2xl font-semibold text-foreground">{job.role}</h3>
                     <p className="company-grad mt-1 text-sm">{job.company}</p>
                     <p className="mt-4 leading-7 text-muted">{job.summary}</p>
-                    <ul className="mt-4 space-y-2">
+                    <ul className="mt-4 list-disc space-y-2 pl-5">
                       {job.bullets.map((b) => (
                         <li key={b} className="text-sm text-muted">
-                          • {b}
+                          {b}
                         </li>
                       ))}
                     </ul>
@@ -321,10 +208,10 @@ export function Site({ content }: { content: ContentData }) {
           </div>
         </section>
 
-        <section className="py-16 sm:py-24">
+        <section id="projects" tabIndex={-1} aria-labelledby="projects-heading" className="py-16 sm:py-24">
           <div className="section-shell">
             <Fade y={28}>
-              <h2 id="projects" className="text-3xl font-semibold text-foreground sm:text-4xl">
+              <h2 id="projects-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Projects
               </h2>
               <div className="accent-underline mt-3 h-1 w-28 rounded" />
@@ -351,11 +238,15 @@ export function Site({ content }: { content: ContentData }) {
                           href={project.github}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`View ${project.name} source code`}
                           className="flex items-center gap-2 text-sm text-muted transition-colors hover:text-accent-hover"
                         >
                           <IconCode />
                           GitHub
+                          <span className="sr-only">
+                            {" "}
+                            source for {project.name}
+                          </span>
+                          <NewTabHint />
                         </a>
                         {project.demo ? (
                           <a
@@ -366,6 +257,11 @@ export function Site({ content }: { content: ContentData }) {
                           >
                             <IconExternal />
                             Live Demo
+                            <span className="sr-only">
+                              {" "}
+                              of {project.name}
+                            </span>
+                            <NewTabHint />
                           </a>
                         ) : null}
                       </div>
@@ -377,10 +273,10 @@ export function Site({ content }: { content: ContentData }) {
           </div>
         </section>
 
-        <section className="py-16 sm:py-24">
+        <section id="skills" tabIndex={-1} aria-labelledby="skills-heading" className="py-16 sm:py-24">
           <div className="section-shell">
             <Fade y={22}>
-              <h2 id="skills" className="text-3xl font-semibold text-foreground sm:text-4xl">
+              <h2 id="skills-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Skills &amp; Technologies
               </h2>
               <div className="accent-underline mt-3 h-1 w-48 rounded" />
@@ -388,18 +284,19 @@ export function Site({ content }: { content: ContentData }) {
             <div className="mt-10 grid gap-8 lg:grid-cols-2">
               {[...techGroups, ...skillGroups].map((group, gi) => (
                 <Fade key={`${group.title}-${gi}`} y={18} delay={0.08 * gi}>
-                  <div className="card-surface rounded-2xl p-6">
+                  <div className="skill-group-card card-surface rounded-2xl p-6">
                     <h3 className="text-xl font-semibold text-foreground">{group.title}</h3>
                     <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
                       {group.items.map((item, ii) => (
                         <Fade key={item.name} y={10} delay={0.03 * ii}>
-                          <div className="group flex cursor-default flex-col items-center gap-2 rounded-xl border border-line bg-chip p-4 text-muted transition-all hover:border-violet-500/40 hover:text-foreground">
+                          <div className="skill-tile flex flex-col items-center gap-2 rounded-xl border border-line bg-chip p-4 text-muted">
                             <SkillMark
                               icon={item.icon}
                               color={item.color}
-                              className="opacity-75 transition-all group-hover:opacity-100 group-hover:brightness-125"
+                              src={item.iconUrl}
+                              className="skill-mark"
                             />
-                            <span className="text-center text-xs font-medium transition-colors group-hover:text-foreground">
+                            <span className="text-center text-xs font-medium text-foreground">
                               {item.name}
                             </span>
                           </div>
@@ -413,65 +310,120 @@ export function Site({ content }: { content: ContentData }) {
           </div>
         </section>
 
-        <section className="py-16 sm:py-24">
+        <section id="contact" tabIndex={-1} aria-labelledby="contact-heading" className="py-16 sm:py-24">
           <div className="section-shell">
             <Fade>
-              <div className="card-surface grid gap-8 rounded-2xl p-6 sm:p-8 lg:grid-cols-[1.2fr_0.8fr]">
+              <div className="card-surface grid gap-8 rounded-2xl p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
                 <div>
-                  <h2 id="contact" className="text-3xl font-semibold text-foreground sm:text-4xl">
+                  <h2 id="contact-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                     Let&apos;s Work Together
                   </h2>
                   <p className="mt-3 text-muted">{site.contactLine}</p>
-                  <form className="mt-8 space-y-4" onSubmit={onSubmit}>
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Name"
-                      required
-                      autoComplete="name"
-                      className={fieldClass}
-                    />
-                    <input
-                      type="email"
-                      name="email"
-                      placeholder="Email"
-                      required
-                      autoComplete="email"
-                      className={fieldClass}
-                    />
-                    <textarea
-                      name="message"
-                      placeholder="Message"
-                      rows={5}
-                      required
-                      className={`${fieldClass} resize-none`}
-                    />
+                  <form className="relative mt-8 space-y-4" action="/api/contact" method="post" onSubmit={onSubmit}>
+                    <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+                      <label htmlFor="contact-company">Company</label>
+                      <input
+                        id="contact-company"
+                        type="text"
+                        name="company"
+                        tabIndex={-1}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-name" className="text-sm font-medium text-foreground">
+                        Name
+                      </label>
+                      <input
+                        id="contact-name"
+                        type="text"
+                        name="name"
+                        required
+                        maxLength={100}
+                        autoComplete="name"
+                        className={fieldClass}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-email" className="text-sm font-medium text-foreground">
+                        Email
+                      </label>
+                      <input
+                        id="contact-email"
+                        type="email"
+                        name="email"
+                        required
+                        maxLength={254}
+                        autoComplete="email"
+                        className={fieldClass}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="contact-message" className="text-sm font-medium text-foreground">
+                        Message
+                      </label>
+                      <textarea
+                        id="contact-message"
+                        name="message"
+                        rows={5}
+                        required
+                        maxLength={4000}
+                        className={`${fieldClass} resize-none`}
+                      />
+                    </div>
                     <button
                       type="submit"
+                      disabled={status === "sending"}
                       className="btn-primary inline-flex items-center rounded-lg px-5 py-3 text-sm font-semibold text-[#f8f8f8] hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                     >
-                      {status === "sent" ? "Opening email…" : "Send Message"}
+                      {status === "sending" ? "Sending…" : "Send Message"}
                     </button>
+                    <p
+                      role="status"
+                      aria-live="polite"
+                      className={`text-sm ${status === "error" ? "text-red-500" : "text-muted"}`}
+                    >
+                      {status === "sent"
+                        ? "Thanks — your message is on its way."
+                        : status === "error"
+                          ? formError
+                          : ""}
+                    </p>
                   </form>
                 </div>
-                <div className="rounded-xl border border-line bg-inset p-6">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-soft">Contact</p>
-                  <a
-                    href={`mailto:${site.email}`}
-                    className="mt-4 block text-foreground transition hover:text-accent-text"
-                  >
-                    {site.email}
-                  </a>
-                  <div className="mt-6 flex items-center gap-3">
-                    <SocialRound href={site.linkedin} label="LinkedIn profile">
-                      <IconLinkedIn />
-                    </SocialRound>
-                    <SocialRound href={site.github} label="GitHub profile">
-                      <IconGitHub />
-                    </SocialRound>
-                    <SocialRound href={`mailto:${site.email}`} label="Email contact">
-                      <IconMail />
-                    </SocialRound>
+                <div className="flex min-h-[24rem] flex-col overflow-hidden rounded-xl border border-line bg-inset">
+                  <ContactScene />
+                  <div className="flex flex-1 flex-col justify-end p-6 pt-1">
+                    <p className="text-xs uppercase tracking-[0.2em] text-muted-soft">Contact</p>
+                    <a
+                      href={`mailto:${site.email}`}
+                      className="mt-4 block text-foreground transition hover:text-accent-text"
+                    >
+                      {site.email}
+                    </a>
+                    <div className="mt-6 flex items-center gap-3">
+                      <SocialRound href={site.linkedin} label="LinkedIn profile">
+                        <IconLinkedIn />
+                      </SocialRound>
+                      <SocialRound href={site.github} label="GitHub profile">
+                        <IconGitHub />
+                      </SocialRound>
+                      <SocialRound href={`mailto:${site.email}`} label="Email contact">
+                        <IconMail />
+                      </SocialRound>
+                    </div>
+                    {resume ? (
+                      <a
+                        href={resume.href}
+                        download={resume.download}
+                        target={resume.target}
+                        rel={resume.rel}
+                        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-line bg-chip px-5 py-3 text-sm font-semibold text-foreground transition hover:border-violet-500/40 hover:text-accent-text"
+                      >
+                       Resume
+                        <IconDownload />
+                      </a>
+                    ) : null}
                   </div>
                 </div>
               </div>

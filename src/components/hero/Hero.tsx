@@ -4,19 +4,33 @@ import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
 import type { HeroMedia, HeroTemplateId, SiteContent } from "@/content/types";
 import { NookHero } from "./NookHero";
+import { StudioHero } from "./StudioHero";
 import { WorldHero } from "./WorldHero";
 import { parsePlayableMedia } from "@/lib/media-url";
 import { Fade } from "@/components/Fade";
 import { IconArrowRight, IconDownload } from "@/components/icons";
+import { resumeDownloadProps } from "@/lib/resume";
 
 function Typewriter({ words }: { words: readonly string[] }) {
   const reduce = useReducedMotion();
+  const list = words.filter(Boolean);
+  const spoken = list.join(". ");
   if (reduce) {
     return (
-      <p className="inline-block text-xl font-medium text-accent-text sm:text-2xl">{words[0] ?? ""}</p>
+      <>
+        <span className="sr-only">{spoken}</span>
+        <p className="inline-block text-xl font-medium text-accent-text sm:text-2xl" aria-hidden="true">
+          {list.join(" · ")}
+        </p>
+      </>
     );
   }
-  return <TypewriterLive words={words} />;
+  return (
+    <>
+      <span className="sr-only">{spoken}</span>
+      <TypewriterLive words={list} />
+    </>
+  );
 }
 
 function TypewriterLive({ words }: { words: readonly string[] }) {
@@ -45,7 +59,7 @@ function TypewriterLive({ words }: { words: readonly string[] }) {
   }, [deleting, index, text, words]);
 
   return (
-    <p className="inline-block text-xl font-medium text-accent-text sm:text-2xl">
+    <p className="inline-block text-xl font-medium text-accent-text sm:text-2xl" aria-hidden="true">
       {text}
       <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[0.12em] bg-accent-text align-baseline motion-safe:animate-pulse" />
     </p>
@@ -54,13 +68,16 @@ function TypewriterLive({ words }: { words: readonly string[] }) {
 
 function HeroCtas({
   resume,
+  name,
   align = "start",
   onProjects,
 }: {
   resume: string;
+  name: string;
   align?: "start" | "center";
   onProjects: (e: MouseEvent<HTMLAnchorElement>) => void;
 }) {
+  const download = resumeDownloadProps(resume, name);
   return (
     <div
       className={`mt-9 flex flex-col gap-4 sm:flex-row ${align === "center" ? "items-center justify-center" : ""}`}
@@ -73,13 +90,18 @@ function HeroCtas({
         View My Work
         <IconArrowRight />
       </a>
-      <a
-        href={resume}
-        className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-6 py-3 text-sm font-semibold text-foreground transition hover:border-violet-500/40 hover:text-accent-text"
-      >
-        Download Resume
-        <IconDownload />
-      </a>
+      {download ? (
+        <a
+          href={download.href}
+          download={download.download}
+          target={download.target}
+          rel={download.rel}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-6 py-3 text-sm font-semibold text-foreground transition hover:border-violet-500/40 hover:text-accent-text"
+        >
+          Download Resume
+          <IconDownload />
+        </a>
+      ) : null}
     </div>
   );
 }
@@ -93,16 +115,29 @@ function hasMedia(media: HeroMedia) {
   return media.kind !== "none" && media.url.trim().length > 0;
 }
 
-function HeroMediaView({ media, className }: { media: HeroMedia; className?: string }) {
+function HeroMediaView({
+  media,
+  className,
+  alt,
+  decorative,
+}: {
+  media: HeroMedia;
+  className?: string;
+  alt: string;
+  decorative?: boolean;
+}) {
   const reduce = useReducedMotion();
   const playable = parsePlayableMedia(media.url, media.kind === "image" ? "image" : "video");
   if (playable.type === "iframe") {
+    const src = reduce
+      ? playable.src.replace(/autoplay=1/g, "autoplay=0").replace(/controls=0/g, "controls=1")
+      : playable.src;
     return (
       <iframe
-        src={playable.src}
+        src={src}
         className={`${className ?? ""} border-0`}
-        title="Hero video"
-        allow="autoplay; encrypted-media; picture-in-picture"
+        title={alt || "Hero video"}
+        allow={`${reduce ? "" : "autoplay; "}encrypted-media; picture-in-picture`}
         allowFullScreen
       />
     );
@@ -116,7 +151,8 @@ function HeroMediaView({ media, className }: { media: HeroMedia; className?: str
         muted
         loop
         playsInline
-        controls={Boolean(reduce)}
+        controls
+        title={alt || "Hero video"}
       />
     );
   }
@@ -124,7 +160,7 @@ function HeroMediaView({ media, className }: { media: HeroMedia; className?: str
     return (
       // Hero media can be a local upload or an external URL.
       // eslint-disable-next-line @next/next/no-img-element
-      <img src={playable.src} alt="" className={className} />
+      <img src={playable.src} alt={decorative ? "" : alt} className={className} />
     );
   }
   return <div className={className} />;
@@ -153,7 +189,7 @@ function HeroCopy({
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} align="center" onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} align="center" onProjects={onProjects} />
         </Fade>
       </div>
     );
@@ -174,7 +210,7 @@ function HeroCopy({
           <p className="mt-4 max-w-xl text-base leading-7 text-muted">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
         </Fade>
       </div>
     );
@@ -201,7 +237,7 @@ function HeroCopy({
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{site.line}</p>
         </Fade>
         <Fade delay={0.24}>
-          <HeroCtas resume={site.resume} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
         </Fade>
       </div>
     );
@@ -223,7 +259,7 @@ function HeroCopy({
         <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
       </Fade>
       <Fade delay={0.22}>
-        <HeroCtas resume={site.resume} onProjects={onProjects} />
+        <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
       </Fade>
     </div>
   );
@@ -250,7 +286,7 @@ function Classic({ site, onProjects }: HeroProps) {
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
         </Fade>
       </div>
     </section>
@@ -278,7 +314,7 @@ function Centered({ site, onProjects }: HeroProps) {
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} align="center" onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} align="center" onProjects={onProjects} />
         </Fade>
       </div>
     </section>
@@ -301,7 +337,7 @@ function Split({ site, onProjects }: HeroProps) {
             <p className="mt-5 text-base leading-7 text-muted sm:text-lg">{site.line}</p>
           </Fade>
           <Fade delay={0.2}>
-            <HeroCtas resume={site.resume} onProjects={onProjects} />
+            <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
           </Fade>
         </div>
         <Fade delay={0.1}>
@@ -355,7 +391,7 @@ function Minimal({ site, onProjects }: HeroProps) {
             <p className="mt-4 max-w-xl text-base leading-7 text-muted">{site.line}</p>
           </Fade>
           <Fade delay={0.22}>
-            <HeroCtas resume={site.resume} onProjects={onProjects} />
+            <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
           </Fade>
         </div>
       </div>
@@ -388,7 +424,7 @@ function Spotlight({ site, onProjects }: HeroProps) {
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{site.line}</p>
         </Fade>
         <Fade delay={0.24}>
-          <HeroCtas resume={site.resume} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
         </Fade>
         {site.stats.length ? (
           <Fade delay={0.3}>
@@ -410,7 +446,7 @@ function Spotlight({ site, onProjects }: HeroProps) {
   );
 }
 
-const templates: Record<Exclude<HeroTemplateId, "world" | "nook">, (props: HeroProps) => ReactNode> = {
+const templates: Record<Exclude<HeroTemplateId, "world" | "nook" | "studio">, (props: HeroProps) => ReactNode> = {
   classic: Classic,
   centered: Centered,
   split: Split,
@@ -433,13 +469,21 @@ export function Hero({
   if (template === "nook") {
     return <NookHero site={site} />;
   }
+  if (template === "studio") {
+    return <StudioHero site={site} />;
+  }
   const copy = <HeroCopy site={site} onProjects={onProjects} template={template} />;
 
   if (hasMedia(media) && media.place === "background") {
     return (
       <section id="top" className="relative flex min-h-[78vh] items-center overflow-hidden py-20 sm:py-28">
         <div className="absolute inset-0">
-          <HeroMediaView media={media} className="h-full w-full object-cover" />
+          <HeroMediaView
+            media={media}
+            className="h-full w-full object-cover"
+            alt=""
+            decorative
+          />
           <div className="absolute inset-0 bg-background/70" />
         </div>
         <div className="section-shell relative z-10 w-full">{copy}</div>
@@ -450,7 +494,11 @@ export function Hero({
   if (hasMedia(media) && media.place === "side") {
     const frame = (
       <div className="relative min-h-[16rem] overflow-hidden rounded-2xl border border-line bg-chip sm:min-h-[22rem] lg:min-h-[28rem]">
-        <HeroMediaView media={media} className="absolute inset-0 h-full w-full object-cover" />
+        <HeroMediaView
+          media={media}
+          className="absolute inset-0 h-full w-full object-cover"
+          alt={`${site.name} portrait or featured media`}
+        />
       </div>
     );
     return (

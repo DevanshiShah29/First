@@ -73,7 +73,8 @@ html:has(.wp-login) body {
 .wp-login-form input:focus {
   border-color: #2271b1;
   box-shadow: 0 0 0 1px #2271b1;
-  outline: none;
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
 }
 
 .wp-login-submit {
@@ -234,8 +235,18 @@ html:has(.wp-login) body {
 }
 
 .wp-bar-fold {
-  width: 36px;
+  width: 44px;
+  min-height: 32px;
   justify-content: center;
+}
+
+.wp-app .skip:focus,
+.wp-app .skip:focus-visible {
+  top: 40px;
+}
+
+#admin-content:focus {
+  outline: none;
 }
 
 .wp-drop {
@@ -255,7 +266,8 @@ html:has(.wp-login) body {
 }
 
 .wp-drop:hover .wp-drop-menu,
-.wp-drop:focus-within .wp-drop-menu {
+.wp-drop:focus-within .wp-drop-menu,
+.wp-drop.is-open .wp-drop-menu {
   display: block;
 }
 
@@ -594,7 +606,8 @@ html:has(.wp-login) body {
 .wp-title-input:focus {
   border-color: #2271b1;
   box-shadow: 0 0 0 1px #2271b1;
-  outline: none;
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
 }
 
 .wp-form-table {
@@ -644,7 +657,8 @@ html:has(.wp-login) body {
 .wp-textarea:focus {
   border-color: #2271b1;
   box-shadow: 0 0 0 1px #2271b1;
-  outline: none;
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
 }
 
 .wp-input-small {
@@ -1280,6 +1294,112 @@ html:has(.wp-login) body {
   margin: 8px 0;
 }
 
+.wp-skill-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  background: #f6f7f7;
+  border-radius: 4px;
+}
+
+.wp-skill-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 96px;
+  padding: 12px 8px;
+  border: 1px solid #c3c4c7;
+  border-radius: 12px;
+  background: #fff;
+  color: #1d2327;
+  --skill-mono: #121218;
+  --accent-text: #6d28d9;
+}
+
+.wp-skill-preview-name {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  color: #1d2327;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.wp-skill-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.wp-skill-fields .wp-input,
+.wp-skill-fields .wp-select,
+.wp-skill-fields .wp-hex {
+  max-width: none;
+}
+
+.wp-skill-fields-top {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.2fr) minmax(140px, 0.8fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.wp-skill-icon-source {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.wp-skill-file {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.wp-skill-file input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.wp-skill-file .wp-btn {
+  pointer-events: none;
+}
+
+.wp-skill-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding-top: 2px;
+}
+
+@media (max-width: 782px) {
+  .wp-skill-row {
+    grid-template-columns: 1fr;
+  }
+
+  .wp-skill-preview {
+    min-height: 80px;
+    max-width: 140px;
+  }
+
+  .wp-skill-fields-top,
+  .wp-skill-icon-source {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 782px) {
   .wp-menu {
     display: none;
@@ -1292,6 +1412,10 @@ html:has(.wp-login) body {
 
   .wp-app.is-menu-open .wp-menu {
     display: block;
+  }
+
+  .wp-menu {
+    overflow: auto;
   }
 
   .wp-edit {

@@ -35,7 +35,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
       <div className="wp-login-box">
         <h1>
           <Link href="/">
-            <LogoMark className="h-14 w-14" title="Devanshi Shah" />
+            <LogoMark className="h-14 w-14" />
             <span>Devanshi Shah</span>
           </Link>
         </h1>
@@ -44,11 +44,16 @@ export function LoginForm({ configured }: { configured: boolean }) {
             Set <code>ADMIN_PASSWORD</code> in <code>.env.local</code> and restart the server.
           </div>
         ) : null}
-        {error ? <div className="wp-notice is-error">{error}</div> : null}
+        {error ? (
+          <div id="admin-login-error" className="wp-notice is-error" role="alert">
+            {error}
+          </div>
+        ) : null}
         <form className="wp-login-form" onSubmit={onSubmit}>
-          <label>
+          <label htmlFor="admin-password">
             Password
             <input
+              id="admin-password"
               type="password"
               name="password"
               autoComplete="current-password"
@@ -56,6 +61,8 @@ export function LoginForm({ configured }: { configured: boolean }) {
               onChange={(e) => setPassword(e.target.value)}
               required
               size={20}
+              aria-invalid={Boolean(error)}
+              aria-describedby={error ? "admin-login-error" : undefined}
             />
           </label>
           <div className="wp-login-submit">

@@ -1,0 +1,79 @@
+"use client";
+
+import { useEffect, useRef, type PointerEvent } from "react";
+import { useReducedMotion } from "motion/react";
+
+export function ContactScene() {
+  const reduce = useReducedMotion();
+  const stage = useRef<HTMLDivElement>(null);
+  const rig = useRef<HTMLDivElement>(null);
+  const target = useRef({ x: 0, y: 0 });
+  const current = useRef({ x: 0, y: 0 });
+  const interacting = useRef(false);
+
+  useEffect(() => {
+    const el = rig.current;
+    if (!el) return;
+    if (reduce) {
+      el.style.transform = "rotateX(10deg) rotateY(-22deg)";
+      return;
+    }
+    let raf = 0;
+    const tick = (now: number) => {
+      if (!interacting.current) {
+        const t = now * 0.00038;
+        target.current = { x: Math.sin(t) * 5.4, y: Math.cos(t * 0.82) * 7.2 };
+      }
+      current.current.x += (target.current.x - current.current.x) * 0.08;
+      current.current.y += (target.current.y - current.current.y) * 0.08;
+      el.style.transform = `rotateX(${(10 + current.current.x).toFixed(3)}deg) rotateY(${(-22 + current.current.y).toFixed(3)}deg)`;
+      raf = window.requestAnimationFrame(tick);
+    };
+    raf = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(raf);
+  }, [reduce]);
+
+  function tiltFromEvent(e: PointerEvent<HTMLDivElement>) {
+    if (reduce) return;
+    const box = stage.current?.getBoundingClientRect();
+    if (!box) return;
+    const nx = (e.clientX - box.left) / box.width - 0.5;
+    const ny = (e.clientY - box.top) / box.height - 0.5;
+    const amp = e.pointerType === "touch" ? 10 : 14;
+    target.current = { x: ny * -amp, y: nx * (amp + 4) };
+    interacting.current = true;
+  }
+
+  return (
+    <div
+      ref={stage}
+      className="contact-scene"
+      aria-hidden="true"
+      onPointerMove={tiltFromEvent}
+      onPointerLeave={() => {
+        interacting.current = false;
+      }}
+    >
+      <div className="contact-scene-glow" />
+      <div className="contact-scene-glow is-alt" />
+      <div ref={rig} className="contact-scene-rig">
+        <div className="contact-ring contact-ring-a" />
+        <div className="contact-ring contact-ring-b" />
+        <div className="contact-sheet contact-sheet-back" />
+        <div className="contact-sheet contact-sheet-mid" />
+        <div className="contact-sheet contact-sheet-front">
+          <span className="contact-sheet-brand" />
+          <span className="contact-sheet-chip"></span>
+          <span className="contact-sheet-line" />
+          <span className="contact-sheet-line is-short" />
+          <span className="contact-sheet-line" />
+          <span className="contact-sheet-line is-mid" />
+          <span className="contact-sheet-line is-short" />
+        </div>
+        <span className="contact-node contact-node-a" />
+        <span className="contact-node contact-node-b" />
+        <span className="contact-node contact-node-c" />
+      </div>
+    </div>
+  );
+}

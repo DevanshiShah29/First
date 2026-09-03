@@ -59,6 +59,11 @@ export const HERO_TEMPLATES = [
     name: "3D Nook",
     description: "Responsive hobby studio — piano, books, cooking, yoga, and more.",
   },
+  {
+    id: "studio",
+    name: "3D Studio",
+    description: "Miniature creative studio centered on you at the laptop, with a photo wall and cozy corners.",
+  },
 ] as const;
 
 export type HeroTemplateId = (typeof HERO_TEMPLATES)[number]["id"];
@@ -135,6 +140,8 @@ export type SkillItem = {
   name: string;
   icon: SkillIcon;
   color?: string;
+  /** Custom icon: uploaded SVG path or any image URL. Takes precedence over `icon`. */
+  iconUrl?: string;
 };
 
 export type SkillGroup = {

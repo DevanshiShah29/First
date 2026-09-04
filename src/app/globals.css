@@ -62,6 +62,10 @@
   --color-accent-hover: var(--accent-hover);
   --color-badge: var(--badge);
   --font-sans: var(--font-outfit);
+  --text-2xs: 0.7rem;
+  --tracking-kicker: 0.2em;
+  --tracking-kicker-tight: 0.18em;
+  --leading-flat: 1.05;
 }
 
 :root {
@@ -441,6 +445,59 @@ html:not([data-theme="light"]) .theme-icon-moon {
 }
 .timeline-line {
   background: linear-gradient(to bottom, var(--brand-from, #7c3aed), var(--brand-to, #6366f1));
+}
+.timeline-dot {
+  position: absolute;
+  top: 2rem;
+  left: -2.2rem;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 9999px;
+  background-color: #7c3aed;
+  box-shadow: 0 0 0 4px rgb(139 92 246 / 0.3);
+}
+@media (min-width: 40rem) {
+  .timeline-dot {
+    left: -2.65rem;
+  }
+}
+.kicker {
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+.contact-grid {
+  display: grid;
+  gap: 2rem;
+}
+@media (min-width: 64rem) {
+  .contact-grid {
+    grid-template-columns: 1.15fr 0.85fr;
+    align-items: stretch;
+  }
+}
+.footer-grid {
+  display: grid;
+  gap: 3rem;
+}
+@media (min-width: 64rem) {
+  .footer-grid {
+    grid-template-columns: minmax(0, 1.4fr) repeat(3, minmax(0, 1fr));
+    gap: 2.5rem;
+  }
+}
+.hero-viewport-min {
+  min-height: 78vh;
+}
+.typewriter-cursor {
+  display: inline-block;
+  margin-left: 0.125rem;
+  height: 1em;
+  width: 2px;
+  transform: translateY(0.12em);
+  background-color: var(--accent-text);
+  vertical-align: baseline;
 }
 
 .world-hero {

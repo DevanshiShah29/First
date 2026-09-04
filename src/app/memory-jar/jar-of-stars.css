@@ -266,6 +266,7 @@ html[data-theme="light"] .jar-of-stars {
 }
 
 .jar-of-stars .jar-photo {
+  object-position: center 10%;
   filter: var(--jar-photo-filter);
 }
 
@@ -815,6 +816,14 @@ html:not([data-theme="light"]) .jar-of-stars .jar-reveal-backdrop--mint {
 html[data-theme="dark"] .jar-of-stars .jar-reveal-backdrop--peach,
 html:not([data-theme="light"]) .jar-of-stars .jar-reveal-backdrop--peach {
   --reveal-bg: radial-gradient(circle at 50% 35%, #382117 0%, #27160f 55%, #170c07 100%);
+}
+
+.jar-of-stars .jar-orb {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  z-index: 10;
+  pointer-events: none;
 }
 
 .jar-of-stars .animate-orb-rise {

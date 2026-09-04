@@ -21,6 +21,7 @@ import {
 } from "./icons";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
+import { sendContactMessage } from "@/lib/api-client";
 
 const fieldClass =
   "mt-1.5 w-full rounded-lg border border-line bg-inset px-4 py-3 text-sm text-foreground transition focus-visible:border-violet-500/60";
@@ -108,29 +109,19 @@ export function Site({ content }: { content: ContentData }) {
     const data = new FormData(form);
     setStatus("sending");
     setFormError("");
-    try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: String(data.get("name") ?? ""),
-          email: String(data.get("email") ?? ""),
-          message: String(data.get("message") ?? ""),
-          company: String(data.get("company") ?? ""),
-        }),
-      });
-      const payload = (await res.json().catch(() => null)) as { error?: string } | null;
-      if (!res.ok) {
-        setStatus("error");
-        setFormError(payload?.error || "Could not send your message. Please email me directly.");
-        return;
-      }
-      form.reset();
-      setStatus("sent");
-    } catch {
+    const result = await sendContactMessage({
+      name: String(data.get("name") ?? ""),
+      email: String(data.get("email") ?? ""),
+      message: String(data.get("message") ?? ""),
+      company: String(data.get("company") ?? ""),
+    });
+    if (!result.ok) {
       setStatus("error");
-      setFormError("Could not send your message. Please email me directly.");
+      setFormError(result.error || "Could not send your message. Please email me directly.");
+      return;
     }
+    form.reset();
+    setStatus("sent");
   }
 
   return (
@@ -170,7 +161,7 @@ export function Site({ content }: { content: ContentData }) {
                 <div className="card-surface relative rounded-2xl p-8">
                   <div className="philosophy-wash absolute inset-0 rounded-2xl" />
                   <div className="relative">
-                    <p className="text-xs uppercase tracking-[0.2em] text-muted-soft">
+                    <p className="kicker text-muted-soft">
                       {site.philosophyKicker}
                     </p>
                     <h3 className="mt-4 text-2xl font-semibold text-foreground">
@@ -199,9 +190,9 @@ export function Site({ content }: { content: ContentData }) {
                 {experience.map((job, i) => (
                   <Fade key={job.id} y={24} delay={0.08 * Math.min(i, 3)} className="w-full">
                     <article className="card-surface relative rounded-2xl p-6 transition duration-300 hover:-translate-y-1">
-                      <span className="absolute -left-[2.2rem] top-8 h-4 w-4 rounded-full bg-violet-600 ring-4 ring-violet-500/30 sm:-left-[2.65rem]" />
+                      <span className="timeline-dot" />
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-xs uppercase tracking-[0.18em] text-accent-text">{job.when}</p>
+                        <p className="text-xs uppercase tracking-kicker-tight text-accent-text">{job.when}</p>
                         {job.current ? (
                           <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-badge">
                             Current
@@ -342,14 +333,14 @@ export function Site({ content }: { content: ContentData }) {
         <section id="contact" tabIndex={-1} aria-labelledby="contact-heading" className="py-16 sm:py-24">
           <div className="section-shell">
             <Fade y={28} duration={0.65}>
-              <div className="card-surface grid gap-8 rounded-2xl p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
+              <div className="card-surface contact-grid rounded-2xl p-6 sm:p-8">
                 <div>
                   <h2 id="contact-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                     Let&apos;s Work Together
                   </h2>
                   <p className="mt-3 text-muted">{site.contactLine}</p>
                   <form className="relative mt-8 space-y-4" action="/api/contact" method="post" onSubmit={onSubmit}>
-                    <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+                    <div className="sr-only" aria-hidden="true">
                       <label htmlFor="contact-company">Company</label>
                       <input
                         id="contact-company"
@@ -403,7 +394,7 @@ export function Site({ content }: { content: ContentData }) {
                     <button
                       type="submit"
                       disabled={status === "sending"}
-                      className="btn-primary inline-flex items-center rounded-lg px-5 py-3 text-sm font-semibold text-[#f8f8f8] hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+                      className="btn-primary inline-flex items-center rounded-lg px-5 py-3 text-sm font-semibold text-foreground hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
                     >
                       {status === "sending" ? "Sending…" : "Send Message"}
                     </button>
@@ -420,10 +411,10 @@ export function Site({ content }: { content: ContentData }) {
                     </p>
                   </form>
                 </div>
-                <div className="flex min-h-[24rem] flex-col overflow-hidden rounded-xl border border-line bg-inset">
+                <div className="flex min-h-96 flex-col overflow-hidden rounded-xl border border-line bg-inset">
                   <ContactScene />
                   <div className="flex flex-1 flex-col justify-end p-6 pt-1">
-                    <p className="text-xs uppercase tracking-[0.2em] text-muted-soft">Contact</p>
+                    <p className="kicker text-muted-soft">Contact</p>
                     <a
                       href={`mailto:${site.email}`}
                       className="mt-4 block text-foreground transition hover:text-accent-text"

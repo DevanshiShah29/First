@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogoMark } from "@/components/Logo";
+import { cmsLogin } from "@/lib/api-client";
 
 export function LoginForm({ configured }: { configured: boolean }) {
   const router = useRouter();
@@ -15,15 +16,10 @@ export function LoginForm({ configured }: { configured: boolean }) {
     e.preventDefault();
     setPending(true);
     setError("");
-    const res = await fetch("/api/cms/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ password }),
-    });
-    const body = (await res.json().catch(() => ({}))) as { error?: string };
-    if (!res.ok) {
+    const result = await cmsLogin(password);
+    if (!result.ok) {
       setPending(false);
-      setError(body.error || "Could not log in.");
+      setError(result.error || "Could not log in.");
       return;
     }
     router.push("/admin");

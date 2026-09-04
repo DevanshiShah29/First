@@ -47,7 +47,7 @@ export function Logo({ name }: { name: string }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <LogoMark className="logo-mark h-9 w-9 shrink-0 transition" />
-      <span className="text-[0.95rem] font-semibold tracking-[-0.03em] text-foreground">
+      <span className="text-sm font-semibold tracking-tight text-foreground sm:text-base">
         <span className="sm:hidden">{first}</span>
         <span className="hidden sm:inline">{name}</span>
       </span>

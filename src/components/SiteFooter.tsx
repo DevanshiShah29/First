@@ -24,7 +24,7 @@ export function SiteFooter({
     <footer className="site-footer border-t border-line">
       <div className="section-shell py-16 sm:py-20">
         <Fade y={20} duration={0.6}>
-          <div className="grid gap-12 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] lg:gap-10">
+          <div className="footer-grid">
             <div>
             <Link href="/" className="inline-flex" onClick={(e) => onClick(e, "/")}>
               <Logo name={site.name} />
@@ -69,7 +69,7 @@ export function SiteFooter({
 
           {groups.map((group) => (
             <nav key={group.title} aria-label={group.title}>
-              <h2 className="text-[0.7rem] font-medium uppercase tracking-[0.18em] text-muted-soft">
+              <h2 className="text-2xs font-medium uppercase tracking-kicker-tight text-muted-soft">
                 {group.title}
               </h2>
               <ul className="mt-4 space-y-2.5">

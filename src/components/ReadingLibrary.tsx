@@ -76,7 +76,7 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
   if (!library.configured) {
     return (
       <section id="library" className="section-shell py-20 sm:py-28">
-        <p className="text-[0.7rem] uppercase tracking-[0.2em] text-accent-text">From the desk</p>
+        <p className="kicker">From the desk</p>
         <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Reading</h1>
         <p className="mt-5 max-w-xl text-muted">The bookshelf is taking a break. Add a Goodreads profile in the CMS to fill this page.</p>
       </section>
@@ -86,7 +86,7 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
   if (total === 0) {
     return (
       <section id="library" className="section-shell py-20 sm:py-28">
-        <p className="text-[0.7rem] uppercase tracking-[0.2em] text-accent-text">From the desk</p>
+        <p className="kicker">From the desk</p>
         <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Reading</h1>
         <p className="mt-5 max-w-xl text-muted">
           Couldn’t load books from Goodreads right now.{" "}
@@ -103,7 +103,7 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
     <div id="library" className="pb-20 sm:pb-28">
       <section className="section-shell pt-16 sm:pt-24">
         <Fade y={24}>
-          <p className="text-[0.7rem] uppercase tracking-[0.2em] text-accent-text">From the desk</p>
+          <p className="kicker">From the desk</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">Reading</h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
             Everything on my Goodreads shelves — what I’m in the middle of, what I’ve finished, and what I want next,

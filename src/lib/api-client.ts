@@ -118,6 +118,223 @@ export async function saveCmsContent(content: ContentData): Promise<ApiResponse<
   }
 }
 
+export interface GenerateExperienceInput {
+  role: string;
+  company: string;
+  when: string;
+  current: boolean;
+  existingSummary?: string;
+  existingBullets?: string[];
+  existingTags?: string[];
+  linkedin?: string;
+  resume?: string;
+}
+
+export interface GenerateExperienceResult {
+  summary: string;
+  bullets: string[];
+  tags: string[];
+}
+
+/**
+ * Generate experience summary, bullets, and tags via Gemini (CMS auth required).
+ */
+export async function generateExperienceCopy(
+  input: GenerateExperienceInput,
+): Promise<ApiResponse<GenerateExperienceResult>> {
+  try {
+    const res = await fetch("/api/cms/generate-experience", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      summary?: string;
+      bullets?: string[];
+      tags?: string[];
+    };
+
+    if (!res.ok || !body.summary || !Array.isArray(body.bullets) || !Array.isArray(body.tags)) {
+      return {
+        ok: false,
+        error: body.error || "Could not generate copy.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        summary: body.summary,
+        bullets: body.bullets,
+        tags: body.tags,
+      },
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not generate copy. Network error.",
+    };
+  }
+}
+
+export interface GenerateProjectInput {
+  name: string;
+  github: string;
+  demo: string;
+  existingBlurb?: string;
+  existingTags?: string[];
+}
+
+export interface GenerateProjectResult {
+  blurb: string;
+  tags: string[];
+}
+
+/**
+ * Generate project description and tags from GitHub / live URLs (CMS auth required).
+ */
+export async function generateProjectCopy(
+  input: GenerateProjectInput,
+): Promise<ApiResponse<GenerateProjectResult>> {
+  try {
+    const res = await fetch("/api/cms/generate-project", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      blurb?: string;
+      tags?: string[];
+    };
+
+    if (!res.ok || !body.blurb || !Array.isArray(body.tags)) {
+      return {
+        ok: false,
+        error: body.error || "Could not generate copy.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        blurb: body.blurb,
+        tags: body.tags,
+      },
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not generate copy. Network error.",
+    };
+  }
+}
+
+export interface GenerateTechnologiesInput {
+  siteTitle: string;
+  siteRoles: string[];
+  experienceStacks: string[];
+  projectTags: string[];
+  existingGroups: ContentData["technologies"];
+  linkedin?: string;
+  resume?: string;
+}
+
+export interface GenerateSkillsInput {
+  siteTitle: string;
+  siteRoles: string[];
+  experienceStacks: string[];
+  experienceSummaries: string[];
+  existingGroups: ContentData["skills"];
+  linkedin?: string;
+  resume?: string;
+}
+
+export interface GenerateSkillsResult {
+  groups: ContentData["skills"];
+}
+
+export interface GenerateTechnologiesResult {
+  groups: NonNullable<ContentData["technologies"]>;
+}
+
+/**
+ * Generate technology groups/items from portfolio signals (CMS auth required).
+ */
+export async function generateTechnologiesCopy(
+  input: GenerateTechnologiesInput,
+): Promise<ApiResponse<GenerateTechnologiesResult>> {
+  try {
+    const res = await fetch("/api/cms/generate-technologies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      groups?: NonNullable<ContentData["technologies"]>;
+    };
+
+    if (!res.ok || !Array.isArray(body.groups) || body.groups.length === 0) {
+      return {
+        ok: false,
+        error: body.error || "Could not generate technologies.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: { groups: body.groups },
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not generate technologies. Network error.",
+    };
+  }
+}
+
+/**
+ * Generate skill groups/items from resume, LinkedIn, and experience (CMS auth required).
+ */
+export async function generateSkillsCopy(
+  input: GenerateSkillsInput,
+): Promise<ApiResponse<GenerateSkillsResult>> {
+  try {
+    const res = await fetch("/api/cms/generate-skills", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      groups?: ContentData["skills"];
+    };
+
+    if (!res.ok || !Array.isArray(body.groups) || body.groups.length === 0) {
+      return {
+        ok: false,
+        error: body.error || "Could not generate skills.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: { groups: body.groups },
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not generate skills. Network error.",
+    };
+  }
+}
+
 /**
  * Upload an asset (hero media, memory photo, skill icon, or resume) to the server.
  */

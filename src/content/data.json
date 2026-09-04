@@ -4,9 +4,9 @@
     "initials": "Dev",
     "title": "Devanshi Shah | Product Manager Portfolio",
     "description": "Portfolio of Devanshi Shah — product-minded engineer turning messy problems into products people actually use.",
-    "heroTemplate": "studio",
+    "heroTemplate": "classic",
     "heroMedia": {
-      "kind": "video",
+      "kind": "none",
       "url": "https://img.magnific.com/premium-vector/software-developer-vector-illustration-communication-technology-cyber-security_1249867-5467.jpg?semt=ais_test_b&w=740&q=80",
       "place": "side",
       "side": "left"
@@ -309,22 +309,12 @@
   },
   "memories": [
     {
-      "id": "mem-1",
-      "title": "First Shipped Feature",
-      "note": "Staying up until 2:30 AM watching the very first real user click through a flow I spent weeks designing. Seeing them find exactly what they needed without hesitation felt like pure magic.",
-      "date": "Summer 2023",
-      "category": "Milestone",
-      "icon": "🚀",
-      "photoUrl": "https://images.unsplash.com/photo-1526779259212-939e64788e3c?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZnJlZSUyMGltYWdlc3xlbnwwfHwwfHx8MA%3D%3D",
-      "color": "#7C3AED"
-    },
-    {
       "id": "mem-2",
       "title": "Late Night Piano Chords",
       "note": "Learning Ludovico Einaudi’s 'Nuvole Bianche' measure by measure on a quiet rainy evening. The moment muscle memory took over and the music flowed on its own.",
       "date": "October 2023",
       "category": "Craft",
-      "icon": "🎹",
+      "icon": "",
       "photoUrl": "",
       "color": "#6366F1"
     },
@@ -334,7 +324,7 @@
       "note": "Filling 14 pages of rough wireframes and margin doodles on the morning commute. The most elegant product architecture often starts on wrinkled paper with a ballpoint pen.",
       "date": "Spring 2024",
       "category": "Discovery",
-      "icon": "✨",
+      "icon": "",
       "photoUrl": "",
       "color": "#A78BFA"
     },
@@ -344,7 +334,7 @@
       "note": "Finishing 'The Design of Everyday Things' over hot ginger chai on a chilly Sunday. Looking at Norman doors and tea kettles with entirely new eyes forever after.",
       "date": "Winter 2024",
       "category": "Tiny Joy",
-      "icon": "☕",
+      "icon": "",
       "photoUrl": "",
       "color": "#F59E0B"
     },
@@ -354,19 +344,19 @@
       "note": "When our team was stuck on a thorny scope dispute for three days, and we drew the simple 'who is this NOT for' matrix on a whiteboard. The collective sigh of relief in that room was unforgettable.",
       "date": "Autumn 2024",
       "category": "Milestone",
-      "icon": "💡",
+      "icon": "",
       "photoUrl": "",
       "color": "#10B981"
     },
     {
-      "id": "mem-6",
-      "title": "Stargazing After a Tough Launch",
-      "note": "Sitting on the rooftop terrace after a high-stakes release week, watching the night sky. Remembering how vast the universe is, and how sweet every tiny finished craft really is.",
-      "date": "Recent",
-      "category": "Life",
-      "icon": "⭐",
-      "photoUrl": "",
-      "color": "#EC4899"
+      "id": "19a431e8-e1ac-4794-8a6c-f6769cdc956b",
+      "title": "New memory",
+      "note": "Has always been in my wish list and finally i got it.",
+      "date": "15 Aug 2026",
+      "category": "",
+      "icon": "",
+      "photoUrl": "/uploads/memories/1788498818619-img-0355.png",
+      "color": "#A78BFA"
     }
   ]
 }

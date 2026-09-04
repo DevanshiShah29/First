@@ -381,7 +381,6 @@ html:not([data-theme="light"]) .jar-of-stars .jar-photo--dark {
   z-index: 4;
   pointer-events: none;
   filter: drop-shadow(0 1px 2px #281e1433);
-  background: url(/memory-jar/tape.png) 50% / cover no-repeat;
   width: min(104px, 34%);
   height: clamp(22px, 4.2vw, 30px);
   position: absolute;

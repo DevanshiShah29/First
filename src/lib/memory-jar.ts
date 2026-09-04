@@ -175,7 +175,6 @@ export const JAR_ASSETS = {
   masonJar: "/memory-jar/mason-jar.png",
   masonJarDark: "/memory-jar/mason-jar-dark.png",
   parchment: "/memory-jar/parchment.png",
-  tape: "/memory-jar/tape.png",
   cursor: "/memory-jar/cursor-star.png",
   star: (color: StarColor) => `/memory-jar/stars/${color}.png`,
   paper: (color: StarColor) => `/memory-jar/papers/${color}.png`,

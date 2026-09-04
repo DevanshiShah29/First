@@ -522,7 +522,7 @@ function RevealCard({
             ) : null}
 
             <p
-              className="mt-5 whitespace-pre-wrap break-words text-center font-serif-italic text-2xl sm:text-3xl leading-snug sm:leading-relaxed"
+              className="mt-5 whitespace-pre-wrap break-words text-center font-serif-italic text-xl leading-snug sm:leading-relaxed"
               style={{ color: theme.ink }}
             >
               “{cleanNote}”

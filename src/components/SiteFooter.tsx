@@ -2,6 +2,7 @@ import type { MouseEvent } from "react";
 import Link from "next/link";
 import type { SiteContent } from "@/content/types";
 import { NewTabHint } from "./a11y";
+import { Fade } from "./Fade";
 import { Logo } from "./Logo";
 import { IconGitHub, IconLinkedIn, IconMail } from "./icons";
 import { siteMap } from "@/lib/sitemap";
@@ -22,8 +23,9 @@ export function SiteFooter({
   return (
     <footer className="site-footer border-t border-line">
       <div className="section-shell py-16 sm:py-20">
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] lg:gap-10">
-          <div>
+        <Fade y={20} duration={0.6}>
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,1fr))] lg:gap-10">
+            <div>
             <Link href="/" className="inline-flex" onClick={(e) => onClick(e, "/")}>
               <Logo name={site.name} />
             </Link>
@@ -89,8 +91,9 @@ export function SiteFooter({
             </nav>
           ))}
         </div>
-      </div>
-      <div className="border-t border-line py-6">
+      </Fade>
+    </div>
+    <div className="border-t border-line py-6">
         <div className="section-shell flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-sm text-muted-soft">
             © {new Date().getFullYear()} {site.name}

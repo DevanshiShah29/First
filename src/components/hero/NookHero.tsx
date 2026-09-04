@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import type { SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
 import { youtubeVideoId } from "@/lib/media-url";
@@ -121,7 +121,6 @@ export function NookHero({ site }: { site: SiteContent }) {
   const audioHost = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const restTimer = useRef<number | NodeJS.Timeout | undefined>(undefined);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [active, setActive] = useState<SpotId | null>(null);
   const [pianoPlaying, setPianoPlaying] = useState(false);
   const [pianoRest, setPianoRest] = useState(false);
@@ -161,11 +160,12 @@ export function NookHero({ site }: { site: SiteContent }) {
 
   function onMove(e: PointerEvent<HTMLDivElement>) {
     if (reduce) return;
-    const box = stage.current?.getBoundingClientRect();
-    if (!box) return;
+    const el = stage.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
     const nx = (e.clientX - box.left) / box.width - 0.5;
     const ny = (e.clientY - box.top) / box.height - 0.5;
-    setTilt({ x: ny * -6, y: nx * 8 });
+    el.style.transform = `perspective(1400px) rotateX(${(ny * -6).toFixed(2)}deg) rotateY(${(nx * 8).toFixed(2)}deg)`;
   }
 
   function onPianoToggle() {
@@ -218,19 +218,20 @@ export function NookHero({ site }: { site: SiteContent }) {
         ref={stage}
         className="world-stage"
         onPointerMove={onMove}
-        onPointerLeave={() => setTilt({ x: 0, y: 0 })}
-        style={{
-          transform: reduce
-            ? undefined
-            : `perspective(1400px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+        onPointerLeave={() => {
+          if (stage.current) stage.current.style.transform = "";
         }}
       >
         <picture>
-          <source media="(max-width: 720px)" srcSet="/images/hero-nook-portrait.jpg" />
+          <source media="(max-width: 720px)" srcSet="/images/hero-nook-portrait.jpg?v=nook2" />
           <img
-            src="/images/hero-nook.jpg"
+            src="/images/hero-nook.jpg?v=nook2"
             alt="Illustrated cozy nook with a piano, books, a memory jar, plants, a laptop, and art supplies."
             className="world-art"
+            width={1280}
+            height={720}
+            decoding="async"
+            fetchPriority="high"
           />
         </picture>
         <div className="world-watermark-mask" />

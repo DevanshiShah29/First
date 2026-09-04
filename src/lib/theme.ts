@@ -1,7 +1,7 @@
 import type { ThemeContent, ThemeMode, ThemePalette } from "@/content/types";
 
 function paletteVars(p: ThemePalette, orb: string) {
-  return `--background:${p.background};--foreground:${p.foreground};--card:${p.card};--card-hover:${p.cardHover};--chip:${p.chip};--accent-text:${p.accentText};--accent-hover:${p.accentHover};--badge:${p.badge};--muted:color-mix(in srgb,var(--foreground) 58%,transparent);--muted-soft:color-mix(in srgb,var(--foreground) 38%,transparent);--border:color-mix(in srgb,var(--foreground) 10%,transparent);--header:color-mix(in srgb,var(--background) 82%,transparent);--inset:color-mix(in srgb,var(--background) 70%,transparent);--company-from:${p.accentText};--company-to:${p.accentHover};--skill-mono:${p.foreground};--orb-a:color-mix(in srgb,var(--brand-from) ${orb}%,transparent);--orb-b:color-mix(in srgb,var(--brand-to) ${Math.max(8, Number(orb) - 8)}%,transparent);`;
+  return `--background:${p.background};--foreground:${p.foreground};--card:${p.card};--card-hover:${p.cardHover};--chip:${p.chip};--accent-text:${p.accentText};--accent-hover:${p.accentHover};--badge:${p.badge};--muted:color-mix(in srgb,var(--foreground) 58%,transparent);--muted-soft:color-mix(in srgb,var(--foreground) 38%,transparent);--border:color-mix(in srgb,var(--foreground) 10%,transparent);--header:color-mix(in srgb,var(--background) 94%,transparent);--inset:color-mix(in srgb,var(--background) 70%,transparent);--company-from:${p.accentText};--company-to:${p.accentHover};--skill-mono:${p.foreground};--orb-a:color-mix(in srgb,var(--brand-from) ${orb}%,transparent);--orb-b:color-mix(in srgb,var(--brand-to) ${Math.max(8, Number(orb) - 8)}%,transparent);`;
 }
 
 export function themeCss(theme: ThemeContent): string {

@@ -20,7 +20,7 @@ import { LogoMark } from "@/components/Logo";
 import { goodreadsUserId } from "@/lib/goodreads";
 import { mediaHint, parsePlayableMedia, youtubeVideoId } from "@/lib/media-url";
 import { resumeFileLabel } from "@/lib/resume";
-import { Field, HexColorInput, StringList, TextArea, TextInput } from "./fields";
+import { DatePicker, Field, HexColorInput, StringList, TextArea, TextInput } from "./fields";
 import { SkillItemRow } from "./SkillItemRow";
 import {
   IconAppearance,
@@ -1208,7 +1208,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
           note: "",
           date: "",
           category: "Tiny Joy",
-          icon: "✨",
           photoUrl: "",
           color: "#A78BFA",
         },
@@ -1220,8 +1219,10 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   async function uploadMemoryPhoto(file: File, id: string) {
     setUploading(true);
     setError("");
+    setNotice("");
     const form = new FormData();
     form.append("file", file);
+    form.append("folder", "memories");
     const res = await fetch("/api/cms/upload", { method: "POST", body: form });
     const body = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
     setUploading(false);
@@ -1231,6 +1232,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     }
     const memories = (data.memories ?? []).map((m) => (m.id === id ? { ...m, photoUrl: body.url } : m));
     setData({ ...data, memories });
+    setNotice("Memory photo uploaded. Save changes to update.");
   }
 
   async function uploadResume(file: File) {
@@ -2953,7 +2955,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                       <tr key={item.id}>
                         <td>
                           <button type="button" className="row-title" onClick={() => go("memories-edit", item.id)}>
-                            <span style={{ marginRight: 6, display: "inline-block" }}>{item.icon || "✨"}</span>
                             {item.title || item.note.slice(0, 30) || "(untitled memory)"}
                           </button>
                           <div style={{ fontSize: "0.85rem", color: "#646970", marginTop: 2, maxHeight: "2.4em", overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -3002,16 +3003,46 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                         </td>
                         <td>{item.date || "—"}</td>
                         <td>
-                          {item.photoUrl ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              src={item.photoUrl}
-                              alt=""
-                              style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4 }}
-                            />
-                          ) : (
-                            "—"
-                          )}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                            {item.photoUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={item.photoUrl}
+                                alt=""
+                                style={{ width: 36, height: 36, objectFit: "cover", borderRadius: 4, flexShrink: 0 }}
+                              />
+                            ) : null}
+                            <label className="wp-skill-file" style={{ margin: 0 }}>
+                              <span className="wp-btn" style={{ height: 26, lineHeight: "24px", fontSize: "0.75rem", padding: "0 8px" }}>
+                                {uploading ? "…" : item.photoUrl ? "Change" : "+ Photo"}
+                              </span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                disabled={uploading}
+                                aria-label={`Upload photo for ${item.title || "memory"}`}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) void uploadMemoryPhoto(file, item.id);
+                                  e.target.value = "";
+                                }}
+                              />
+                            </label>
+                            {item.photoUrl ? (
+                              <button
+                                type="button"
+                                className="wp-btn-link trash"
+                                style={{ fontSize: "0.8rem", textDecoration: "none" }}
+                                title="Remove photo"
+                                onClick={() => {
+                                  const memories = memoriesList.map((m) => (m.id === item.id ? { ...m, photoUrl: "" } : m));
+                                  setData({ ...data, memories });
+                                }}
+                              >
+                                Remove
+                              </button>
+                            ) : null}
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -3053,10 +3084,10 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                             }}
                           />
                         </Field>
-                        <Field label="Date / When" hint="e.g. Summer 2023, Rainy Tuesday, First launch">
-                          <TextInput
+                        <Field label="Date" hint="Pick a date using the calendar picker, or enter custom text.">
+                          <DatePicker
                             value={memory.date ?? ""}
-                            placeholder="e.g. Autumn 2024"
+                            placeholder="e.g. 15 Aug 2026 or Summer 2024"
                             onChange={(date) => {
                               const memories = [...memoriesList];
                               memories[memIndex] = { ...memory, date };
@@ -3094,37 +3125,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                             </div>
                           </div>
                         </Field>
-                        <Field label="Icon / Emoji" hint="Displayed on the star capsule and card header">
-                          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                            <TextInput
-                              value={memory.icon ?? "✨"}
-                              placeholder="✨"
-                              small
-                              onChange={(icon) => {
-                                const memories = [...memoriesList];
-                                memories[memIndex] = { ...memory, icon };
-                                setData({ ...data, memories });
-                              }}
-                            />
-                            <div style={{ display: "flex", gap: 4 }}>
-                              {["✨", "⭐", "🚀", "🎹", "💡", "☕", "🌱", "🎨", "💖", "📖"].map((em) => (
-                                <button
-                                  key={em}
-                                  type="button"
-                                  className="wp-btn"
-                                  style={{ padding: "4px 8px", fontSize: "1rem" }}
-                                  onClick={() => {
-                                    const memories = [...memoriesList];
-                                    memories[memIndex] = { ...memory, icon: em };
-                                    setData({ ...data, memories });
-                                  }}
-                                >
-                                  {em}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </Field>
                         <Field label="Glow Accent Color" hint="Custom glow/highlight color for this memory card">
                           <HexColorInput
                             value={memory.color ?? "#A78BFA"}
@@ -3135,38 +3135,35 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                             }}
                           />
                         </Field>
-                        <Field label="Photo Attachment" hint="Optional polaroid-style image for this memory">
+                        <Field label="Photo Attachment" hint="Upload a photo (JPG, PNG, WebP, GIF, SVG) or paste an image URL.">
                           <div>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              disabled={uploading}
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) void uploadMemoryPhoto(file, memory.id);
-                                e.target.value = "";
-                              }}
-                            />
-                            {uploading ? <span className="wp-description" style={{ marginLeft: 8 }}>Uploading…</span> : null}
-                            <div style={{ marginTop: 8 }}>
+                            <div className="wp-skill-icon-source" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                              <label className="wp-skill-file">
+                                <span className="wp-btn wp-btn-primary">
+                                  {uploading ? "Uploading…" : memory.photoUrl ? "Change Photo" : "Upload Photo"}
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  disabled={uploading}
+                                  aria-label="Upload memory photo"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) void uploadMemoryPhoto(file, memory.id);
+                                    e.target.value = "";
+                                  }}
+                                />
+                              </label>
                               <TextInput
                                 value={memory.photoUrl ?? ""}
-                                placeholder="Or enter an image URL: https://…"
+                                placeholder="or paste an image URL: https://…"
                                 onChange={(photoUrl) => {
                                   const memories = [...memoriesList];
                                   memories[memIndex] = { ...memory, photoUrl };
                                   setData({ ...data, memories });
                                 }}
                               />
-                            </div>
-                            {memory.photoUrl ? (
-                              <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 12 }}>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={memory.photoUrl}
-                                  alt="Memory preview"
-                                  style={{ width: 80, height: 80, objectFit: "cover", borderRadius: 8, border: "1px solid #ccc" }}
-                                />
+                              {memory.photoUrl ? (
                                 <button
                                   type="button"
                                   className="wp-btn-link"
@@ -3178,6 +3175,28 @@ export function AdminApp({ initial }: { initial: ContentData }) {
                                 >
                                   Remove photo
                                 </button>
+                              ) : null}
+                            </div>
+                            {uploading ? <span className="wp-description" style={{ display: "block", marginTop: 6 }}>Uploading photo…</span> : null}
+                            {memory.photoUrl ? (
+                              <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 14 }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={memory.photoUrl}
+                                  alt="Memory preview"
+                                  style={{
+                                    width: 100,
+                                    height: 100,
+                                    objectFit: "cover",
+                                    borderRadius: 6,
+                                    border: "1px solid #c3c4c7",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+                                  }}
+                                />
+                                <div style={{ fontSize: "0.85rem", color: "#646970" }}>
+                                  <div style={{ fontWeight: 500, color: "#2c3338" }}>Photo attached</div>
+                                  <div style={{ wordBreak: "break-all", fontSize: "0.75rem", marginTop: 4 }}>{memory.photoUrl}</div>
+                                </div>
                               </div>
                             ) : null}
                           </div>
@@ -3208,7 +3227,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
           ) : null}
 
           <p className="wp-sub" style={{ marginTop: 28 }}>
-            Saves to <code>src/content/data.json</code>. Commit that file when you deploy.
+            Saves live to Neon (Postgres) via Prisma. No commit needed to publish content.
           </p>
         </main>
       </div>

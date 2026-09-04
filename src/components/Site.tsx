@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import type { ContentData } from "@/content/types";
 import { resumeDownloadProps } from "@/lib/resume";
 import { scrollToHash } from "@/lib/scroll";
@@ -72,6 +72,29 @@ export function Site({ content }: { content: ContentData }) {
     return () => window.clearTimeout(t);
   }, [reduce]);
 
+  useEffect(() => {
+    const revealElements = document.querySelectorAll(".rv");
+    if (!revealElements.length) return;
+
+    const revealObserver = new IntersectionObserver(
+      (entries, observer) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("vis");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -24px 0px" },
+    );
+
+    revealElements.forEach((el) => revealObserver.observe(el));
+
+    return () => {
+      revealObserver.disconnect();
+    };
+  }, []);
+
   function onSectionLink(e: MouseEvent<HTMLAnchorElement>, href: string) {
     if (!href.startsWith("#")) return;
     e.preventDefault();
@@ -121,12 +144,15 @@ export function Site({ content }: { content: ContentData }) {
 
         <section id="about" tabIndex={-1} aria-labelledby="about-heading" className="py-16 sm:py-24">
           <div className="section-shell">
-            <Fade y={28} className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
               <div>
-                <h2 id="about-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
-                  About Me
-                </h2>
-                <p className="mt-6 text-base leading-8 text-muted">{site.about}</p>
+                <Fade y={24}>
+                  <h2 id="about-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
+                    About Me
+                  </h2>
+                  <div className="accent-underline mt-3 h-1 w-24 rounded" />
+                  <p className="mt-6 text-base leading-8 text-muted">{site.about}</p>
+                </Fade>
                 <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
                   {site.stats.map((stat, i) => (
                     <Fade key={stat.label} y={18} delay={0.08 * i}>
@@ -140,7 +166,7 @@ export function Site({ content }: { content: ContentData }) {
                   ))}
                 </div>
               </div>
-              <Fade y={24} delay={0.1}>
+              <Fade y={28} delay={0.12}>
                 <div className="card-surface relative rounded-2xl p-8">
                   <div className="philosophy-wash absolute inset-0 rounded-2xl" />
                   <div className="relative">
@@ -154,13 +180,13 @@ export function Site({ content }: { content: ContentData }) {
                   </div>
                 </div>
               </Fade>
-            </Fade>
+            </div>
           </div>
         </section>
 
         <section id="experience" tabIndex={-1} aria-labelledby="experience-heading" className="py-16 sm:py-24">
           <div className="section-shell">
-            <Fade y={22}>
+            <Fade y={24}>
               <h2 id="experience-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Experience
               </h2>
@@ -169,48 +195,50 @@ export function Site({ content }: { content: ContentData }) {
             </Fade>
             <div className="relative mt-10 pl-8 sm:pl-12">
               <div className="timeline-line absolute bottom-0 left-3 top-0 w-px sm:left-4" />
-              {experience.map((job, i) => (
-                <Fade key={job.id} delay={0.06 * i}>
-                  <article className="card-surface relative mb-6 rounded-2xl p-6 transition duration-300 last:mb-0 hover:-translate-y-1">
-                    <span className="absolute -left-[2.2rem] top-8 h-4 w-4 rounded-full bg-violet-600 ring-4 ring-violet-500/30 sm:-left-[2.65rem]" />
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-xs uppercase tracking-[0.18em] text-accent-text">{job.when}</p>
-                      {job.current ? (
-                        <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-badge">
-                          Current
-                        </span>
-                      ) : null}
-                    </div>
-                    <h3 className="mt-2 text-2xl font-semibold text-foreground">{job.role}</h3>
-                    <p className="company-grad mt-1 text-sm">{job.company}</p>
-                    <p className="mt-4 leading-7 text-muted">{job.summary}</p>
-                    <ul className="mt-4 list-disc space-y-2 pl-5">
-                      {job.bullets.map((b) => (
-                        <li key={b} className="text-sm text-muted">
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {job.stack.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full border border-line bg-chip px-3 py-1 text-xs text-muted"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </article>
-                </Fade>
-              ))}
+              <div className="flex flex-col gap-6 sm:gap-8">
+                {experience.map((job, i) => (
+                  <Fade key={job.id} y={24} delay={0.08 * Math.min(i, 3)} className="w-full">
+                    <article className="card-surface relative rounded-2xl p-6 transition duration-300 hover:-translate-y-1">
+                      <span className="absolute -left-[2.2rem] top-8 h-4 w-4 rounded-full bg-violet-600 ring-4 ring-violet-500/30 sm:-left-[2.65rem]" />
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs uppercase tracking-[0.18em] text-accent-text">{job.when}</p>
+                        {job.current ? (
+                          <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-badge">
+                            Current
+                          </span>
+                        ) : null}
+                      </div>
+                      <h3 className="mt-2 text-2xl font-semibold text-foreground">{job.role}</h3>
+                      <p className="company-grad mt-1 text-sm">{job.company}</p>
+                      <p className="mt-4 leading-7 text-muted">{job.summary}</p>
+                      <ul className="mt-4 list-disc space-y-2 pl-5">
+                        {job.bullets.map((b) => (
+                          <li key={b} className="text-sm text-muted">
+                            {b}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        {job.stack.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full border border-line bg-chip px-3 py-1 text-xs text-muted"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </article>
+                  </Fade>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
         <section id="projects" tabIndex={-1} aria-labelledby="projects-heading" className="py-16 sm:py-24">
           <div className="section-shell">
-            <Fade y={28}>
+            <Fade y={24}>
               <h2 id="projects-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Projects
               </h2>
@@ -218,7 +246,7 @@ export function Site({ content }: { content: ContentData }) {
             </Fade>
             <div className="mt-10 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
               {projects.map((project, i) => (
-                <Fade key={project.id} delay={0.08 * i} className="h-full">
+                <Fade key={project.id} y={28} delay={0.08 * (i % 3)} className="h-full">
                   <article className="card-surface group flex h-full flex-col rounded-2xl p-6 transition duration-300 hover:-translate-y-1">
                     <h3 className="text-xl font-semibold text-foreground">{project.name}</h3>
                     <p className="mt-3 text-sm leading-6 text-muted">{project.blurb}</p>
@@ -275,7 +303,7 @@ export function Site({ content }: { content: ContentData }) {
 
         <section id="skills" tabIndex={-1} aria-labelledby="skills-heading" className="py-16 sm:py-24">
           <div className="section-shell">
-            <Fade y={22}>
+            <Fade y={24}>
               <h2 id="skills-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
                 Skills &amp; Technologies
               </h2>
@@ -283,24 +311,25 @@ export function Site({ content }: { content: ContentData }) {
             </Fade>
             <div className="mt-10 grid gap-8 lg:grid-cols-2">
               {[...techGroups, ...skillGroups].map((group, gi) => (
-                <Fade key={`${group.title}-${gi}`} y={18} delay={0.08 * gi}>
+                <Fade key={`${group.title}-${gi}`} y={22} delay={0.08 * (gi % 2)}>
                   <div className="skill-group-card card-surface rounded-2xl p-6">
                     <h3 className="text-xl font-semibold text-foreground">{group.title}</h3>
                     <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-                      {group.items.map((item, ii) => (
-                        <Fade key={item.name} y={10} delay={0.03 * ii}>
-                          <div className="skill-tile flex flex-col items-center gap-2 rounded-xl border border-line bg-chip p-4 text-muted">
-                            <SkillMark
-                              icon={item.icon}
-                              color={item.color}
-                              src={item.iconUrl}
-                              className="skill-mark"
-                            />
-                            <span className="text-center text-xs font-medium text-foreground">
-                              {item.name}
-                            </span>
-                          </div>
-                        </Fade>
+                      {group.items.map((item) => (
+                        <div
+                          key={item.name}
+                          className="skill-tile flex flex-col items-center gap-2 rounded-xl border border-line bg-chip p-4 text-muted"
+                        >
+                          <SkillMark
+                            icon={item.icon}
+                            color={item.color}
+                            src={item.iconUrl}
+                            className="skill-mark"
+                          />
+                          <span className="text-center text-xs font-medium text-foreground">
+                            {item.name}
+                          </span>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -312,7 +341,7 @@ export function Site({ content }: { content: ContentData }) {
 
         <section id="contact" tabIndex={-1} aria-labelledby="contact-heading" className="py-16 sm:py-24">
           <div className="section-shell">
-            <Fade>
+            <Fade y={28} duration={0.65}>
               <div className="card-surface grid gap-8 rounded-2xl p-6 sm:p-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch">
                 <div>
                   <h2 id="contact-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">

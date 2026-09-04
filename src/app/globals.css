@@ -12,7 +12,7 @@
   --card: #0f0f0f;
   --card-hover: #141414;
   --border: rgba(255, 255, 255, 0.06);
-  --header: rgba(8, 8, 8, 0.8);
+  --header: rgba(8, 8, 8, 0.94);
   --inset: rgba(8, 8, 8, 0.6);
   --chip: #0f0f0f;
   --accent-text: #a78bfa;
@@ -34,7 +34,7 @@
   --card: #ffffff;
   --card-hover: #f3f1ff;
   --border: rgba(18, 18, 24, 0.08);
-  --header: rgba(247, 247, 251, 0.82);
+  --header: rgba(247, 247, 251, 0.96);
   --inset: rgba(255, 255, 255, 0.72);
   --chip: #f4f3fa;
   --accent-text: #6d28d9;
@@ -74,14 +74,30 @@ body {
   min-height: 100%;
   background: var(--background);
   color: var(--foreground);
-  scroll-behavior: smooth;
   scroll-padding-top: var(--header-offset);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
 }
 
 body {
   margin: 0;
-  font-family: var(--font-outfit), var(--font-inter), Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), Arial, Helvetica, sans-serif;
   transition: background-color 0.25s ease, color 0.25s ease;
+  text-rendering: optimizeLegibility;
+}
+
+#about,
+#experience,
+#projects,
+#skills,
+#contact,
+.site-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 720px;
 }
 
 ::selection {
@@ -145,31 +161,18 @@ html.has-custom-cursor .cursor-trail {
   background: color-mix(in srgb, #fbbf24 30%, transparent);
 }
 
-.memory-jar-page {
-  --jar-glow-a: color-mix(in srgb, var(--brand-from, #7c3aed) 24%, transparent);
-  --jar-glow-b: color-mix(in srgb, var(--brand-to, #6366f1) 18%, transparent);
-  background:
-    radial-gradient(circle at 50% 22%, var(--jar-glow-a), transparent 34rem),
-    radial-gradient(circle at 50% 78%, var(--jar-glow-b), transparent 32rem),
-    linear-gradient(180deg, var(--background), color-mix(in srgb, var(--background) 90%, var(--brand-from, #7c3aed)));
+.site-header {
+  background: var(--header);
 }
-.memory-jar-page::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0.42;
-  background-image:
-    radial-gradient(circle, color-mix(in srgb, var(--accent-text) 80%, white) 0 1px, transparent 1.6px),
-    radial-gradient(circle, color-mix(in srgb, var(--brand-to, #6366f1) 65%, white) 0 1px, transparent 1.8px);
-  background-position:
-    0 0,
-    18px 28px;
-  background-size:
-    78px 92px,
-    112px 128px;
-  mask-image: radial-gradient(ellipse at center, #000 0%, #000 58%, transparent 100%);
+
+html.jar-stars-active,
+html.jar-stars-active body {
+  background: #fbf4ea;
+}
+
+html.jar-stars-active.has-custom-cursor,
+html.jar-stars-active.has-custom-cursor * {
+  cursor: url(/memory-jar/cursor-star.png) 16 16, auto !important;
 }
 
 .section-shell {
@@ -202,7 +205,7 @@ html.has-custom-cursor .cursor-trail {
 }
 .card-surface:hover {
   border-color: color-mix(in srgb, var(--brand-from, #8b5cf6) 40%, transparent);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--brand-from, #8b5cf6) 12%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-from, #8b5cf6) 18%, transparent);
   background: var(--card-hover);
 }
 
@@ -251,26 +254,57 @@ html.has-custom-cursor .cursor-trail {
   }
 }
 
+/* Scroll Reveal (matching dos-fe) */
+.rv {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rv.vis {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.rv-d1 { transition-delay: 0.06s; }
+.rv-d2 { transition-delay: 0.12s; }
+.rv-d3 { transition-delay: 0.18s; }
+.rv-d4 { transition-delay: 0.24s; }
+.rv-d5 { transition-delay: 0.3s; }
+.rv-d6 { transition-delay: 0.36s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rv {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 .hero-orb-a,
 .hero-orb-b {
   pointer-events: none;
   position: absolute;
   border-radius: 9999px;
-  filter: blur(64px);
+  /* Soft radial fills avoid live blur during scroll */
+  filter: none;
+  opacity: 0.9;
 }
 .hero-orb-a {
   top: -5rem;
   right: 0;
   height: 24rem;
   width: 24rem;
-  background: var(--orb-a);
+  background: radial-gradient(circle, var(--orb-a), transparent 68%);
 }
 .hero-orb-b {
   bottom: -8rem;
   left: 0;
   height: 20rem;
   width: 20rem;
-  background: var(--orb-b);
+  background: radial-gradient(circle, var(--orb-b), transparent 68%);
 }
 
 .company-grad {
@@ -374,9 +408,8 @@ html.has-custom-cursor .cursor-trail {
   padding: 1rem;
   overflow: auto;
   border: 0;
-  background: rgb(0 0 0 / 0.75);
+  background: rgb(0 0 0 / 0.82);
   color: inherit;
-  backdrop-filter: blur(12px);
 }
 .memory-dialog:not([open]) {
   display: none;
@@ -654,8 +687,10 @@ html:not([data-theme="light"]) .theme-icon-moon {
 .world-hero.is-studio .world-stage {
   transform-origin: 50% 46%;
   transition: none;
-  will-change: transform;
   touch-action: pan-y;
+}
+.world-hero.is-studio .world-stage.is-tilting {
+  will-change: transform;
 }
 .world-hero.is-studio .world-stage::before {
   content: "";
@@ -676,9 +711,26 @@ html:not([data-theme="light"]) .theme-icon-moon {
   background: linear-gradient(to top left, #efe4d4 42%, transparent);
 }
 .world-hero.is-studio .world-playing {
-  left: 38%;
-  top: 24%;
+  left: 42%;
+  top: 18%;
   transform: none;
+}
+.studio-hitmap {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  visibility: hidden;
+}
+.studio-hitmap.is-ready {
+  visibility: visible;
+}
+.studio-hitmap .world-spot {
+  pointer-events: auto;
+}
+.world-hero.is-studio .world-spot[data-spot="plants"],
+.world-hero.is-studio .world-spot[data-spot="frames"] {
+  z-index: 4;
 }
 .world-hero.is-studio .world-spot[data-spot="laptop"] {
   z-index: 5;
@@ -780,7 +832,6 @@ html:not([data-theme="light"]) .theme-icon-moon {
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.2));
   animation: studio-star-drift 2.5s ease-in-out infinite;
-  will-change: transform, opacity;
 }
 .studio-paper-star:nth-child(3n) {
   animation-duration: 2.9s;
@@ -997,7 +1048,6 @@ html:not([data-theme="light"]) .theme-icon-moon {
   line-height: 1;
   text-shadow: 0 0 6px currentColor;
   animation: world-jar-drift 2.4s ease-in-out infinite;
-  will-change: transform, opacity;
 }
 .world-jar-star:nth-child(3n) {
   animation-duration: 2.8s;
@@ -1306,8 +1356,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   height: 11rem;
   width: 11rem;
   border-radius: 999px;
-  background: var(--orb-a);
-  filter: blur(42px);
+  background: radial-gradient(circle, var(--orb-a), transparent 70%);
   opacity: 0.9;
 }
 
@@ -1328,6 +1377,8 @@ html:not([data-theme="light"]) .theme-icon-moon {
   width: 14.5rem;
   height: 15.5rem;
   transform-style: preserve-3d;
+}
+.contact-scene-rig.is-tilting {
   will-change: transform;
 }
 
@@ -1339,8 +1390,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   height: 2.4rem;
   transform: translateX(-50%) rotateX(78deg) translateZ(-28px);
   border-radius: 999px;
-  background: radial-gradient(ellipse, color-mix(in srgb, var(--foreground) 22%, transparent), transparent 72%);
-  filter: blur(6px);
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--foreground) 18%, transparent), transparent 72%);
 }
 
 .contact-ring {
@@ -1359,6 +1409,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   margin: -7.7rem 0 0 -7.7rem;
   transform: rotateX(68deg) rotateZ(18deg);
   animation: contact-spin 22s linear infinite;
+  animation-play-state: paused;
 }
 
 .contact-ring-b {
@@ -1368,6 +1419,12 @@ html:not([data-theme="light"]) .theme-icon-moon {
   border-color: color-mix(in srgb, var(--brand-to) 55%, transparent);
   transform: rotateX(74deg) rotateY(12deg) rotateZ(-28deg);
   animation: contact-spin-rev 28s linear infinite;
+  animation-play-state: paused;
+}
+
+.contact-scene.is-live .contact-ring-a,
+.contact-scene.is-live .contact-ring-b {
+  animation-play-state: running;
 }
 
 .contact-sheet {
@@ -1462,6 +1519,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   top: 22%;
   transform: translateZ(54px);
   animation: contact-pulse 3.4s ease-in-out infinite;
+  animation-play-state: paused;
 }
 
 .contact-node-b {
@@ -1471,6 +1529,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   height: 0.32rem;
   transform: translateZ(36px);
   animation: contact-pulse 4.2s ease-in-out infinite 0.4s;
+  animation-play-state: paused;
 }
 
 .contact-node-c {
@@ -1480,6 +1539,13 @@ html:not([data-theme="light"]) .theme-icon-moon {
   height: 0.28rem;
   transform: translateZ(44px);
   animation: contact-pulse 3.8s ease-in-out infinite 0.8s;
+  animation-play-state: paused;
+}
+
+.contact-scene.is-live .contact-node-a,
+.contact-scene.is-live .contact-node-b,
+.contact-scene.is-live .contact-node-c {
+  animation-play-state: running;
 }
 
 @keyframes contact-spin {

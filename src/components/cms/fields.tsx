@@ -68,6 +68,118 @@ export function TextArea({
   );
 }
 
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
+
+export function formatReadableDate(d: Date): string {
+  const day = d.getDate();
+  const month = MONTH_NAMES[d.getMonth()];
+  const year = d.getFullYear();
+  return `${day} ${month} ${year}`;
+}
+
+export function toIsoDate(val?: string): string {
+  if (!val) return "";
+  const trimmed = val.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+
+  const dmyMatch = trimmed.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})$/);
+  if (dmyMatch) {
+    const day = parseInt(dmyMatch[1], 10);
+    const monthName = dmyMatch[2].slice(0, 3).toLowerCase();
+    const monthIdx = MONTH_NAMES.findIndex((m) => m.toLowerCase() === monthName);
+    const year = parseInt(dmyMatch[3], 10);
+    if (monthIdx >= 0) {
+      const mm = String(monthIdx + 1).padStart(2, "0");
+      const dd = String(day).padStart(2, "0");
+      return `${year}-${mm}-${dd}`;
+    }
+  }
+
+  const parsed = new Date(trimmed);
+  if (!isNaN(parsed.getTime())) {
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const d = String(parsed.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  return "";
+}
+
+export function DatePicker({
+  value,
+  onChange,
+  placeholder = "Select date or type custom",
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  const iso = toIsoDate(value);
+
+  const handleDateChange = (isoVal: string) => {
+    if (!isoVal) {
+      onChange("");
+      return;
+    }
+    const [y, m, d] = isoVal.split("-").map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    onChange(formatReadableDate(dateObj));
+  };
+
+  const setToday = () => {
+    onChange(formatReadableDate(new Date()));
+  };
+
+  return (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+      <input
+        type="date"
+        className="wp-input"
+        style={{ width: "auto", minWidth: 150 }}
+        value={iso}
+        onChange={(e) => handleDateChange(e.target.value)}
+        aria-label="Pick date from calendar"
+      />
+      <TextInput
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+      />
+      <button
+        type="button"
+        className="wp-btn"
+        onClick={setToday}
+        title="Set to today"
+      >
+        Today
+      </button>
+      {value ? (
+        <button
+          type="button"
+          className="wp-btn-link"
+          onClick={() => onChange("")}
+          title="Clear date"
+        >
+          Clear
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function parseCssHex(raw: string): string | null {
   const match = raw.trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
   if (!match) return null;

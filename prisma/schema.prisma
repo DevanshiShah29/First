@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon: non-pooled connection for migrations / db push
+  directUrl = env("DIRECT_URL")
+}
+
+/// Singleton site + theme settings (id = "main").
+model SiteSettings {
+  id String @id @default("main")
+
+  name             String
+  initials         String
+  title            String
+  description      String
+  heroTemplate     String
+  heroMediaKind    String
+  heroMediaUrl     String   @default("")
+  heroMediaPlace   String
+  heroMediaSide    String
+  pianoYoutubeUrl  String   @default("")
+  goodreadsUrl     String   @default("")
+  kicker           String   @default("")
+  greeting         String   @default("")
+  roles            String[]
+  line             String   @default("")
+  about            String   @default("")
+  philosophyKicker String   @default("")
+  philosophyTitle  String   @default("")
+  philosophy       String   @default("")
+  experienceIntro  String   @default("")
+  contactLine      String   @default("")
+  email            String   @default("")
+  linkedin         String   @default("")
+  github           String   @default("")
+  resume           String   @default("")
+
+  themeDefaultMode String
+  themeAllowToggle Boolean
+  themeBrandFrom   String
+  themeBrandTo     String
+
+  darkBackground  String
+  darkForeground  String
+  darkCard        String
+  darkCardHover   String
+  darkChip        String
+  darkAccentText  String
+  darkAccentHover String
+  darkBadge       String
+
+  lightBackground  String
+  lightForeground  String
+  lightCard        String
+  lightCardHover   String
+  lightChip        String
+  lightAccentText  String
+  lightAccentHover String
+  lightBadge       String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stats SiteStat[]
+}
+
+model SiteStat {
+  id        String @id @default(cuid())
+  siteId    String @default("main")
+  sortOrder Int
+  value     Int
+  suffix    String @default("")
+  label     String
+
+  site SiteSettings @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, sortOrder])
+}
+
+model Experience {
+  id        String   @id
+  sortOrder Int
+  when      String   @default("")
+  current   Boolean  @default(false)
+  role      String
+  company   String   @default("")
+  summary   String   @default("")
+  bullets   String[]
+  stack     String[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Project {
+  id        String   @id
+  sortOrder Int
+  name      String
+  blurb     String   @default("")
+  tags      String[]
+  github    String   @default("")
+  demo      String   @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Memory {
+  id        String  @id
+  sortOrder Int
+  title     String  @default("")
+  note      String  @default("")
+  date      String  @default("")
+  category  String  @default("")
+  icon      String  @default("")
+  photoUrl  String  @default("")
+  color     String  @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
+/// kind: "skills" | "technologies"
+model SkillGroup {
+  id        String @id @default(cuid())
+  kind      String
+  title     String
+  sortOrder Int
+
+  items SkillItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, sortOrder])
+}
+
+model SkillItem {
+  id        String  @id @default(cuid())
+  groupId   String
+  sortOrder Int
+  name      String
+  icon      String  @default("empty")
+  color     String?
+  iconUrl   String?
+
+  group SkillGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, sortOrder])
+}

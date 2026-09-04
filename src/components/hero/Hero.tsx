@@ -1,15 +1,26 @@
 "use client";
 
 import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
-import { useReducedMotion } from "motion/react";
+import dynamic from "next/dynamic";
 import type { HeroMedia, HeroTemplateId, SiteContent } from "@/content/types";
-import { NookHero } from "./NookHero";
-import { StudioHero } from "./StudioHero";
-import { WorldHero } from "./WorldHero";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import { parsePlayableMedia } from "@/lib/media-url";
 import { Fade } from "@/components/Fade";
 import { IconArrowRight, IconDownload } from "@/components/icons";
 import { resumeDownloadProps } from "@/lib/resume";
+
+const WorldHero = dynamic(() => import("./WorldHero").then((m) => m.WorldHero), {
+  ssr: false,
+  loading: () => <div className="world-hero" aria-hidden />,
+});
+const NookHero = dynamic(() => import("./NookHero").then((m) => m.NookHero), {
+  ssr: false,
+  loading: () => <div className="world-hero is-nook" aria-hidden />,
+});
+const StudioHero = dynamic(() => import("./StudioHero").then((m) => m.StudioHero), {
+  ssr: true,
+  loading: () => <div className="world-hero is-studio" aria-hidden />,
+});
 
 function Typewriter({ words }: { words: readonly string[] }) {
   const reduce = useReducedMotion();

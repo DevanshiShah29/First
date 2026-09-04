@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import type { SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
 import { youtubeVideoId } from "@/lib/media-url";
@@ -89,7 +89,6 @@ export function WorldHero({ site }: { site: SiteContent }) {
   const audioHost = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const restTimer = useRef<number | NodeJS.Timeout | undefined>(undefined);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [active, setActive] = useState<SpotId | null>(null);
   const [flash, setFlash] = useState(false);
   const [pianoPlaying, setPianoPlaying] = useState(false);
@@ -130,11 +129,12 @@ export function WorldHero({ site }: { site: SiteContent }) {
 
   function onMove(e: PointerEvent<HTMLDivElement>) {
     if (reduce) return;
-    const box = stage.current?.getBoundingClientRect();
-    if (!box) return;
+    const el = stage.current;
+    if (!el) return;
+    const box = el.getBoundingClientRect();
     const nx = (e.clientX - box.left) / box.width - 0.5;
     const ny = (e.clientY - box.top) / box.height - 0.5;
-    setTilt({ x: ny * -7, y: nx * 9 });
+    el.style.transform = `perspective(1400px) rotateX(${(ny * -7).toFixed(2)}deg) rotateY(${(nx * 9).toFixed(2)}deg)`;
   }
 
   function onSpot(id: SpotId, on: boolean) {
@@ -197,19 +197,18 @@ export function WorldHero({ site }: { site: SiteContent }) {
         className="world-stage"
         onPointerMove={onMove}
         onPointerLeave={() => {
-          setTilt({ x: 0, y: 0 });
-        }}
-        style={{
-          transform: reduce
-            ? undefined
-            : `perspective(1400px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+          if (stage.current) stage.current.style.transform = "";
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/hero-world.jpg?v=paper"
+          src="/images/hero-world.jpg?v=paper2"
           alt="Illustrated desk with a piano, a jar of stars, camera, laptop, books, cooking, and travel souvenirs."
           className="world-art"
+          width={1280}
+          height={720}
+          decoding="async"
+          fetchPriority="high"
         />
         <div className="world-watermark-mask" />
         <div ref={audioHost} className="world-audio-host" aria-hidden />

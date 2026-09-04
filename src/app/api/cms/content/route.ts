@@ -36,11 +36,11 @@ export async function POST(req: Request) {
   const content = parseContent(payload);
   try {
     await saveContent(content);
-  } catch {
+  } catch (err) {
+    console.error("saveContent failed", err);
     return NextResponse.json(
       {
-        error:
-          "Could not write content on this host. Save locally, then commit src/content/data.json to publish.",
+        error: "Could not save content to the database. Check DATABASE_URL and try again.",
       },
       { status: 500 },
     );

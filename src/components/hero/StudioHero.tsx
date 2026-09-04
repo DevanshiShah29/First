@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
-import { useReducedMotion } from "motion/react";
+import { createVisibilityGate } from "@/lib/active-loop";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import type { SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
 import { youtubeVideoId } from "@/lib/media-url";
@@ -10,30 +11,53 @@ type SpotId = "frames" | "jar" | "books" | "piano" | "laptop" | "cook" | "plants
 
 type Spot = { id: SpotId; label: string; left: string; top: string; w: string; h: string };
 
+/** Percentages are relative to the studio art's visible object-fit cover box. */
 const desktopSpots: Spot[] = [
-  { id: "frames", label: "Photo wall", left: "2%", top: "2%", w: "22%", h: "36%" },
-  { id: "plants", label: "Plants", left: "24%", top: "0%", w: "24%", h: "18%" },
-  { id: "plants", label: "Plants", left: "54%", top: "0%", w: "44%", h: "22%" },
-  { id: "plants", label: "Plants", left: "76%", top: "68%", w: "16%", h: "26%" },
-  { id: "piano", label: "Piano", left: "28%", top: "20%", w: "20%", h: "30%" },
-  { id: "jar", label: "Memory jar", left: "9%", top: "42%", w: "12%", h: "28%" },
-  { id: "books", label: "Reading", left: "20%", top: "36%", w: "13%", h: "24%" },
-  { id: "laptop", label: "Coding", left: "32%", top: "28%", w: "30%", h: "56%" },
-  { id: "cook", label: "Baking", left: "58%", top: "28%", w: "32%", h: "38%" },
-  { id: "yoga", label: "Yoga", left: "62%", top: "64%", w: "36%", h: "34%" },
+  { id: "frames", label: "Photo wall", left: "1%", top: "8%", w: "15%", h: "38%" },
+  { id: "plants", label: "Plants", left: "22%", top: "0%", w: "20%", h: "14%" },
+  { id: "plants", label: "Plants", left: "72%", top: "0%", w: "26%", h: "16%" },
+  { id: "plants", label: "Plants", left: "88%", top: "48%", w: "11%", h: "28%" },
+  { id: "piano", label: "Piano", left: "13%", top: "15%", w: "20%", h: "34%" },
+  { id: "books", label: "Reading", left: "12%", top: "52%", w: "13%", h: "18%" },
+  { id: "jar", label: "Memory jar", left: "32%", top: "50%", w: "10%", h: "22%" },
+  { id: "laptop", label: "Coding", left: "38%", top: "22%", w: "20%", h: "46%" },
+  { id: "cook", label: "Baking", left: "64%", top: "38%", w: "15%", h: "24%" },
+  { id: "yoga", label: "Yoga", left: "58%", top: "76%", w: "30%", h: "22%" },
 ];
 
 const mobileSpots: Spot[] = [
-  { id: "frames", label: "Photo wall", left: "2%", top: "1%", w: "52%", h: "30%" },
-  { id: "plants", label: "Plants", left: "52%", top: "1%", w: "46%", h: "28%" },
-  { id: "plants", label: "Plants", left: "0%", top: "34%", w: "18%", h: "16%" },
-  { id: "piano", label: "Piano", left: "0%", top: "38%", w: "26%", h: "28%" },
-  { id: "laptop", label: "Coding", left: "26%", top: "28%", w: "48%", h: "38%" },
-  { id: "cook", label: "Baking", left: "62%", top: "42%", w: "36%", h: "28%" },
-  { id: "books", label: "Reading", left: "0%", top: "62%", w: "20%", h: "20%" },
-  { id: "jar", label: "Memory jar", left: "18%", top: "66%", w: "24%", h: "26%" },
-  { id: "yoga", label: "Yoga", left: "50%", top: "76%", w: "48%", h: "22%" },
+  { id: "frames", label: "Photo wall", left: "2%", top: "2%", w: "40%", h: "26%" },
+  { id: "plants", label: "Plants", left: "58%", top: "1%", w: "40%", h: "18%" },
+  { id: "plants", label: "Plants", left: "0%", top: "30%", w: "14%", h: "12%" },
+  { id: "piano", label: "Piano", left: "0%", top: "40%", w: "26%", h: "24%" },
+  { id: "laptop", label: "Coding", left: "32%", top: "32%", w: "36%", h: "32%" },
+  { id: "cook", label: "Baking", left: "66%", top: "44%", w: "32%", h: "22%" },
+  { id: "books", label: "Reading", left: "2%", top: "60%", w: "22%", h: "16%" },
+  { id: "jar", label: "Memory jar", left: "26%", top: "66%", w: "24%", h: "20%" },
+  { id: "yoga", label: "Yoga", left: "48%", top: "82%", w: "48%", h: "16%" },
 ];
+
+type Hitmap = { left: number; top: number; width: number; height: number };
+
+/** Map hotspot layer onto the visible object-fit:cover content box. */
+function coverHitmap(
+  naturalW: number,
+  naturalH: number,
+  boxW: number,
+  boxH: number,
+  posX: number,
+  posY: number,
+): Hitmap {
+  const scale = Math.max(boxW / naturalW, boxH / naturalH);
+  const width = naturalW * scale;
+  const height = naturalH * scale;
+  return {
+    left: (boxW - width) * posX,
+    top: (boxH - height) * posY,
+    width,
+    height,
+  };
+}
 
 const paperStars = [
   { l: "22%", t: "42%", d: "0s", c: "#fde68a", r: -14 },
@@ -137,6 +161,7 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
 export function StudioHero({ site }: { site: SiteContent }) {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
+  const artRef = useRef<HTMLImageElement>(null);
   const audioHost = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const restTimer = useRef<number | NodeJS.Timeout | undefined>(undefined);
@@ -150,8 +175,20 @@ export function StudioHero({ site }: { site: SiteContent }) {
   const [pianoRest, setPianoRest] = useState(false);
   const [bookRest, setBookRest] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [hitmap, setHitmap] = useState<Hitmap | null>(null);
   const videoId = youtubeVideoId(site.pianoYoutubeUrl ?? "");
   const goodreadsId = goodreadsUserId(site.goodreadsUrl ?? "");
+
+  function syncHitmap() {
+    const img = artRef.current;
+    const host = stage.current;
+    if (!img || !host || !img.naturalWidth || !img.naturalHeight) return;
+    const box = host.getBoundingClientRect();
+    const mobile = window.matchMedia("(max-width: 720px)").matches;
+    // Matches .world-hero.is-studio .world-art object-position
+    const posY = mobile ? 0.42 : 0.48;
+    setHitmap(coverHitmap(img.naturalWidth, img.naturalHeight, box.width, box.height, 0.5, posY));
+  }
 
   function stopMusic() {
     iframeRef.current?.remove();
@@ -180,10 +217,22 @@ export function StudioHero({ site }: { site: SiteContent }) {
     if (!el) return;
     if (reduce) {
       el.style.transform = "";
+      el.classList.remove("is-tilting");
       return;
     }
     let raf = 0;
+    let active = true;
+    let last = "";
+    const stop = () => {
+      if (raf) window.cancelAnimationFrame(raf);
+      raf = 0;
+      el.classList.remove("is-tilting");
+    };
     const tick = (now: number) => {
+      if (!active) {
+        raf = 0;
+        return;
+      }
       if (!interacting.current) {
         idleT.current = now;
         const t = now * 0.00028;
@@ -193,11 +242,28 @@ export function StudioHero({ site }: { site: SiteContent }) {
       current.current.y += (target.current.y - current.current.y) * 0.1;
       const x = current.current.x;
       const y = current.current.y;
-      el.style.transform = `perspective(1600px) rotateX(${x.toFixed(3)}deg) rotateY(${y.toFixed(3)}deg) translate3d(${(y * 1.4).toFixed(2)}px, ${(x * -1.2).toFixed(2)}px, 12px)`;
+      const next = `perspective(1600px) rotateX(${x.toFixed(2)}deg) rotateY(${y.toFixed(2)}deg) translate3d(${(y * 1.4).toFixed(1)}px, ${(x * -1.2).toFixed(1)}px, 12px)`;
+      if (next !== last) {
+        last = next;
+        el.style.transform = next;
+      }
       raf = window.requestAnimationFrame(tick);
     };
-    raf = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(raf);
+    const start = () => {
+      if (raf || !active) return;
+      el.classList.add("is-tilting");
+      raf = window.requestAnimationFrame(tick);
+    };
+    const release = createVisibilityGate(el, (visible) => {
+      active = visible;
+      if (visible) start();
+      else stop();
+    });
+    return () => {
+      active = false;
+      stop();
+      release();
+    };
   }, [reduce]);
 
   useEffect(() => {
@@ -205,6 +271,27 @@ export function StudioHero({ site }: { site: SiteContent }) {
       if (restTimer.current) window.clearTimeout(restTimer.current);
       iframeRef.current?.remove();
       iframeRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    syncHitmap();
+    const host = stage.current;
+    const img = artRef.current;
+    if (!host) return;
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => syncHitmap()) : null;
+    ro?.observe(host);
+    const onResize = () => syncHitmap();
+    window.addEventListener("resize", onResize);
+    img?.addEventListener("load", syncHitmap);
+    const mq = window.matchMedia("(max-width: 720px)");
+    const onMq = () => syncHitmap();
+    mq.addEventListener("change", onMq);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", onResize);
+      img?.removeEventListener("load", syncHitmap);
+      mq.removeEventListener("change", onMq);
     };
   }, []);
 
@@ -417,11 +504,17 @@ export function StudioHero({ site }: { site: SiteContent }) {
         onPointerLeave={onPointerLeave}
       >
         <picture>
-          <source media="(max-width: 720px)" srcSet="/images/hero-studio-portrait.jpg?v=studio1" />
+          <source media="(max-width: 720px)" srcSet="/images/hero-studio-portrait.jpg?v=studio2" />
           <img
-            src="/images/hero-studio.jpg?v=studio1"
+            ref={artRef}
+            src="/images/hero-studio.jpg?v=studio2"
             alt="Cozy 3D miniature studio centered on a woman looking at a MacBook, with a photo wall, piano, memory jar of paper stars, books, baking, plants, and a yoga corner."
             className="world-art"
+            width={1280}
+            height={720}
+            decoding="async"
+            fetchPriority="high"
+            onLoad={syncHitmap}
           />
         </picture>
         <div className="world-watermark-mask" />
@@ -430,8 +523,17 @@ export function StudioHero({ site }: { site: SiteContent }) {
           {pianoPlaying ? "Piano music is playing." : ""}
         </p>
 
-        {renderSpots("desktop")}
-        {renderSpots("mobile")}
+        <div
+          className={`studio-hitmap${hitmap ? " is-ready" : ""}`}
+          style={
+            hitmap
+              ? { left: hitmap.left, top: hitmap.top, width: hitmap.width, height: hitmap.height }
+              : undefined
+          }
+        >
+          {renderSpots("desktop")}
+          {renderSpots("mobile")}
+        </div>
 
         {pianoPlaying ? (
           <button type="button" className="world-playing" onClick={onPianoToggle} aria-label="Stop piano music">

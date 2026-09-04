@@ -1,6 +1,6 @@
-import { promises as fs } from "fs";
-import path from "path";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { normalizeHex } from "@/lib/hex";
+import { prisma } from "@/lib/prisma";
 import {
   DEFAULT_HERO_MEDIA,
   DEFAULT_THEME,
@@ -22,7 +22,9 @@ import {
   type ThemePalette,
 } from "./types";
 
-const DATA_PATH = path.join(process.cwd(), "src/content/data.json");
+const SITE_ID = "main";
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
 
 function asRecord(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value)
@@ -216,14 +218,297 @@ export function parseContent(value: unknown): ContentData {
   };
 }
 
-export async function loadContent(): Promise<ContentData> {
-  const raw = await fs.readFile(DATA_PATH, "utf8");
-  return parseContent(JSON.parse(raw) as unknown);
+function siteSettingsData(site: SiteContent, theme: ThemeContent) {
+  return {
+    name: site.name,
+    initials: site.initials,
+    title: site.title,
+    description: site.description,
+    heroTemplate: site.heroTemplate,
+    heroMediaKind: site.heroMedia.kind,
+    heroMediaUrl: site.heroMedia.url,
+    heroMediaPlace: site.heroMedia.place,
+    heroMediaSide: site.heroMedia.side,
+    pianoYoutubeUrl: site.pianoYoutubeUrl,
+    goodreadsUrl: site.goodreadsUrl,
+    kicker: site.kicker,
+    greeting: site.greeting,
+    roles: site.roles,
+    line: site.line,
+    about: site.about,
+    philosophyKicker: site.philosophyKicker,
+    philosophyTitle: site.philosophyTitle,
+    philosophy: site.philosophy,
+    experienceIntro: site.experienceIntro,
+    contactLine: site.contactLine,
+    email: site.email,
+    linkedin: site.linkedin,
+    github: site.github,
+    resume: site.resume,
+    themeDefaultMode: theme.defaultMode,
+    themeAllowToggle: theme.allowToggle,
+    themeBrandFrom: theme.brandFrom,
+    themeBrandTo: theme.brandTo,
+    darkBackground: theme.dark.background,
+    darkForeground: theme.dark.foreground,
+    darkCard: theme.dark.card,
+    darkCardHover: theme.dark.cardHover,
+    darkChip: theme.dark.chip,
+    darkAccentText: theme.dark.accentText,
+    darkAccentHover: theme.dark.accentHover,
+    darkBadge: theme.dark.badge,
+    lightBackground: theme.light.background,
+    lightForeground: theme.light.foreground,
+    lightCard: theme.light.card,
+    lightCardHover: theme.light.cardHover,
+    lightChip: theme.light.chip,
+    lightAccentText: theme.light.accentText,
+    lightAccentHover: theme.light.accentHover,
+    lightBadge: theme.light.badge,
+  };
 }
+
+/** Write a full ContentData document into normalized tables. */
+export async function persistContent(db: DbClient, raw: ContentData): Promise<void> {
+  const data = parseContent(raw);
+  const siteFields = siteSettingsData(data.site, data.theme);
+
+  await db.siteSettings.upsert({
+    where: { id: SITE_ID },
+    create: { id: SITE_ID, ...siteFields },
+    update: siteFields,
+  });
+
+  // Clear collections first (SkillGroup cascade removes SkillItem).
+  await Promise.all([
+    db.siteStat.deleteMany({ where: { siteId: SITE_ID } }),
+    db.experience.deleteMany(),
+    db.project.deleteMany(),
+    db.memory.deleteMany(),
+    db.skillGroup.deleteMany(),
+  ]);
+
+  const skillCreates: Prisma.SkillGroupCreateInput[] = [];
+  const skillBundles: { kind: "skills" | "technologies"; groups: SkillGroup[] }[] = [
+    { kind: "skills", groups: data.skills },
+    { kind: "technologies", groups: data.technologies ?? [] },
+  ];
+  for (const bundle of skillBundles) {
+    for (let g = 0; g < bundle.groups.length; g++) {
+      const group = bundle.groups[g];
+      skillCreates.push({
+        kind: bundle.kind,
+        title: group.title,
+        sortOrder: g,
+        items: {
+          create: group.items.map((item, i) => ({
+            sortOrder: i,
+            name: item.name,
+            icon: item.icon,
+            color: item.color ?? null,
+            iconUrl: item.iconUrl ?? null,
+          })),
+        },
+      });
+    }
+  }
+
+  await Promise.all([
+    data.site.stats.length > 0
+      ? db.siteStat.createMany({
+          data: data.site.stats.map((stat, i) => ({
+            siteId: SITE_ID,
+            sortOrder: i,
+            value: stat.value,
+            suffix: stat.suffix,
+            label: stat.label,
+          })),
+        })
+      : Promise.resolve(),
+    data.experience.length > 0
+      ? db.experience.createMany({
+          data: data.experience.map((item, i) => ({
+            id: item.id,
+            sortOrder: i,
+            when: item.when,
+            current: item.current,
+            role: item.role,
+            company: item.company,
+            summary: item.summary,
+            bullets: item.bullets,
+            stack: item.stack,
+          })),
+        })
+      : Promise.resolve(),
+    data.projects.length > 0
+      ? db.project.createMany({
+          data: data.projects.map((item, i) => ({
+            id: item.id,
+            sortOrder: i,
+            name: item.name,
+            blurb: item.blurb,
+            tags: item.tags,
+            github: item.github,
+            demo: item.demo,
+          })),
+        })
+      : Promise.resolve(),
+    (data.memories ?? []).length > 0
+      ? db.memory.createMany({
+          data: (data.memories ?? []).map((item, i) => ({
+            id: item.id,
+            sortOrder: i,
+            title: item.title ?? "",
+            note: item.note,
+            date: item.date ?? "",
+            category: item.category ?? "",
+            icon: item.icon ?? "",
+            photoUrl: item.photoUrl ?? "",
+            color: item.color ?? "",
+          })),
+        })
+      : Promise.resolve(),
+  ]);
+
+  // Nested creates can't use createMany; run sequentially but few groups.
+  for (const create of skillCreates) {
+    await db.skillGroup.create({ data: create });
+  }
+}
+
+export async function loadContent(): Promise<ContentData> {
+  const [site, experience, projects, memories, skillGroups] = await Promise.all([
+    prisma.siteSettings.findUnique({
+      where: { id: SITE_ID },
+      include: { stats: { orderBy: { sortOrder: "asc" } } },
+    }),
+    prisma.experience.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.project.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.memory.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.skillGroup.findMany({
+      orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
+      include: { items: { orderBy: { sortOrder: "asc" } } },
+    }),
+  ]);
+
+  if (!site) {
+    throw new Error(
+      'No site settings found. Run `npm run db:seed` after setting DATABASE_URL and DIRECT_URL.',
+    );
+  }
+
+  const toSkillGroups = (kind: string): SkillGroup[] =>
+    skillGroups
+      .filter((g) => g.kind === kind)
+      .map((g) => ({
+        title: g.title,
+        items: g.items.map((item) => ({
+          name: item.name,
+          icon: isSkillIcon(item.icon) ? item.icon : "empty",
+          ...(item.color ? { color: item.color } : {}),
+          ...(item.iconUrl ? { iconUrl: item.iconUrl } : {}),
+        })),
+      }));
+
+  return parseContent({
+    site: {
+      name: site.name,
+      initials: site.initials,
+      title: site.title,
+      description: site.description,
+      heroTemplate: site.heroTemplate,
+      heroMedia: {
+        kind: site.heroMediaKind,
+        url: site.heroMediaUrl,
+        place: site.heroMediaPlace,
+        side: site.heroMediaSide,
+      },
+      pianoYoutubeUrl: site.pianoYoutubeUrl,
+      goodreadsUrl: site.goodreadsUrl,
+      kicker: site.kicker,
+      greeting: site.greeting,
+      roles: site.roles,
+      line: site.line,
+      about: site.about,
+      philosophyKicker: site.philosophyKicker,
+      philosophyTitle: site.philosophyTitle,
+      philosophy: site.philosophy,
+      experienceIntro: site.experienceIntro,
+      contactLine: site.contactLine,
+      email: site.email,
+      linkedin: site.linkedin,
+      github: site.github,
+      resume: site.resume,
+      stats: site.stats.map((s) => ({
+        value: s.value,
+        suffix: s.suffix,
+        label: s.label,
+      })),
+    },
+    experience: experience.map((item) => ({
+      id: item.id,
+      when: item.when,
+      current: item.current,
+      role: item.role,
+      company: item.company,
+      summary: item.summary,
+      bullets: item.bullets,
+      stack: item.stack,
+    })),
+    projects: projects.map((item) => ({
+      id: item.id,
+      name: item.name,
+      blurb: item.blurb,
+      tags: item.tags,
+      github: item.github,
+      demo: item.demo,
+    })),
+    skills: toSkillGroups("skills"),
+    technologies: toSkillGroups("technologies"),
+    theme: {
+      defaultMode: site.themeDefaultMode,
+      allowToggle: site.themeAllowToggle,
+      brandFrom: site.themeBrandFrom,
+      brandTo: site.themeBrandTo,
+      dark: {
+        background: site.darkBackground,
+        foreground: site.darkForeground,
+        card: site.darkCard,
+        cardHover: site.darkCardHover,
+        chip: site.darkChip,
+        accentText: site.darkAccentText,
+        accentHover: site.darkAccentHover,
+        badge: site.darkBadge,
+      },
+      light: {
+        background: site.lightBackground,
+        foreground: site.lightForeground,
+        card: site.lightCard,
+        cardHover: site.lightCardHover,
+        chip: site.lightChip,
+        accentText: site.lightAccentText,
+        accentHover: site.lightAccentHover,
+        badge: site.lightBadge,
+      },
+    },
+    memories: memories.map((item) => ({
+      id: item.id,
+      title: item.title,
+      note: item.note,
+      date: item.date,
+      category: item.category,
+      icon: item.icon,
+      photoUrl: item.photoUrl,
+      color: item.color,
+    })),
+  });
+}
+
+const TX_OPTIONS = { maxWait: 15_000, timeout: 60_000 } as const;
 
 export async function saveContent(data: ContentData): Promise<void> {
   const parsed = parseContent(data);
-  const tmp = `${DATA_PATH}.tmp`;
-  await fs.writeFile(tmp, `${JSON.stringify(parsed, null, 2)}\n`, "utf8");
-  await fs.rename(tmp, DATA_PATH);
+  await prisma.$transaction(async (tx) => {
+    await persistContent(tx, parsed);
+  }, TX_OPTIONS);
 }

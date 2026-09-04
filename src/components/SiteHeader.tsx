@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
@@ -128,7 +128,7 @@ export function SiteHeader({
   );
 
   return (
-    <header id="site-header" className="sticky top-0 z-50 border-b border-line bg-header backdrop-blur-xl">
+    <header id="site-header" className="site-header sticky top-0 z-50 border-b border-line">
       {inner}
     </header>
   );

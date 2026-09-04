@@ -184,6 +184,8 @@ function CustomSkillMark({
       alt=""
       width={MARK_SIZE}
       height={MARK_SIZE}
+      loading="lazy"
+      decoding="async"
       aria-hidden="true"
       className={className}
       style={{ width: MARK_SIZE, height: MARK_SIZE, objectFit: "contain", display: "block", flexShrink: 0 }}

@@ -1,7 +1,7 @@
 "use client";
 
 import { type MouseEvent, type ReactNode } from "react";
-import { useReducedMotion } from "motion/react";
+import { useReducedMotion } from "@/lib/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 
 export function NewTabHint() {

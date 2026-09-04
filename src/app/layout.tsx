@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { loadContent } from "@/content/store";
 import { themeCss, themeInitScript } from "@/lib/theme";
 import "./globals.css";
@@ -7,12 +7,6 @@ import "./globals.css";
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
   display: "swap",
 });
 
@@ -27,7 +21,7 @@ export const dynamic = "force-dynamic";
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const content = await loadContent();
   return (
-    <html lang="en" className={`${outfit.variable} ${inter.variable} antialiased`} suppressHydrationWarning>
+    <html lang="en" className={`${outfit.variable} antialiased`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript(content.theme.defaultMode) }} />
         <style dangerouslySetInnerHTML={{ __html: themeCss(content.theme) }} />

@@ -92,17 +92,19 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     router.refresh();
   }
 
+  // Match homepage section order (Hero → About → Experience → Projects → Skills → Contact),
+  // then Craft / Memories / Appearance / Settings.
   const menu: MenuItem[] = [
     { id: "dashboard", label: "Dashboard", icon: <IconDash />, match: screen === "dashboard" },
+    { id: "hero", label: "Hero", icon: <IconHero />, match: screen === "hero" },
+    { id: "about", label: "About", icon: <IconAbout />, match: screen === "about" },
     { id: "experience", label: "Experience", icon: <IconPin />, match: screen.startsWith("experience") },
     { id: "projects", label: "Projects", icon: <IconPages />, match: screen.startsWith("projects") },
     { id: "skills", label: "Skills", icon: <IconStar />, match: screen === "skills" },
     { id: "technologies", label: "Technologies", icon: <IconCode />, match: screen === "technologies" },
+    { id: "contact", label: "Contact", icon: <IconContact />, match: screen === "contact" },
     { id: "craft", label: "Craft", icon: <IconCraft />, match: screen === "craft" },
     { id: "memories", label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
-    { id: "about", label: "About", icon: <IconAbout />, match: screen === "about" },
-    { id: "contact", label: "Contact", icon: <IconContact />, match: screen === "contact" },
-    { id: "hero", label: "Hero", icon: <IconHero />, match: screen === "hero" },
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
     { id: "site", label: "Settings", icon: <IconSettings />, match: screen === "site" },
   ];

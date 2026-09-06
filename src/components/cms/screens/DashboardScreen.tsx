@@ -30,6 +30,16 @@ export function DashboardScreen({
         <Metabox id="dash_glance" title="At a Glance">
           <ul className="wp-glance">
             <li>
+              <button type="button" onClick={() => go("hero")}>
+                Hero
+              </button>
+            </li>
+            <li>
+              <button type="button" onClick={() => go("about")}>
+                About
+              </button>
+            </li>
+            <li>
               <button type="button" onClick={() => go("experience")}>
                 {data.experience.length} Experience
               </button>
@@ -50,6 +60,11 @@ export function DashboardScreen({
               </button>
             </li>
             <li>
+              <button type="button" onClick={() => go("contact")}>
+                Contact
+              </button>
+            </li>
+            <li>
               <button type="button" onClick={() => go("craft")}>
                 {(data.craft?.groups ?? []).reduce((n, g) => n + g.items.length, 0)} Craft
               </button>
@@ -57,21 +72,6 @@ export function DashboardScreen({
             <li>
               <button type="button" onClick={() => go("memories")}>
                 {memoriesList.length} Memories
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => go("about")}>
-                About
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => go("contact")}>
-                Contact
-              </button>
-            </li>
-            <li>
-              <button type="button" onClick={() => go("hero")}>
-                Hero
               </button>
             </li>
             <li>

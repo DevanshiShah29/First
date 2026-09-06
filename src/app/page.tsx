@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Site } from "@/components/Site";
 import { loadContent } from "@/content/store";
+import { toPublicContent } from "@/content/types";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const content = await loadContent();
+  const content = toPublicContent(await loadContent());
   return <Site content={content} />;
 }

@@ -12,7 +12,6 @@ const ALLOWED = new Map([
   ["image/webp", "webp"],
   ["image/gif", "gif"],
   ["image/avif", "avif"],
-  ["image/svg+xml", "svg"],
   ["video/mp4", "mp4"],
   ["video/webm", "webm"],
   ["video/ogg", "ogv"],
@@ -26,7 +25,6 @@ const EXT_ALIAS: Record<string, string> = {
   webp: "webp",
   gif: "gif",
   avif: "avif",
-  svg: "svg",
   mp4: "mp4",
   webm: "webm",
   ogg: "ogv",
@@ -36,7 +34,6 @@ const EXT_ALIAS: Record<string, string> = {
 
 const FOLDERS = new Set(["hero", "skills", "memories", "resume"]);
 const MAX_BYTES = 25 * 1024 * 1024;
-const MAX_SVG_BYTES = 512 * 1024;
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 
 function resolveExt(file: File): string | undefined {
@@ -80,10 +77,7 @@ export async function POST(req: Request) {
 
   const ext = resolveExt(file);
   if (!ext) {
-    return NextResponse.json({ error: "Use JPG, PNG, WebP, GIF, SVG, MP4, or WebM." }, { status: 400 });
-  }
-  if (ext === "svg" && file.size > MAX_SVG_BYTES) {
-    return NextResponse.json({ error: "SVG must be 512KB or smaller." }, { status: 400 });
+    return NextResponse.json({ error: "Use JPG, PNG, WebP, GIF, AVIF, MP4, or WebM." }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json({ error: "File must be 25MB or smaller." }, { status: 400 });
@@ -95,12 +89,6 @@ export async function POST(req: Request) {
   try {
     await mkdir(dir, { recursive: true });
     const buf = Buffer.from(await file.arrayBuffer());
-    if (ext === "svg") {
-      const text = buf.toString("utf8").replace(/^\uFEFF/, "").trim();
-      if (!/<svg[\s>]/i.test(text)) {
-        return NextResponse.json({ error: "That file does not look like an SVG." }, { status: 400 });
-      }
-    }
     await writeFile(path.join(dir, filename), buf);
   } catch {
     return NextResponse.json(
@@ -109,7 +97,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const kind = ext === "svg" || file.type.startsWith("image/") ? "image" : file.type.startsWith("video/") ? "video" : "image";
+  const kind = file.type.startsWith("video/") || ext === "mp4" || ext === "webm" || ext === "ogv" || ext === "mov"
+    ? "video"
+    : "image";
   return NextResponse.json({ url: `/uploads/${folder}/${filename}`, kind });
 }
 

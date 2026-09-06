@@ -57,11 +57,17 @@ html:has(.wp-login) body {
   color: #1d2327;
 }
 
-.wp-login-form input[type="password"],
-.wp-login-form input[type="text"] {
-  width: 100%;
+.wp-password-field {
+  position: relative;
+  display: block;
   margin-top: 4px;
-  padding: 3px 5px;
+}
+
+.wp-login-form .wp-password-field input[type="password"],
+.wp-login-form .wp-password-field input[type="text"] {
+  width: 100%;
+  margin-top: 0;
+  padding: 3px 44px 3px 5px;
   min-height: 40px;
   font-size: 24px;
   border: 1px solid #8c8f94;
@@ -70,16 +76,85 @@ html:has(.wp-login) body {
   border-radius: 4px;
 }
 
-.wp-login-form input:focus {
+.wp-login-form .wp-password-field input:focus {
   border-color: #2271b1;
   box-shadow: 0 0 0 1px #2271b1;
   outline: 2px solid #2271b1;
   outline-offset: 1px;
 }
 
+.wp-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #646970;
+  cursor: pointer;
+}
+
+.wp-password-toggle:hover {
+  color: #1d2327;
+  background: #f0f0f1;
+}
+
+.wp-password-toggle:focus-visible {
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
+}
+
+.wp-password-toggle .wp-menu-icon {
+  width: 20px;
+  height: 20px;
+}
+
 .wp-login-submit {
   display: flex;
   justify-content: flex-end;
+}
+
+.wp-login-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wp-login-forgot {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #2271b1;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.wp-login-forgot:hover:not(:disabled) {
+  color: #135e96;
+}
+
+.wp-login-forgot:disabled {
+  color: #a7aaad;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.wp-login-lead {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #50575e;
 }
 
 .wp-login-nav {

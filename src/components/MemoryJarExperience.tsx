@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { DEFAULT_MEMORIES } from "@/content/memories-default";
-import type { ContentData, MemoryItem } from "@/content/types";
+import type { MemoryItem, PublicContentData } from "@/content/types";
 import { jarAudio } from "@/lib/memory-jar-audio";
 import { resolveStarColor, type StarColor } from "@/lib/memory-jar";
 import { useReducedMotion } from "@/lib/reduced-motion";
@@ -11,7 +11,7 @@ import { useJarSize } from "@/lib/use-jar-size";
 import { MasonJar } from "./memory-jar/MasonJar";
 import { RevealCard } from "./memory-jar/RevealCard";
 
-export function MemoryJarExperience({ content }: { content: ContentData }) {
+export function MemoryJarExperience({ content }: { content: PublicContentData }) {
   const memories = useMemo(() => {
     if (content.memories && content.memories.length > 0) return content.memories;
     return DEFAULT_MEMORIES;

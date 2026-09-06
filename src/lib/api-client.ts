@@ -84,6 +84,100 @@ export async function cmsLogout(): Promise<void> {
 }
 
 /**
+ * Request a CMS password-reset email to the admin address.
+ */
+export async function cmsForgotPassword(): Promise<ApiResponse<{ message?: string }>> {
+  try {
+    const res = await fetch("/api/cms/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const body = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: body.error || "Could not send reset email.",
+      };
+    }
+
+    return { ok: true, data: { message: body.message } };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not send reset email. Network error.",
+    };
+  }
+}
+
+/**
+ * Complete CMS password reset with a one-time email token.
+ */
+export async function cmsResetPassword(input: {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}): Promise<ApiResponse> {
+  try {
+    const res = await fetch("/api/cms/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: body.error || "Could not reset password.",
+      };
+    }
+
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not reset password. Network error.",
+    };
+  }
+}
+
+/**
+ * Change CMS login password (requires an active session).
+ */
+export async function cmsChangePassword(input: {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}): Promise<ApiResponse> {
+  try {
+    const res = await fetch("/api/cms/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        error: body.error || "Could not change password.",
+      };
+    }
+
+    return { ok: true };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not change password. Network error.",
+    };
+  }
+}
+
+/**
  * Persist modified portfolio content to CMS backend.
  */
 export async function saveCmsContent(content: ContentData): Promise<ApiResponse<{ content: ContentData }>> {

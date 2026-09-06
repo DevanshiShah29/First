@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { ContentData } from "@/content/types";
+import type { PublicContentData } from "@/content/types";
 import { SkipLink } from "./a11y";
 import { Cursor } from "./Cursor";
 import { SiteFooter } from "./SiteFooter";
@@ -11,7 +11,7 @@ export function PageShell({
   content,
   children,
 }: {
-  content: ContentData;
+  content: PublicContentData;
   children: ReactNode;
 }) {
   const { site } = content;

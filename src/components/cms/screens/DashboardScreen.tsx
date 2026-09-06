@@ -55,6 +55,16 @@ export function DashboardScreen({
               </button>
             </li>
             <li>
+              <button type="button" onClick={() => go("about")}>
+                About
+              </button>
+            </li>
+            <li>
+              <button type="button" onClick={() => go("contact")}>
+                Contact
+              </button>
+            </li>
+            <li>
               <button type="button" onClick={() => go("hero")}>
                 Hero
               </button>

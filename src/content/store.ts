@@ -1,6 +1,7 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { normalizeHex } from "@/lib/hex";
 import { prisma } from "@/lib/prisma";
+import { decryptSecret, encryptSecret } from "@/lib/secrets-crypto";
 import {
   DEFAULT_HERO_MEDIA,
   DEFAULT_THEME,
@@ -218,7 +219,7 @@ export function parseContent(value: unknown): ContentData {
   };
 }
 
-function siteSettingsData(site: SiteContent, theme: ThemeContent) {
+async function siteSettingsData(site: SiteContent, theme: ThemeContent) {
   return {
     name: site.name,
     initials: site.initials,
@@ -229,7 +230,7 @@ function siteSettingsData(site: SiteContent, theme: ThemeContent) {
     heroMediaUrl: site.heroMedia.url,
     heroMediaPlace: site.heroMedia.place,
     heroMediaSide: site.heroMedia.side,
-    pianoYoutubeUrl: site.pianoYoutubeUrl,
+    pianoYoutubeUrl: await encryptSecret(site.pianoYoutubeUrl),
     goodreadsUrl: site.goodreadsUrl,
     kicker: site.kicker,
     greeting: site.greeting,
@@ -271,7 +272,7 @@ function siteSettingsData(site: SiteContent, theme: ThemeContent) {
 /** Write a full ContentData document into normalized tables. */
 export async function persistContent(db: DbClient, raw: ContentData): Promise<void> {
   const data = parseContent(raw);
-  const siteFields = siteSettingsData(data.site, data.theme);
+  const siteFields = await siteSettingsData(data.site, data.theme);
 
   await db.siteSettings.upsert({
     where: { id: SITE_ID },
@@ -423,7 +424,7 @@ export async function loadContent(): Promise<ContentData> {
         place: site.heroMediaPlace,
         side: site.heroMediaSide,
       },
-      pianoYoutubeUrl: site.pianoYoutubeUrl,
+      pianoYoutubeUrl: await decryptSecret(site.pianoYoutubeUrl),
       goodreadsUrl: site.goodreadsUrl,
       kicker: site.kicker,
       greeting: site.greeting,

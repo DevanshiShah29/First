@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { createVisibilityGate } from "@/lib/active-loop";
 import { useReducedMotion } from "@/lib/reduced-motion";
-import type { SiteContent } from "@/content/types";
+import type { PublicSiteContent, SiteContent } from "@/content/types";
+import { siteHasPiano } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
-import { youtubeVideoId } from "@/lib/media-url";
 
 type SpotId = "frames" | "jar" | "books" | "piano" | "laptop" | "cook" | "plants" | "yoga";
 
@@ -158,7 +158,7 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
   return null;
 }
 
-export function StudioHero({ site }: { site: SiteContent }) {
+export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
   const artRef = useRef<HTMLImageElement>(null);
@@ -176,7 +176,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
   const [bookRest, setBookRest] = useState(false);
   const [flash, setFlash] = useState(false);
   const [hitmap, setHitmap] = useState<Hitmap | null>(null);
-  const videoId = youtubeVideoId(site.pianoYoutubeUrl ?? "");
+  const hasPiano = siteHasPiano(site);
   const goodreadsId = goodreadsUserId(site.goodreadsUrl ?? "");
 
   function syncHitmap() {
@@ -196,7 +196,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
     audioHost.current?.replaceChildren();
   }
 
-  function startMusic(id: string) {
+  function startMusic() {
     const host = audioHost.current;
     if (!host) return;
     stopMusic();
@@ -206,8 +206,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
     iframe.allow = "autoplay; encrypted-media";
     iframe.setAttribute("aria-hidden", "true");
     iframe.tabIndex = -1;
-    const origin = encodeURIComponent(window.location.origin);
-    iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&enablejsapi=1&playsinline=1&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0&origin=${origin}`;
+    iframe.src = `/api/media/piano?t=${Date.now()}`;
     host.appendChild(iframe);
     iframeRef.current = iframe;
   }
@@ -340,7 +339,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
 
   function onPianoToggle() {
     window.clearTimeout(restTimer.current);
-    if (!videoId) {
+    if (!hasPiano) {
       setPianoPlaying(false);
       setPianoRest(true);
       stopMusic();
@@ -353,7 +352,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
       setPianoPlaying(false);
       return;
     }
-    startMusic(videoId);
+    startMusic();
     setPianoPlaying(true);
   }
 
@@ -370,10 +369,9 @@ export function StudioHero({ site }: { site: SiteContent }) {
   }
 
   const pianoOn = active === "piano" || pianoPlaying || pianoRest;
-  const pianoTip = pianoPlaying ? null : !videoId ? "The piano is taking a break 🎹" : "Play something 🎵";
+  const pianoTip = pianoPlaying ? null : !hasPiano ? "The piano is taking a break 🎹" : "Play something 🎵";
   const bookOn = active === "books" || bookRest;
   const bookTip = !goodreadsId ? "The books are taking a break 📚" : "Open my books";
-  const pianoHref = videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined;
   const deskTip = site.roles[0] ? `Building · ${site.roles[0]}` : "This is my desk";
 
   function renderSpots(layout: "desktop" | "mobile") {
@@ -387,7 +385,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
           const isFrames = spot.id === "frames";
           const isLaptop = spot.id === "laptop";
           const on = isPiano ? pianoOn : isBook ? bookOn : active === spot.id;
-          const href = isBook && goodreadsId ? "/reading" : isJar ? "/memories" : isPiano ? pianoHref : undefined;
+          const href = isBook && goodreadsId ? "/reading" : isJar ? "/memories" : undefined;
           const Spot = href ? "a" : "button";
           const tip = isPiano
             ? pianoTip
@@ -405,7 +403,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
           const label = isPiano
             ? pianoPlaying
               ? "Pause piano music"
-              : videoId
+              : hasPiano
                 ? "Play piano music"
                 : "The piano is taking a break"
             : isBook
@@ -424,8 +422,6 @@ export function StudioHero({ site }: { site: SiteContent }) {
               key={`${layout}-${spot.id}-${spot.left}-${i}`}
               href={href}
               type={href ? undefined : "button"}
-              target={isPiano && href ? "_blank" : undefined}
-              rel={isPiano && href ? "noopener noreferrer" : undefined}
               data-spot={spot.id}
               className={`world-spot${on ? " is-on" : ""}${isPiano && pianoPlaying ? " is-playing" : ""}`}
               style={{ left: spot.left, top: spot.top, width: spot.w, height: spot.h }}
@@ -448,7 +444,7 @@ export function StudioHero({ site }: { site: SiteContent }) {
                   return;
                 }
                 if (isPiano) {
-                  if (videoId) e.preventDefault();
+                  e.preventDefault();
                   onPianoToggle();
                   return;
                 }

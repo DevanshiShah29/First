@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { useReducedMotion } from "@/lib/reduced-motion";
-import type { SiteContent } from "@/content/types";
+import type { PublicSiteContent, SiteContent } from "@/content/types";
+import { siteHasPiano } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
-import { youtubeVideoId } from "@/lib/media-url";
 
 type SpotId =
   | "piano"
@@ -115,7 +115,7 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
   return null;
 }
 
-export function NookHero({ site }: { site: SiteContent }) {
+export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
   const audioHost = useRef<HTMLDivElement>(null);
@@ -125,7 +125,7 @@ export function NookHero({ site }: { site: SiteContent }) {
   const [pianoPlaying, setPianoPlaying] = useState(false);
   const [pianoRest, setPianoRest] = useState(false);
   const [bookRest, setBookRest] = useState(false);
-  const videoId = youtubeVideoId(site.pianoYoutubeUrl ?? "");
+  const hasPiano = siteHasPiano(site);
   const goodreadsId = goodreadsUserId(site.goodreadsUrl ?? "");
 
   function stopMusic() {
@@ -134,7 +134,7 @@ export function NookHero({ site }: { site: SiteContent }) {
     audioHost.current?.replaceChildren();
   }
 
-  function startMusic(id: string) {
+  function startMusic() {
     const host = audioHost.current;
     if (!host) return;
     stopMusic();
@@ -144,8 +144,7 @@ export function NookHero({ site }: { site: SiteContent }) {
     iframe.allow = "autoplay; encrypted-media";
     iframe.setAttribute("aria-hidden", "true");
     iframe.tabIndex = -1;
-    const origin = encodeURIComponent(window.location.origin);
-    iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&enablejsapi=1&playsinline=1&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0&origin=${origin}`;
+    iframe.src = `/api/media/piano?t=${Date.now()}`;
     host.appendChild(iframe);
     iframeRef.current = iframe;
   }
@@ -170,7 +169,7 @@ export function NookHero({ site }: { site: SiteContent }) {
 
   function onPianoToggle() {
     window.clearTimeout(restTimer.current);
-    if (!videoId) {
+    if (!hasPiano) {
       setPianoPlaying(false);
       setPianoRest(true);
       stopMusic();
@@ -183,7 +182,7 @@ export function NookHero({ site }: { site: SiteContent }) {
       setPianoPlaying(false);
       return;
     }
-    startMusic(videoId);
+    startMusic();
     setPianoPlaying(true);
   }
 
@@ -197,12 +196,11 @@ export function NookHero({ site }: { site: SiteContent }) {
   const pianoOn = active === "piano" || pianoPlaying || pianoRest;
   const pianoTip = pianoPlaying
     ? null
-    : !videoId
+    : !hasPiano
       ? "The piano is taking a break 🎹"
       : "Play something 🎵";
   const bookOn = active === "books" || bookRest;
   const bookTip = !goodreadsId ? "The books are taking a break 📚" : "Open my books";
-  const pianoHref = videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined;
 
   return (
     <section id="top" className={`world-hero is-nook${pianoPlaying ? " is-playing" : ""}`} aria-labelledby="hero-heading">
@@ -248,13 +246,7 @@ export function NookHero({ site }: { site: SiteContent }) {
               const isJar = spot.id === "jar";
               const on = isPiano ? pianoOn : isBook ? bookOn : active === spot.id;
               const href =
-                isBook && goodreadsId
-                  ? "/reading"
-                  : isJar
-                    ? "/memories"
-                    : isPiano
-                      ? pianoHref
-                      : undefined;
+                isBook && goodreadsId ? "/reading" : isJar ? "/memories" : undefined;
               const Spot = href ? "a" : "button";
               const tip =
                 isPiano && pianoTip
@@ -269,7 +261,7 @@ export function NookHero({ site }: { site: SiteContent }) {
               const label = isPiano
                 ? pianoPlaying
                   ? "Pause piano music"
-                  : videoId
+                  : hasPiano
                     ? "Play piano music"
                     : "The piano is taking a break"
                 : isBook
@@ -284,8 +276,6 @@ export function NookHero({ site }: { site: SiteContent }) {
                   key={`${layout}-${spot.id}`}
                   href={href}
                   type={href ? undefined : "button"}
-                  target={isPiano && href ? "_blank" : undefined}
-                  rel={isPiano && href ? "noopener noreferrer" : undefined}
                   data-spot={spot.id}
                   className={`world-spot${on ? " is-on" : ""}${isPiano && pianoPlaying ? " is-playing" : ""}`}
                   style={{ left: spot.left, top: spot.top, width: spot.w, height: spot.h }}
@@ -301,7 +291,7 @@ export function NookHero({ site }: { site: SiteContent }) {
                   onBlur={() => setActive((cur) => (cur === spot.id ? null : cur))}
                   onClick={(e) => {
                     if (isPiano) {
-                      if (videoId) e.preventDefault();
+                      e.preventDefault();
                       onPianoToggle();
                       return;
                     }

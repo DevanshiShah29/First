@@ -4,7 +4,9 @@ import { verifySessionCookie } from "@/lib/cms-auth";
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/admin/login")) return NextResponse.next();
+  if (pathname.startsWith("/admin/login") || pathname.startsWith("/admin/reset-password")) {
+    return NextResponse.next();
+  }
   const token = req.cookies.get("cms_session")?.value;
   if (await verifySessionCookie(token)) return NextResponse.next();
   const url = req.nextUrl.clone();

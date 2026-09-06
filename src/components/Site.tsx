@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { useReducedMotion } from "@/lib/reduced-motion";
-import type { ContentData } from "@/content/types";
+import type { PublicContentData } from "@/content/types";
 import { resumeDownloadProps } from "@/lib/resume";
 import { scrollToHash } from "@/lib/scroll";
 import { NewTabHint, SkipLink } from "./a11y";
@@ -59,7 +59,7 @@ function SocialRound({
   );
 }
 
-export function Site({ content }: { content: ContentData }) {
+export function Site({ content }: { content: PublicContentData }) {
   const { site, experience, projects, skills: skillGroups = [], technologies: techGroups = [] } = content;
   const reduce = useReducedMotion();
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");

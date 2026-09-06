@@ -4,6 +4,8 @@ import { youtubeVideoId } from "@/lib/media-url";
 export type Screen =
   | "dashboard"
   | "site"
+  | "about"
+  | "contact"
   | "hero"
   | "appearance"
   | "experience"

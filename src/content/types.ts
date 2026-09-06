@@ -140,7 +140,7 @@ export type SkillItem = {
   name: string;
   icon: SkillIcon;
   color?: string;
-  /** Custom icon: uploaded SVG path or any image URL. Takes precedence over `icon`. */
+  /** Custom icon: uploaded image URL (PNG/WebP/etc). Takes precedence over `icon`. */
   iconUrl?: string;
 };
 
@@ -229,4 +229,31 @@ export type ContentData = {
   theme: ThemeContent;
   memories?: MemoryItem[];
 };
+
+/** Public site props: sensitive media URLs stripped; playback via server proxy. */
+export type PublicSiteContent = Omit<SiteContent, "pianoYoutubeUrl"> & {
+  pianoAvailable: boolean;
+};
+
+export type PublicContentData = Omit<ContentData, "site"> & {
+  site: PublicSiteContent;
+};
+
+export function toPublicContent(content: ContentData): PublicContentData {
+  const { pianoYoutubeUrl, ...rest } = content.site;
+  return {
+    ...content,
+    site: {
+      ...rest,
+      pianoAvailable: Boolean(pianoYoutubeUrl?.trim()),
+    },
+  };
+}
+
+export function siteHasPiano(site: PublicSiteContent | SiteContent) {
+  if ("pianoAvailable" in site && typeof site.pianoAvailable === "boolean") {
+    return site.pianoAvailable;
+  }
+  return Boolean("pianoYoutubeUrl" in site && site.pianoYoutubeUrl?.trim());
+}
 

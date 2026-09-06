@@ -30,7 +30,14 @@ npm run db:seed
 npm run db:studio   # browse/edit rows
 ```
 
-`src/content/data.json` remains as the seed source only.
+`src/content/data.json` remains as the seed source only. Do not commit real secrets or private media URLs there 
+
+## Security
+
+- Secrets (`ADMIN_PASSWORD`, `CMS_SECRET`, `DATABASE_URL`, `GEMINI_API_KEY`, `FORMSUBMIT_KEY`, `RESEND_API_KEY`, …) live only in env / host secret store — never in source or `NEXT_PUBLIC_*`.
+- CMS session cookies are httpOnly HMAC-signed with `CMS_SECRET`. Login is rate-limited.
+- Sensitive media (piano YouTube URL) is encrypted at rest and served only via same-origin `GET /api/media/piano`.
+- If this repo or a machine `.env` was ever shared, rotate all credentials.
 
 ## Direction
 

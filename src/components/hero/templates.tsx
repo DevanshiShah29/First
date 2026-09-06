@@ -2,12 +2,12 @@
 
 import type { MouseEvent, ReactNode } from "react";
 import { Fade } from "@/components/Fade";
-import type { HeroTemplateId, SiteContent } from "@/content/types";
+import type { HeroTemplateId, PublicSiteContent, SiteContent } from "@/content/types";
 import { HeroCtas } from "./HeroCtas";
 import { Typewriter } from "./Typewriter";
 
 export interface HeroProps {
-  site: SiteContent;
+  site: PublicSiteContent | SiteContent;
   onProjects: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 

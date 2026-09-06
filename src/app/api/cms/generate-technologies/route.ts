@@ -279,9 +279,8 @@ export async function POST(req: Request) {
   } | null;
 
   if (!geminiRes.ok) {
-    const message = geminiJson?.error?.message || `Gemini error (${geminiRes.status}).`;
-    console.error("Gemini API error", geminiRes.status, message);
-    return NextResponse.json({ error: message }, { status: 502 });
+    console.error("Gemini API error", geminiRes.status);
+    return NextResponse.json({ error: "AI generation failed. Try again." }, { status: 502 });
   }
 
   const text = geminiJson?.candidates?.[0]?.content?.parts

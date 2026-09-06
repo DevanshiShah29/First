@@ -218,7 +218,7 @@ function ExperienceEditForm({
               <AiFormSection
                 step={1}
                 title="Sources for AI"
-                description="Fill role details first. Generation also reads your LinkedIn + resume from Site settings."
+                description="Fill role details first. Generation also reads your LinkedIn + resume from Contact."
               >
                 <table className="wp-form-table">
                   <tbody>
@@ -233,11 +233,11 @@ function ExperienceEditForm({
                 <ul className="wp-ai-source-summary" style={{ marginTop: 8 }}>
                   <li>
                     <strong>LinkedIn</strong>
-                    <span>{hasLinkedIn ? data.site.linkedin : "Not set — add in Site settings"}</span>
+                    <span>{hasLinkedIn ? data.site.linkedin : "Not set — add in Contact"}</span>
                   </li>
                   <li>
                     <strong>Resume</strong>
-                    <span>{hasResume ? data.site.resume : "Not set — upload in Site settings"}</span>
+                    <span>{hasResume ? data.site.resume : "Not set — upload in Contact"}</span>
                   </li>
                 </ul>
               </AiFormSection>

@@ -2,7 +2,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { loadContent, parseContent, saveContent } from "@/content/store";
-import { verifySessionCookie } from "@/lib/cms-auth";
+import { assertSameOrigin, verifySessionCookie } from "@/lib/cms-auth";
 
 export const runtime = "nodejs";
 
@@ -23,6 +23,9 @@ export async function POST(req: Request) {
   if (!(await authed())) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
+  if (!assertSameOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
   let body: unknown;
   try {
     body = await req.json();
@@ -36,8 +39,8 @@ export async function POST(req: Request) {
   const content = parseContent(payload);
   try {
     await saveContent(content);
-  } catch (err) {
-    console.error("saveContent failed", err);
+  } catch {
+    console.error("saveContent failed");
     return NextResponse.json(
       {
         error: "Could not save content to the database. Check DATABASE_URL and try again.",

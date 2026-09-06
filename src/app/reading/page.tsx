@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
 import { ReadingLibrary } from "@/components/ReadingLibrary";
 import { loadContent } from "@/content/store";
+import { toPublicContent } from "@/content/types";
 import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
 
 export const dynamic = "force-dynamic";
@@ -15,13 +16,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ReadingPage() {
-  const content = await loadContent();
-  const name = content.site.name.split(" ")[0] || content.site.name;
-  let library = emptyLibrary(content.site.goodreadsUrl);
+  const full = await loadContent();
+  const content = toPublicContent(full);
+  const name = full.site.name.split(" ")[0] || full.site.name;
+  let library = emptyLibrary(full.site.goodreadsUrl);
   try {
-    library = await loadGoodreadsLibrary(content.site.goodreadsUrl, name);
+    library = await loadGoodreadsLibrary(full.site.goodreadsUrl, name);
   } catch {
-    library = { ...emptyLibrary(content.site.goodreadsUrl), configured: true, name };
+    library = { ...emptyLibrary(full.site.goodreadsUrl), configured: true, name };
   }
   return (
     <PageShell content={content}>

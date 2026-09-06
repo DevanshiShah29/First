@@ -213,15 +213,15 @@ async function gatherGithubContext(githubUrl: string): Promise<SourceContext | n
 }
 
 async function gatherLiveContext(demoUrl: string): Promise<SourceContext | null> {
-  let normalized = demoUrl;
+  let url: URL;
   try {
-    if (!/^https?:\/\//i.test(normalized)) normalized = `https://${normalized}`;
-    const u = new URL(normalized);
-    if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+    const { assertPublicHttpsUrl } = await import("@/lib/safe-fetch");
+    url = await assertPublicHttpsUrl(demoUrl);
   } catch {
-    return { label: "Live URL", text: `Invalid URL: ${demoUrl}` };
+    return { label: "Live URL", text: `Invalid or disallowed URL: ${demoUrl}` };
   }
 
+  const normalized = url.toString();
   try {
     const res = await fetchWithTimeout(normalized);
     if (!res.ok) {
@@ -245,8 +245,8 @@ async function gatherLiveContext(demoUrl: string): Promise<SourceContext | null>
         ? `URL: ${normalized}\n${signals}`
         : `URL: ${normalized} (page fetched; little metadata found)`,
     };
-  } catch (err) {
-    console.error("Live URL fetch failed", err);
+  } catch {
+    console.error("Live URL fetch failed");
     return {
       label: "Live demo",
       text: `URL: ${normalized} (fetch failed; generate carefully from the URL and name only)`,
@@ -349,9 +349,8 @@ export async function POST(req: Request) {
   } | null;
 
   if (!geminiRes.ok) {
-    const message = geminiJson?.error?.message || `Gemini error (${geminiRes.status}).`;
-    console.error("Gemini API error", geminiRes.status, message);
-    return NextResponse.json({ error: message }, { status: 502 });
+    console.error("Gemini API error", geminiRes.status);
+    return NextResponse.json({ error: "AI generation failed. Try again." }, { status: 502 });
   }
 
   const text = geminiJson?.candidates?.[0]?.content?.parts

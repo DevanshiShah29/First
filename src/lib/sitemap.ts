@@ -1,4 +1,4 @@
-import type { SiteContent } from "@/content/types";
+import type { PublicSiteContent, SiteContent } from "@/content/types";
 
 export type SiteLink = {
   href: string;
@@ -11,7 +11,7 @@ export type SiteMapGroup = {
   links: SiteLink[];
 };
 
-export function siteMap(site: SiteContent): SiteMapGroup[] {
+export function siteMap(site: PublicSiteContent | SiteContent): SiteMapGroup[] {
   const connect: SiteLink[] = [{ href: "/#contact", label: "Contact" }];
   if (site.email) connect.push({ href: `mailto:${site.email}`, label: site.email, external: true });
   if (site.linkedin) connect.push({ href: site.linkedin, label: "LinkedIn", external: true });

@@ -73,6 +73,22 @@ export function IconSettings({ className }: IconProps) {
   );
 }
 
+export function IconAbout({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16zm0 3.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM7.8 14.2v-1.2c0-1.3 1.4-2 2.2-2s2.2.7 2.2 2v1.2H7.8z" />
+    </Svg>
+  );
+}
+
+export function IconContact({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M2 4h16v12H2V4zm1.5 1.5v2.2l6.5 4 6.5-4V5.5h-13zm13 3.7-6.5 4-6.5-4v5.3h13V9.2z" />
+    </Svg>
+  );
+}
+
 export function IconHome({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -109,6 +125,22 @@ export function IconCode({ className }: IconProps) {
   return (
     <Svg className={className}>
       <path d="m6.5 13.5-4-3.5 4-3.5 1 1-2.8 2.5 2.8 2.5-1 1zm7 0-1-1 2.8-2.5-2.8-2.5 1-1 4 3.5-4 3.5zm-4.7 1.5-1.6-.5 3.5-10 1.6.5-3.5 10z" />
+    </Svg>
+  );
+}
+
+export function IconEye({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M10 4C4.5 4 1 10 1 10s3.5 6 9 6 9-6 9-6-3.5-6-9-6zm0 10a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2.2A1.8 1.8 0 1 0 10 8a1.8 1.8 0 0 0 0 3.8z" />
+    </Svg>
+  );
+}
+
+export function IconEyeOff({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M2.3 3.7 3.7 2.3l14 14-1.4 1.4-2.4-2.4C12.6 15.7 11.4 16 10 16c-5.5 0-9-6-9-6a16.6 16.6 0 0 1 4.1-4.1L2.3 3.7zM10 6c5.5 0 9 6 9 6a16.4 16.4 0 0 1-3.2 3.5l-2.1-2.1A4 4 0 0 0 8.6 8.3L6.4 6.1C7.5 6.2 8.7 6 10 6zm0 2.2a1.8 1.8 0 0 1 1.8 1.8c0 .3-.1.5-.2.7l-2.3-2.3c.2-.1.4-.2.7-.2z" />
     </Svg>
   );
 }

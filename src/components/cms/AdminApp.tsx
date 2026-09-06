@@ -6,7 +6,9 @@ import type { ContentData, HeroMedia } from "@/content/types";
 import { cmsLogout, saveCmsContent, uploadCmsFile } from "@/lib/api-client";
 import { AdminBar, AdminMenu, type MenuItem } from "./components/AdminNav";
 import { Breadcrumbs } from "./components/Breadcrumbs";
+import { AboutScreen } from "./screens/AboutScreen";
 import { AppearanceScreen } from "./screens/AppearanceScreen";
+import { ContactScreen } from "./screens/ContactScreen";
 import { DashboardScreen } from "./screens/DashboardScreen";
 import { ExperienceEditScreen, ExperienceListScreen } from "./screens/ExperienceScreens";
 import { HeroScreen } from "./screens/HeroScreen";
@@ -16,8 +18,10 @@ import { SiteScreen } from "./screens/SiteScreen";
 import { SkillGroupsScreen } from "./screens/SkillsScreens";
 import { clone, newId, type BreadcrumbItem, type Screen } from "./types";
 import {
+  IconAbout,
   IconAppearance,
   IconCode,
+  IconContact,
   IconDash,
   IconHero,
   IconJar,
@@ -277,6 +281,8 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "skills", label: "Skills", icon: <IconStar />, match: screen === "skills" },
     { id: "technologies", label: "Technologies", icon: <IconCode />, match: screen === "technologies" },
     { id: "memories", label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
+    { id: "about", label: "About", icon: <IconAbout />, match: screen === "about" },
+    { id: "contact", label: "Contact", icon: <IconContact />, match: screen === "contact" },
     { id: "hero", label: "Hero", icon: <IconHero />, match: screen === "hero" },
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
     { id: "site", label: "Settings", icon: <IconSettings />, match: screen === "site" },
@@ -290,6 +296,16 @@ export function AdminApp({ initial }: { initial: ContentData }) {
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },
           { label: "General Settings", current: true },
+        ];
+      case "about":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "About", current: true },
+        ];
+      case "contact":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Contact", current: true },
         ];
       case "hero":
         return [
@@ -413,6 +429,38 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               expandAll={expandAll}
               collapseAll={collapseAll}
               go={go}
+              save={save}
+              dirty={dirty}
+              onPasswordNotice={(message) => {
+                setError("");
+                setNotice(message);
+              }}
+              onPasswordError={(message) => {
+                setNotice("");
+                setError(message);
+              }}
+            />
+          )}
+
+          {screen === "about" && (
+            <AboutScreen
+              data={data}
+              setData={setData}
+              sectionState={sectionState}
+              expandAll={expandAll}
+              collapseAll={collapseAll}
+              save={save}
+              dirty={dirty}
+            />
+          )}
+
+          {screen === "contact" && (
+            <ContactScreen
+              data={data}
+              setData={setData}
+              sectionState={sectionState}
+              expandAll={expandAll}
+              collapseAll={collapseAll}
               uploadResume={uploadResume}
               uploading={uploading}
               save={save}

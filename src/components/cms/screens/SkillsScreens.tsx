@@ -197,18 +197,18 @@ export function SkillGroupsScreen({
             title="Sources for AI"
             description={
               kind === "technologies"
-                ? "Uses LinkedIn + resume from Site settings, plus Experience stacks and Project tags."
-                : "Uses LinkedIn + resume from Site settings, plus Experience summaries and tags."
+                ? "Uses LinkedIn + resume from Contact, plus Experience stacks and Project tags."
+                : "Uses LinkedIn + resume from Contact, plus Experience summaries and tags."
             }
           >
             <ul className="wp-ai-source-summary">
               <li>
                 <strong>LinkedIn</strong>
-                <span>{hasLinkedIn ? data.site.linkedin : "Not set — add in Site settings"}</span>
+                <span>{hasLinkedIn ? data.site.linkedin : "Not set — add in Contact"}</span>
               </li>
               <li>
                 <strong>Resume</strong>
-                <span>{hasResume ? data.site.resume : "Not set — upload in Site settings"}</span>
+                <span>{hasResume ? data.site.resume : "Not set — upload in Contact"}</span>
               </li>
               <li>
                 <strong>Experience stacks</strong>

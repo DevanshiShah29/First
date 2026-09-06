@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { MemoryJarExperience } from "@/components/MemoryJarExperience";
 import { PageShell } from "@/components/PageShell";
 import { loadContent } from "@/content/store";
+import { toPublicContent } from "@/content/types";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MemoriesPage() {
-  const content = await loadContent();
+  const content = toPublicContent(await loadContent());
   return (
     <PageShell content={content}>
       <MemoryJarExperience content={content} />

@@ -2,7 +2,7 @@
 
 import type { MouseEvent } from "react";
 import dynamic from "next/dynamic";
-import type { SiteContent } from "@/content/types";
+import type { PublicSiteContent, SiteContent } from "@/content/types";
 import { hasMedia, HeroMediaView } from "./HeroMediaView";
 import { ClassicHero, HERO_TEMPLATES_MAP, HeroCopy } from "./templates";
 
@@ -22,7 +22,7 @@ const StudioHero = dynamic(() => import("./StudioHero").then((m) => m.StudioHero
 });
 
 interface HeroProps {
-  site: SiteContent;
+  site: PublicSiteContent | SiteContent;
   onProjects: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 

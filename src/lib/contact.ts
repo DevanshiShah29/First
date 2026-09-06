@@ -108,15 +108,11 @@ function formOrigin(req: Request) {
   return `${proto}://${host}`;
 }
 
-const DEFAULT_FORMSUBMIT_KEY = "ec460ad538a6760b7bb0b32b3ab9ce80";
-
-function formSubmitTarget(email: string) {
-  return process.env.FORMSUBMIT_KEY?.trim() || DEFAULT_FORMSUBMIT_KEY || email;
-}
-
-async function sendWithFormSubmit(to: string, fields: ContactFields, siteName: string, origin: string) {
+async function sendWithFormSubmit(fields: ContactFields, siteName: string, origin: string) {
+  const formKey = process.env.FORMSUBMIT_KEY?.trim();
+  if (!formKey) return false;
   const { subject } = mailCopy(fields, siteName);
-  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(formSubmitTarget(to))}`, {
+  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(formKey)}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -144,5 +140,62 @@ export async function deliverContact(req: Request, fields: ContactFields, to: st
   const from =
     process.env.CONTACT_FROM_EMAIL?.trim() || `${siteName} <onboarding@resend.dev>`;
   if (await sendWithResend(to, from, fields, siteName)) return true;
-  return sendWithFormSubmit(to, fields, siteName, formOrigin(req));
+  return sendWithFormSubmit(fields, siteName, formOrigin(req));
+}
+
+export function requestOrigin(req: Request) {
+  return formOrigin(req);
+}
+
+/** Send a simple transactional email (Resend first, FormSubmit fallback). */
+export async function deliverSimpleMail(
+  req: Request,
+  input: { to: string; subject: string; text: string; html: string; siteName: string },
+) {
+  const from =
+    process.env.CONTACT_FROM_EMAIL?.trim() || `${input.siteName} <onboarding@resend.dev>`;
+  const key = process.env.RESEND_API_KEY?.trim();
+  if (key) {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: [input.to],
+        subject: input.subject,
+        text: input.text,
+        html: input.html,
+      }),
+    });
+    if (res.ok) return true;
+  }
+
+  const formKey = process.env.FORMSUBMIT_KEY?.trim();
+  if (!formKey) return false;
+  const origin = formOrigin(req);
+  const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(formKey)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Origin: origin,
+      Referer: `${origin}/`,
+    },
+    body: JSON.stringify({
+      name: "CMS Password Reset",
+      email: input.to,
+      message: input.text,
+      _subject: input.subject,
+      _template: "table",
+      _captcha: "false",
+    }),
+  });
+  if (!res.ok) return false;
+  const payload = (await res.json().catch(() => null)) as { success?: unknown; message?: unknown } | null;
+  if (payload?.success === true || payload?.success === "true") return true;
+  const message = typeof payload?.message === "string" ? payload.message : "";
+  return /activat/i.test(message);
 }

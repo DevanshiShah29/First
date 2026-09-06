@@ -111,6 +111,11 @@ export function useCmsNavigation(
     switch (screen) {
       case "dashboard":
         return [{ label: "Dashboard", current: true }];
+      case "analytics":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Analytics", current: true },
+        ];
       case "site":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },

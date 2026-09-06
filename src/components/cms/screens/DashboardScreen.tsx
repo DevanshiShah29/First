@@ -37,6 +37,11 @@ export function DashboardScreen({
         <Metabox id="dash_glance" title="At a Glance">
           <ul className="wp-glance">
             <li>
+              <button type="button" onClick={() => go("analytics")}>
+                Site analytics
+              </button>
+            </li>
+            <li>
               <button type="button" onClick={() => go("hero")}>
                 Hero
               </button>

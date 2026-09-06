@@ -18,6 +18,7 @@ import { useCmsUploads } from "./hooks/useCmsUploads";
 
 // CMS screens
 import { AboutScreen } from "./screens/AboutScreen";
+import { AnalyticsScreen } from "./screens/AnalyticsScreen";
 import { AppearanceScreen } from "./screens/AppearanceScreen";
 import { ContactScreen } from "./screens/ContactScreen";
 import { CraftScreen } from "./screens/CraftScreens";
@@ -41,6 +42,7 @@ import { SkillGroupsScreen } from "./screens/SkillsScreens";
 // Icons
 import {
   IconAbout,
+  IconAnalytics,
   IconAppearance,
   IconCode,
   IconContact,
@@ -124,6 +126,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   // then Craft / Memories / Appearance / Settings.
   const menu: MenuItem[] = [
     { id: "dashboard", label: "Dashboard", icon: <IconDash />, match: screen === "dashboard" },
+    { id: "analytics", label: "Analytics", icon: <IconAnalytics />, match: screen === "analytics" },
     { id: "hero", label: "Hero", icon: <IconHero />, match: screen === "hero" },
     { id: "about", label: "About", icon: <IconAbout />, match: screen === "about" },
     { id: "experience", label: "Experience", icon: <IconPin />, match: screen.startsWith("experience") },
@@ -183,6 +186,8 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               addMemory={addMemory}
             />
           )}
+
+          {screen === "analytics" && <AnalyticsScreen />}
 
           {screen === "site" && (
             <SiteScreen

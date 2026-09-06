@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
+import { AnalyticsTracker } from "@/components/AnalyticsTracker";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { loadContent } from "@/content/store";
 import { buildPageMetadata } from "@/lib/seo";
 import { siteOrigin } from "@/lib/site-url";
@@ -55,6 +58,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScript(content.theme.defaultMode) }}
         />
+        <GoogleAnalytics />
+        <AnalyticsTracker />
+        <Analytics />
         {children}
       </body>
     </html>

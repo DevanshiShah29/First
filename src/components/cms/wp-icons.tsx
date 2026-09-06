@@ -202,6 +202,18 @@ export function IconCode({ className }: IconProps) {
 }
 
 /**
+ * Renders the Analytics menu icon.
+ * @example <IconAnalytics />
+ */
+export function IconAnalytics({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M3 17h2V9H3v8zm4 0h2V5H7v12zm4 0h2v-6h-2v6zm4 0h2V7h-2v10zm4 0h2V3h-2v14z" />
+    </Svg>
+  );
+}
+
+/**
  * Renders the show-password eye icon.
  * @example <IconEye />
  */

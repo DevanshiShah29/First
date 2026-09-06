@@ -214,3 +214,33 @@ model CraftItem {
 
   @@index([groupId, sortOrder])
 }
+
+/// Anonymous site visitor (cookie-bound id). No accounts on the public site.
+model AnalyticsVisitor {
+  id          String   @id @default(cuid())
+  /// HMAC of client IP — used only for rate/spam heuristics, never raw IP.
+  ipHash      String   @default("")
+  /// Truncated User-Agent for device hints in the CMS.
+  userAgent   String   @default("")
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+
+  pageViews AnalyticsPageView[]
+
+  @@index([lastSeenAt])
+}
+
+/// One recorded public page view.
+model AnalyticsPageView {
+  id        String   @id @default(cuid())
+  visitorId String
+  path      String
+  referrer  String   @default("")
+  createdAt DateTime @default(now())
+
+  visitor AnalyticsVisitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([path, createdAt])
+  @@index([visitorId, createdAt])
+}

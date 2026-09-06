@@ -3,6 +3,7 @@ import { youtubeVideoId } from "@/lib/media-url";
 
 export type Screen =
   | "dashboard"
+  | "analytics"
   | "site"
   | "about"
   | "contact"

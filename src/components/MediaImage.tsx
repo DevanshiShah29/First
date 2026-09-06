@@ -1,5 +1,6 @@
 "use client";
 
+// External dependencies
 import Image, { type ImageProps } from "next/image";
 
 type MediaImageProps = Omit<ImageProps, "src"> & {

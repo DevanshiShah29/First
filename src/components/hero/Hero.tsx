@@ -1,8 +1,13 @@
 "use client";
 
+// External dependencies
 import type { MouseEvent } from "react";
 import dynamic from "next/dynamic";
+
+// Application services & types
 import type { PublicSiteContent, SiteContent } from "@/content/types";
+
+// UI components
 import { hasMedia, HeroMediaView } from "./HeroMediaView";
 import { ClassicHero, HERO_TEMPLATES_MAP, HeroCopy } from "./templates";
 

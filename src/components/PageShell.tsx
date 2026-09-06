@@ -1,7 +1,12 @@
 "use client";
 
+// External dependencies
 import type { ReactNode } from "react";
+
+// Application services & types
 import type { PublicContentData } from "@/content/types";
+
+// UI components
 import { SkipLink } from "./a11y";
 import { Cursor } from "./Cursor";
 import { SiteFooter } from "./SiteFooter";

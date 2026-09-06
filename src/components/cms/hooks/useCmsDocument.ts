@@ -1,7 +1,10 @@
 "use client";
 
+// External dependencies
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+
+// Application services & types
 import type { ContentData } from "@/content/types";
 import { saveCmsContent } from "@/lib/cms-client";
 import { clone } from "../types";

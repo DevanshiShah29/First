@@ -1,6 +1,9 @@
 "use client";
 
+// External dependencies
 import { useEffect, useState } from "react";
+
+// Application services & types
 import { useReducedMotion } from "@/hooks/reduced-motion";
 
 function TypewriterLive({ words }: { words: readonly string[] }) {

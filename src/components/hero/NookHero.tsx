@@ -1,11 +1,16 @@
 "use client";
 
+// External dependencies
 import { useState } from "react";
 import { getImageProps } from "next/image";
+
+// Application services & types
+import type { PublicSiteContent, SiteContent } from "@/content/types";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import { useHeroTilt } from "@/hooks/use-hero-tilt";
 import { usePianoPlayback } from "@/hooks/use-piano-playback";
-import { useReducedMotion } from "@/hooks/reduced-motion";
-import type { PublicSiteContent, SiteContent } from "@/content/types";
+
+// UI components
 import { Ingredients, MiniUi, Notes } from "./fx";
 
 type SpotId =

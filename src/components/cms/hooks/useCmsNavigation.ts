@@ -1,9 +1,12 @@
 "use client";
 
+// External dependencies
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
+
+// Application services & types
 import type { ContentData } from "@/content/types";
-import type { BreadcrumbItem, Screen } from "../types";
 import { newId } from "../types";
+import type { BreadcrumbItem, Screen } from "../types";
 
 export function useCmsNavigation(
   data: ContentData,

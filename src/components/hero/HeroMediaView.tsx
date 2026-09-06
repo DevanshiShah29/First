@@ -1,9 +1,12 @@
 "use client";
 
+// Application services & types
 import type { HeroMedia } from "@/content/types";
-import { MediaImage } from "@/components/MediaImage";
-import { parsePlayableMedia } from "@/lib/media-url";
 import { useReducedMotion } from "@/hooks/reduced-motion";
+import { parsePlayableMedia } from "@/lib/media-url";
+
+// UI components
+import { MediaImage } from "@/components/MediaImage";
 
 interface HeroMediaViewProps {
   media: HeroMedia;

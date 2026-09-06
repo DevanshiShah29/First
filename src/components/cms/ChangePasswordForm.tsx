@@ -1,7 +1,12 @@
 "use client";
 
+// External dependencies
 import { useState, type FormEvent } from "react";
+
+// Application services & types
 import { cmsChangePassword } from "@/lib/cms-client";
+
+// UI components
 import { Metabox } from "./components/Metabox";
 import { Field, TextInput } from "./fields";
 

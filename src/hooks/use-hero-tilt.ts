@@ -1,5 +1,6 @@
 "use client";
 
+// External dependencies
 import { useRef, type PointerEvent } from "react";
 
 /**

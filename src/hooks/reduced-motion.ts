@@ -1,5 +1,6 @@
 "use client";
 
+// External dependencies
 import { useEffect, useState } from "react";
 
 /** Lightweight prefers-reduced-motion hook (avoids pulling in Motion). */

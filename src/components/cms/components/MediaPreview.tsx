@@ -1,6 +1,9 @@
 "use client";
 
+// External dependencies
 import type { CSSProperties } from "react";
+
+// Application services & types
 import type {
   HeroMedia,
   HeroTemplateId,

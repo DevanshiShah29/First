@@ -1,13 +1,20 @@
 "use client";
 
+// External dependencies
 import { useState, type FormEvent } from "react";
+
+// Application services & types
 import type { PublicSiteContent } from "@/content/types";
-import { ContactScene } from "@/components/ContactScene";
-import { Fade } from "@/components/Fade";
-import { IconDownload, IconGitHub, IconLinkedIn, IconMail } from "@/components/icons";
 import { sendContactMessage } from "@/lib/contact-client";
 import { resumeDownloadProps } from "@/lib/resume";
+
+// UI components
+import { ContactScene } from "@/components/ContactScene";
+import { Fade } from "@/components/Fade";
 import { SocialRound } from "./SocialRound";
+
+// Icons
+import { IconDownload, IconGitHub, IconLinkedIn, IconMail } from "@/components/icons";
 
 const fieldClass =
   "mt-1.5 w-full rounded-lg border border-line bg-inset px-4 py-3 text-sm text-foreground transition focus-visible:border-violet-500/60";

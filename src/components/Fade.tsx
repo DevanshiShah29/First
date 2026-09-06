@@ -1,7 +1,8 @@
 "use client";
 
-import { motion, useReducedMotion, type Transition } from "motion/react";
+// External dependencies
 import type { ReactNode } from "react";
+import { motion, useReducedMotion, type Transition } from "motion/react";
 
 export type FadeProps = {
   children: ReactNode;

@@ -1,9 +1,12 @@
 "use client";
 
+// Application services & types
 import type { ContentData } from "@/content/types";
+import { move } from "../types";
+
+// UI components
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";
-import { move } from "../types";
 
 interface AboutScreenProps {
   data: ContentData;

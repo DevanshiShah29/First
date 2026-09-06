@@ -1,6 +1,9 @@
 "use client";
 
+// External dependencies
 import { useState, type Dispatch, type SetStateAction } from "react";
+
+// Application services & types
 import type { ContentData, HeroMedia } from "@/content/types";
 import { uploadCmsFile } from "@/lib/cms-client";
 

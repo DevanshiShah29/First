@@ -1,11 +1,18 @@
 "use client";
 
+// External dependencies
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import Link from "next/link";
+
+// Application services & types
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
+
+// UI components
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";
+
+// Icons
 import { IconClose, IconMenu } from "./icons";
 
 const homeNav = [

@@ -1,12 +1,17 @@
 "use client";
 
+// External dependencies
 import { useEffect, useState } from "react";
 import Link from "next/link";
+
+// Application services & types
 import type { MemoryItem, PublicContentData } from "@/content/types";
-import { jarAudio } from "@/lib/memory-jar-audio";
-import { resolveStarColor, type StarColor } from "@/lib/memory-jar";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { useJarSize } from "@/hooks/use-jar-size";
+import { resolveStarColor, type StarColor } from "@/lib/memory-jar";
+import { jarAudio } from "@/lib/memory-jar-audio";
+
+// UI components
 import { MasonJar } from "./memory-jar/MasonJar";
 import { RevealCard } from "./memory-jar/RevealCard";
 

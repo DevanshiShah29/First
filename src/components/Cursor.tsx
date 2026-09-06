@@ -1,8 +1,9 @@
 "use client";
 
+// External dependencies
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import { motion, useMotionValue, useReducedMotion, useSpring } from "motion/react";
+import { usePathname } from "next/navigation";
 
 const hoverSel = "a, button, [role='button'], summary, .card-surface, .btn-primary";
 const textSel = "input, textarea, select, [contenteditable='true']";

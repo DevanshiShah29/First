@@ -1,8 +1,11 @@
 "use client";
 
+// External dependencies
 import { useEffect, useRef, useState } from "react";
-import type { PublicSiteContent, SiteContent } from "@/content/types";
+
+// Application services & types
 import { siteHasPiano } from "@/content/types";
+import type { PublicSiteContent, SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
 
 /**

@@ -1,10 +1,15 @@
 "use client";
 
+// External dependencies
 import Link from "next/link";
+
+// Application services & types
 import type { ContentData, MemoryItem } from "@/content/types";
+import { move, type Screen } from "../types";
+
+// UI components
 import { Metabox } from "../components/Metabox";
 import { DatePicker, Field, HexColorInput, TextArea, TextInput } from "../fields";
-import { move, type Screen } from "../types";
 
 export function MemoriesListScreen({
   data,

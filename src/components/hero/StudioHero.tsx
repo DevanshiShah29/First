@@ -1,5 +1,6 @@
 "use client";
 
+// External dependencies
 import {
   useEffect,
   useRef,
@@ -9,10 +10,14 @@ import {
   type Ref,
 } from "react";
 import { getImageProps } from "next/image";
-import { createVisibilityGate } from "@/hooks/active-loop";
-import { usePianoPlayback } from "@/hooks/use-piano-playback";
-import { useReducedMotion } from "@/hooks/reduced-motion";
+
+// Application services & types
 import type { PublicSiteContent, SiteContent } from "@/content/types";
+import { createVisibilityGate } from "@/hooks/active-loop";
+import { useReducedMotion } from "@/hooks/reduced-motion";
+import { usePianoPlayback } from "@/hooks/use-piano-playback";
+
+// UI components
 import { MiniUi, Notes } from "./fx";
 
 type SpotId = "frames" | "jar" | "books" | "piano" | "laptop" | "cook" | "plants" | "yoga";

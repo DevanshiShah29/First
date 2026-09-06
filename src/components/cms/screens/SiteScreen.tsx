@@ -1,10 +1,13 @@
 "use client";
 
+// Application services & types
 import type { ContentData } from "@/content/types";
+import type { Screen } from "../types";
+
+// UI components
 import { ChangePasswordForm } from "../ChangePasswordForm";
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";
-import type { Screen } from "../types";
 
 interface SiteScreenProps {
   data: ContentData;

@@ -1,8 +1,13 @@
 "use client";
 
-import { SkillMark } from "@/components/icons";
+// Application services & types
 import type { SkillItem } from "@/content/types";
+
+// UI components
 import { HexColorInput, TextInput } from "./fields";
+
+// Icons
+import { SkillMark } from "@/components/icons";
 
 function previewableIconUrl(raw: string) {
   const src = raw.trim();

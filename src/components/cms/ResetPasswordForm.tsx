@@ -1,10 +1,17 @@
 "use client";
 
+// External dependencies
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LogoMark } from "@/components/Logo";
+
+// Application services & types
 import { cmsResetPassword } from "@/lib/cms-client";
+
+// UI components
+import { LogoMark } from "@/components/Logo";
+
+// Icons
 import { IconEye, IconEyeOff } from "./wp-icons";
 
 const MIN_LENGTH = 8;

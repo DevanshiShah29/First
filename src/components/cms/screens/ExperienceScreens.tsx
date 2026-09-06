@@ -1,12 +1,17 @@
 "use client";
 
+// External dependencies
 import { useState } from "react";
+
+// Application services & types
 import type { ContentData, ExperienceItem } from "@/content/types";
 import { generateExperienceCopy } from "@/lib/cms-client";
+import { move, type Screen } from "../types";
+
+// UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";
-import { move, type Screen } from "../types";
 
 function linesToList(text: string): string[] {
   return text

@@ -1,9 +1,14 @@
 "use client";
 
+// External dependencies
 import { useEffect, type MouseEvent } from "react";
-import { useReducedMotion } from "@/hooks/reduced-motion";
+
+// Application services & types
 import type { PublicContentData } from "@/content/types";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
+
+// UI components
 import { SkipLink } from "./a11y";
 import { Cursor } from "./Cursor";
 import { Hero } from "./hero/Hero";

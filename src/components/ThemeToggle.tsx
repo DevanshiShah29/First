@@ -1,6 +1,9 @@
 "use client";
 
+// External dependencies
 import { useCallback, useSyncExternalStore } from "react";
+
+// Icons
 import { IconMoon, IconSun } from "./icons";
 
 function applyTheme(next: "light" | "dark") {

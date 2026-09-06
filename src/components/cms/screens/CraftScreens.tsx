@@ -1,10 +1,13 @@
 "use client";
 
-import type { ContentData, CraftContent, CraftGroup, CraftItem } from "@/content/types";
+// Application services & types
 import { EMPTY_CRAFT } from "@/content/types";
+import type { ContentData, CraftContent, CraftGroup, CraftItem } from "@/content/types";
+import { move } from "../types";
+
+// UI components
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";
-import { move } from "../types";
 
 interface CraftScreenProps {
   data: ContentData;

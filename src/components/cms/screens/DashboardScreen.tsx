@@ -1,8 +1,11 @@
 "use client";
 
+// Application services & types
 import type { ContentData } from "@/content/types";
-import { Metabox } from "../components/Metabox";
 import type { Screen } from "../types";
+
+// UI components
+import { Metabox } from "../components/Metabox";
 
 interface DashboardScreenProps {
   data: ContentData;

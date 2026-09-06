@@ -1,11 +1,14 @@
 "use client";
 
+// Application services & types
 import {
   DEFAULT_THEME,
   THEME_PALETTE_FIELDS,
   type ContentData,
   type ThemeMode,
 } from "@/content/types";
+
+// UI components
 import { AppearancePreview } from "../components/AppearancePreview";
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, HexColorInput } from "../fields";

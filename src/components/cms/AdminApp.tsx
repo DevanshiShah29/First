@@ -1,24 +1,44 @@
 "use client";
 
+// External dependencies
 import { useRouter } from "next/navigation";
+
+// Application services & types
 import type { ContentData } from "@/content/types";
 import { cmsLogout } from "@/lib/cms-client";
+
+// UI components
 import { AdminBar, AdminMenu, type MenuItem } from "./components/AdminNav";
 import { Breadcrumbs } from "./components/Breadcrumbs";
+
+// CMS hooks
 import { useCmsDocument } from "./hooks/useCmsDocument";
 import { useCmsNavigation } from "./hooks/useCmsNavigation";
 import { useCmsUploads } from "./hooks/useCmsUploads";
+
+// CMS screens
 import { AboutScreen } from "./screens/AboutScreen";
 import { AppearanceScreen } from "./screens/AppearanceScreen";
 import { ContactScreen } from "./screens/ContactScreen";
 import { CraftScreen } from "./screens/CraftScreens";
 import { DashboardScreen } from "./screens/DashboardScreen";
-import { ExperienceEditScreen, ExperienceListScreen } from "./screens/ExperienceScreens";
+import {
+  ExperienceEditScreen,
+  ExperienceListScreen,
+} from "./screens/ExperienceScreens";
 import { HeroScreen } from "./screens/HeroScreen";
-import { MemoriesEditScreen, MemoriesListScreen } from "./screens/MemoriesScreens";
-import { ProjectsEditScreen, ProjectsListScreen } from "./screens/ProjectsScreens";
+import {
+  MemoriesEditScreen,
+  MemoriesListScreen,
+} from "./screens/MemoriesScreens";
+import {
+  ProjectsEditScreen,
+  ProjectsListScreen,
+} from "./screens/ProjectsScreens";
 import { SiteScreen } from "./screens/SiteScreen";
 import { SkillGroupsScreen } from "./screens/SkillsScreens";
+
+// Icons
 import {
   IconAbout,
   IconAppearance,

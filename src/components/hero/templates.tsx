@@ -1,8 +1,13 @@
 "use client";
 
+// External dependencies
 import type { MouseEvent, ReactNode } from "react";
-import { Fade } from "@/components/Fade";
+
+// Application services & types
 import type { HeroTemplateId, PublicSiteContent, SiteContent } from "@/content/types";
+
+// UI components
+import { Fade } from "@/components/Fade";
 import { HeroCtas } from "./HeroCtas";
 import { Typewriter } from "./Typewriter";
 

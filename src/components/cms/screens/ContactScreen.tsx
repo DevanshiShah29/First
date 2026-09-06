@@ -1,7 +1,10 @@
 "use client";
 
+// Application services & types
 import type { ContentData } from "@/content/types";
 import { resumeFileLabel } from "@/lib/resume";
+
+// UI components
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, TextInput } from "../fields";
 

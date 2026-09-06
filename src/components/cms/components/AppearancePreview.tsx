@@ -1,6 +1,9 @@
 "use client";
 
+// External dependencies
 import { useState } from "react";
+
+// Application services & types
 import type { SiteContent, ThemeContent } from "@/content/types";
 
 export function AppearancePreview({

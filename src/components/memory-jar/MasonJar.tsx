@@ -1,14 +1,19 @@
 "use client";
 
+// External dependencies
 import Image from "next/image";
+
+// Application services & types
 import type { MemoryItem } from "@/content/types";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import {
   JAR_ASSETS,
   JAR_STAR_BOUNDS,
   resolveStarColor,
   type StarColor,
 } from "@/lib/memory-jar";
-import { useReducedMotion } from "@/hooks/reduced-motion";
+
+// UI components
 import { PaperStar } from "./PaperStar";
 
 interface MasonJarProps {

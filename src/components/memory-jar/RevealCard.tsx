@@ -1,16 +1,21 @@
 "use client";
 
+// External dependencies
 import { useCallback, useEffect, useId, useMemo, type CSSProperties } from "react";
-import { MediaImage } from "@/components/MediaImage";
+
+// Application services & types
 import type { MemoryItem } from "@/content/types";
-import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import { useReducedMotion } from "@/hooks/reduced-motion";
-import { jarAudio } from "@/lib/memory-jar-audio";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import {
   JAR_ASSETS,
   PAPER_THEMES,
   resolveStarColor,
 } from "@/lib/memory-jar";
+import { jarAudio } from "@/lib/memory-jar-audio";
+
+// UI components
+import { MediaImage } from "@/components/MediaImage";
 import { PaperStar } from "./PaperStar";
 
 interface RevealCardProps {

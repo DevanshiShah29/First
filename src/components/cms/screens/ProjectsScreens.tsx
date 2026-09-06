@@ -1,12 +1,17 @@
 "use client";
 
+// External dependencies
 import { useState } from "react";
+
+// Application services & types
 import type { ContentData, ProjectItem } from "@/content/types";
 import { generateProjectCopy } from "@/lib/cms-client";
+import { move, type Screen } from "../types";
+
+// UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
 import { Field, StringList, TextArea, TextInput } from "../fields";
-import { move, type Screen } from "../types";
 
 export function ProjectsListScreen({
   data,

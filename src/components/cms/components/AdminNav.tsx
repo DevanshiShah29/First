@@ -1,9 +1,16 @@
 "use client";
 
+// External dependencies
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { LogoMark } from "@/components/Logo";
+
+// Application services & types
 import type { Screen } from "../types";
+
+// UI components
+import { LogoMark } from "@/components/Logo";
+
+// Icons
 import {
   IconHome,
   IconJar,

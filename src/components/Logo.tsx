@@ -1,5 +1,6 @@
 "use client";
 
+// External dependencies
 import { useId } from "react";
 
 type LogoProps = {

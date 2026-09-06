@@ -1,8 +1,13 @@
 "use client";
 
+// External dependencies
 import type { MouseEvent } from "react";
-import { IconArrowRight, IconDownload } from "@/components/icons";
+
+// Application services & types
 import { resumeDownloadProps } from "@/lib/resume";
+
+// Icons
+import { IconArrowRight, IconDownload } from "@/components/icons";
 
 interface HeroCtasProps {
   resume: string;

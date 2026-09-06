@@ -1,5 +1,6 @@
 "use client";
 
+// External dependencies
 import { useMemo, useState, type ReactNode } from "react";
 
 export function Metabox({

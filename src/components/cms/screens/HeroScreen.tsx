@@ -1,11 +1,15 @@
 "use client";
 
+// Application services & types
 import {
   HERO_TEMPLATES,
   type ContentData,
   type HeroMedia,
 } from "@/content/types";
 import { mediaHint } from "@/lib/media-url";
+import { goodreadsHint, pianoMusicHint } from "../types";
+
+// UI components
 import {
   HeroThumb,
   MediaLayoutPreview,
@@ -13,7 +17,6 @@ import {
 } from "../components/MediaPreview";
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, StringList, TextArea, TextInput } from "../fields";
-import { goodreadsHint, pianoMusicHint } from "../types";
 
 interface HeroScreenProps {
   data: ContentData;

@@ -1,5 +1,6 @@
 "use client";
 
+// External dependencies
 import { useEffect, useRef } from "react";
 
 const FOCUSABLE_SELECTOR = [

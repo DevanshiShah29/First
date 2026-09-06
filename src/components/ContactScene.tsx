@@ -1,6 +1,9 @@
 "use client";
 
+// External dependencies
 import { useEffect, useRef, type PointerEvent } from "react";
+
+// Application services & types
 import { createVisibilityGate } from "@/hooks/active-loop";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 

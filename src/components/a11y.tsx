@@ -1,6 +1,9 @@
 "use client";
 
+// External dependencies
 import { type MouseEvent, type ReactNode } from "react";
+
+// Application services & types
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 

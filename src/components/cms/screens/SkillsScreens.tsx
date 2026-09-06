@@ -1,13 +1,18 @@
 "use client";
 
+// External dependencies
 import { useMemo, useState } from "react";
+
+// Application services & types
 import type { ContentData, SkillGroup, SkillItem } from "@/content/types";
 import { generateSkillsCopy, generateTechnologiesCopy } from "@/lib/cms-client";
+import { move } from "../types";
+
+// UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, TextInput } from "../fields";
 import { SkillItemRow } from "../SkillItemRow";
-import { move } from "../types";
 
 interface SkillGroupsScreenProps {
   kind: "skills" | "technologies";

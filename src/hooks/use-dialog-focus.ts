@@ -12,6 +12,10 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(",");
 
+/**
+ * Visible, enabled focusable elements under a root.
+ * @example focusableIn(dialog) // [button, input, …]
+ */
 function focusableIn(root: HTMLElement): HTMLElement[] {
   return [...root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)].filter(
     (el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0,
@@ -19,9 +23,8 @@ function focusableIn(root: HTMLElement): HTMLElement[] {
 }
 
 /**
- * Dialog focus management: save/restore focus, move focus inside on open,
- * trap Tab within the dialog, and lock body scroll while open.
- * `resetKey` re-runs focus when the dialog content changes without unmounting.
+ * Dialog focus trap, restore, and body-scroll lock.
+ * @example useDialogFocus(true) // dialogRef
  */
 export function useDialogFocus<T extends HTMLElement = HTMLElement>(
   active: boolean,
@@ -47,6 +50,10 @@ export function useDialogFocus<T extends HTMLElement = HTMLElement>(
       savedFocusForSession.current = true;
     }
 
+    /**
+     * Focuses the first focusable control in the dialog.
+     * @example focusFirst() // void
+     */
     const focusFirst = () => {
       const list = focusableIn(node);
       list[0]?.focus();
@@ -54,6 +61,10 @@ export function useDialogFocus<T extends HTMLElement = HTMLElement>(
     // After paint so the dialog nodes exist and are focusable.
     const raf = requestAnimationFrame(focusFirst);
 
+    /**
+     * Traps Tab/Shift+Tab within the dialog.
+     * @example onKeyDown(e) // void
+     */
     function onKeyDown(e: KeyboardEvent) {
       if (e.key !== "Tab") return;
       const list = focusableIn(node);

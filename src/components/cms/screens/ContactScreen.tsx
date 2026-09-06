@@ -20,6 +20,10 @@ interface ContactScreenProps {
   dirty: boolean;
 }
 
+/**
+ * Renders Contact/social/resume editors.
+ * @example <ContactScreen data={data} uploadResume={…} … />
+ */
 export function ContactScreen({
   data,
   setData,

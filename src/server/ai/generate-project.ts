@@ -22,6 +22,10 @@ type SourceContext = {
   text: string;
 };
 
+/**
+ * Parses Gemini JSON into blurb/tags.
+ * @example parseGenerated(raw) // { blurb, tags } | null
+ */
 function parseGenerated(raw: string): GeneratedFields | null {
   const obj = parseJsonObject(raw);
   if (!obj) return null;
@@ -31,6 +35,10 @@ function parseGenerated(raw: string): GeneratedFields | null {
   return { blurb, tags };
 }
 
+/**
+ * Parses owner/repo from a github.com URL.
+ * @example parseGithubRepo("https://github.com/a/b") // { owner: "a", repo: "b" }
+ */
 function parseGithubRepo(url: string): { owner: string; repo: string } | null {
   try {
     const u = new URL(url);
@@ -46,6 +54,10 @@ function parseGithubRepo(url: string): { owner: string; repo: string } | null {
   }
 }
 
+/**
+ * Decodes base64 GitHub README content.
+ * @example decodeGithubReadme(b64) // "# Title…"
+ */
 function decodeGithubReadme(contentBase64: string): string {
   try {
     return Buffer.from(contentBase64.replace(/\n/g, ""), "base64")
@@ -56,6 +68,10 @@ function decodeGithubReadme(contentBase64: string): string {
   }
 }
 
+/**
+ * Removes script/style/noscript blocks from HTML.
+ * @example stripHtmlNoise(html) // cleanedHtml
+ */
 function stripHtmlNoise(html: string): string {
   return html
     .replace(/<script[\s\S]*?<\/script>/gi, " ")
@@ -63,6 +79,10 @@ function stripHtmlNoise(html: string): string {
     .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ");
 }
 
+/**
+ * Pulls the first matching meta tag content from HTML.
+ * @example metaContent(html, ["description"]) // "…"
+ */
 function metaContent(html: string, names: string[]): string {
   for (const name of names) {
     const re = new RegExp(
@@ -76,6 +96,10 @@ function metaContent(html: string, names: string[]): string {
   return "";
 }
 
+/**
+ * Extracts title/meta/H1 signals from HTML.
+ * @example extractLivePageSignals(html) // "Title: …\nMeta description: …"
+ */
 function extractLivePageSignals(html: string): string {
   const cleaned = stripHtmlNoise(html).slice(0, MAX_HTML_CHARS);
   const title = cleaned.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g, " ").trim() || "";
@@ -91,6 +115,10 @@ function extractLivePageSignals(html: string): string {
   return parts.join("\n");
 }
 
+/**
+ * Fetches a URL and aborts after FETCH_TIMEOUT_MS.
+ * @example await fetchWithTimeout(url) // Response
+ */
 async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -110,6 +138,10 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
   }
 }
 
+/**
+ * Fetches GitHub repo metadata and README excerpt.
+ * @example await gatherGithubContext(url) // { label, text } | null
+ */
 async function gatherGithubContext(githubUrl: string): Promise<SourceContext | null> {
   const parsed = parseGithubRepo(githubUrl);
   if (!parsed) {
@@ -177,6 +209,10 @@ async function gatherGithubContext(githubUrl: string): Promise<SourceContext | n
   }
 }
 
+/**
+ * Fetches live demo page metadata signals.
+ * @example await gatherLiveContext(url) // { label, text } | null
+ */
 async function gatherLiveContext(demoUrl: string): Promise<SourceContext | null> {
   let url: URL;
   try {
@@ -226,6 +262,10 @@ export type GenerateProjectOutcome =
   | { ok: true; data: GeneratedFields }
   | { ok: false; error: string; status: number };
 
+/**
+ * Generates project blurb/tags via Gemini + sources.
+ * @example await generateProject(key, body) // { ok: true, data } | { ok: false, … }
+ */
 export async function generateProject(
   apiKey: string,
   body: GenerateProjectInput,

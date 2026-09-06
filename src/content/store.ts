@@ -35,28 +35,52 @@ export const CMS_CONTENT_TAG = "cms-content";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
+/**
+ * Coerces unknown to a plain object.
+ * @example asRecord({a:1}) // {a:1}, asRecord(null) // {}
+ */
 function asRecord(value: unknown): Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
 }
 
+/**
+ * Reads a string field or returns fallback.
+ * @example str("hi") // "hi", str(1, "x") // "x"
+ */
 function str(value: unknown, fallback = ""): string {
   return typeof value === "string" ? value : fallback;
 }
 
+/**
+ * Reads a boolean field or returns fallback.
+ * @example bool(true) // true, bool("yes") // false
+ */
 function bool(value: unknown, fallback = false): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+/**
+ * Reads a finite number or returns fallback.
+ * @example num(3) // 3, num(NaN, 0) // 0
+ */
 function num(value: unknown, fallback = 0): number {
   return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+/**
+ * Maps an array to non-empty strings.
+ * @example strList(["a", ""]) // ["a"]
+ */
 function strList(value: unknown): string[] {
   return Array.isArray(value) ? value.map((item) => str(item)).filter(Boolean) : [];
 }
 
+/**
+ * Parses hero media JSON into HeroMedia.
+ * @example parseHeroMedia({kind:"image"}) // HeroMedia
+ */
 function parseHeroMedia(value: unknown): HeroMedia {
   const row = asRecord(value);
   const kindRaw = str(row.kind, DEFAULT_HERO_MEDIA.kind);
@@ -74,6 +98,10 @@ function parseHeroMedia(value: unknown): HeroMedia {
   };
 }
 
+/**
+ * Parses site settings JSON into SiteContent with safe defaults.
+ * @example parseSite({}) // SiteContent
+ */
 function parseSite(value: unknown): SiteContent {
   const s = asRecord(value);
   const statsRaw = Array.isArray(s.stats) ? s.stats : [];
@@ -114,6 +142,10 @@ function parseSite(value: unknown): SiteContent {
   };
 }
 
+/**
+ * Parses experience array JSON.
+ * @example parseExperience([{role:"PM"}]) // ExperienceItem[]
+ */
 function parseExperience(value: unknown): ExperienceItem[] {
   if (!Array.isArray(value)) return [];
   return value.map((item, i) => {
@@ -131,6 +163,10 @@ function parseExperience(value: unknown): ExperienceItem[] {
   });
 }
 
+/**
+ * Parses projects array JSON.
+ * @example parseProjects([{name:"App"}]) // ProjectItem[]
+ */
 function parseProjects(value: unknown): ProjectItem[] {
   if (!Array.isArray(value)) return [];
   return value.map((item, i) => {
@@ -146,6 +182,10 @@ function parseProjects(value: unknown): ProjectItem[] {
   });
 }
 
+/**
+ * Parses skill/technology group arrays.
+ * @example parseSkillGroups([{title:"Lang"}]) // SkillGroup[]
+ */
 function parseSkillGroups(value: unknown, defaultTitle = "Skills"): SkillGroup[] {
   if (!Array.isArray(value)) return [];
   return value.map((group) => {
@@ -167,10 +207,18 @@ function parseSkillGroups(value: unknown, defaultTitle = "Skills"): SkillGroup[]
   });
 }
 
+/**
+ * Parses theme mode string.
+ * @example parseMode("dark") // "dark", parseMode("x") // default
+ */
 function parseMode(value: unknown): ThemeMode {
   return value === "light" || value === "dark" || value === "system" ? value : DEFAULT_THEME.defaultMode;
 }
 
+/**
+ * Parses a theme palette with hex normalization.
+ * @example parsePalette({}, DEFAULT_THEME.dark) // ThemePalette
+ */
 function parsePalette(value: unknown, fallback: ThemePalette): ThemePalette {
   const row = asRecord(value);
   return {
@@ -185,6 +233,10 @@ function parsePalette(value: unknown, fallback: ThemePalette): ThemePalette {
   };
 }
 
+/**
+ * Parses theme settings JSON.
+ * @example parseTheme({defaultMode:"system"}) // ThemeContent
+ */
 function parseTheme(value: unknown): ThemeContent {
   const row = asRecord(value);
   return {
@@ -197,6 +249,10 @@ function parseTheme(value: unknown): ThemeContent {
   };
 }
 
+/**
+ * Parses memories array JSON.
+ * @example parseMemories([{note:"hi"}]) // MemoryItem[]
+ */
 function parseMemories(value: unknown): MemoryItem[] {
   if (!Array.isArray(value)) return [];
   return value.map((item, i) => {
@@ -214,6 +270,10 @@ function parseMemories(value: unknown): MemoryItem[] {
   });
 }
 
+/**
+ * Parses craft page JSON into CraftContent.
+ * @example parseCraft({title:"Craft"}) // CraftContent
+ */
 function parseCraft(value: unknown): CraftContent {
   const root = asRecord(value);
   const groupsRaw = Array.isArray(root.groups) ? root.groups : [];
@@ -241,8 +301,8 @@ function parseCraft(value: unknown): CraftContent {
 }
 
 /**
- * Soft coercion for seed/import only. Invents safe defaults for missing fields.
- * CMS saves must use parseContentForSave (Zod) so incomplete payloads are rejected.
+ * Soft-coerces unknown JSON into ContentData for seed/import.
+ * @example parseContent({}) // ContentData
  */
 export function parseContent(value: unknown): ContentData {
   const root = asRecord(value);
@@ -258,6 +318,10 @@ export function parseContent(value: unknown): ContentData {
   };
 }
 
+/**
+ * Builds encrypted site row fields for Prisma.
+ * @example await siteCoreData(site) // SiteSettings input
+ */
 async function siteCoreData(site: SiteContent) {
   return {
     name: site.name,
@@ -283,6 +347,10 @@ async function siteCoreData(site: SiteContent) {
   };
 }
 
+/**
+ * Maps site hero fields to HeroSettings columns.
+ * @example heroSettingsData(site) // {template, mediaKind, …}
+ */
 function heroSettingsData(site: SiteContent) {
   return {
     template: site.heroTemplate,
@@ -293,6 +361,10 @@ function heroSettingsData(site: SiteContent) {
   };
 }
 
+/**
+ * Maps ThemeContent to ThemeSettings columns.
+ * @example themeSettingsData(theme) // {defaultMode, dark, …}
+ */
 function themeSettingsData(theme: ThemeContent) {
   return {
     defaultMode: theme.defaultMode,
@@ -304,13 +376,17 @@ function themeSettingsData(theme: ThemeContent) {
   };
 }
 
+/**
+ * Coerces DB JSON palette into ThemePalette.
+ * @example asThemePalette(row.dark, fallback) // ThemePalette
+ */
 function asThemePalette(value: unknown, fallback: ThemePalette): ThemePalette {
   return parsePalette(value, fallback);
 }
 
 /**
- * Write a full ContentData document into normalized tables.
- * Caller must pass already-validated content (seed: parseContent; CMS: parseContentForSave).
+ * Writes validated ContentData into normalized Prisma tables.
+ * @example await persistContent(tx, data) // void
  */
 export async function persistContent(db: DbClient, data: ContentData): Promise<void> {
   const siteFields = await siteCoreData(data.site);
@@ -470,6 +546,10 @@ export async function persistContent(db: DbClient, data: ContentData): Promise<v
   }
 }
 
+/**
+ * Loads the full CMS document from Prisma and coerces it.
+ * @example await fetchContentFromDb() // ContentData
+ */
 async function fetchContentFromDb(): Promise<ContentData> {
   const [site, experience, projects, memories, skillGroups, craftSettings] = await Promise.all([
     prisma.siteSettings.findUnique({
@@ -510,6 +590,10 @@ async function fetchContentFromDb(): Promise<ContentData> {
     );
   }
 
+  /**
+   * Filters DB skill groups by kind.
+   * @example toSkillGroups("skills") // SkillGroup[]
+   */
   const toSkillGroups = (kind: string): SkillGroup[] =>
     skillGroups
       .filter((g) => g.kind === kind)
@@ -623,11 +707,18 @@ const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v3"], 
   revalidate: 3600,
 });
 
-/** Cached CMS document. Deduped per request; invalidated via CMS_CONTENT_TAG on save. */
+/**
+ * Loads cached CMS content (request-deduped).
+ * @example await loadContent() // ContentData
+ */
 export const loadContent = cache(async (): Promise<ContentData> => getCachedContent());
 
 const TX_OPTIONS = { maxWait: 15_000, timeout: 60_000 } as const;
 
+/**
+ * Persists ContentData in a Prisma transaction.
+ * @example await saveContent(data) // void
+ */
 export async function saveContent(data: ContentData): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await persistContent(tx, data);

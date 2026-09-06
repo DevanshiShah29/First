@@ -4,6 +4,10 @@ import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
 
 export const runtime = "nodejs";
 
+/**
+ * Handles GET /api/goodreads.
+ * @example GET // Goodreads library JSON
+ */
 export async function GET() {
   const { site } = await loadContent();
   const profileUrl = site.goodreadsUrl.trim();

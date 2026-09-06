@@ -9,6 +9,10 @@ import { buildPageMetadata } from "@/lib/seo";
 /** Align with Goodreads fetch revalidate (~30m). CMS saves also revalidate this path. */
 export const revalidate = 1800;
 
+/**
+ * Builds reading page metadata from CMS.
+ * @example generateMetadata() // Metadata
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
   return buildPageMetadata({
@@ -19,6 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+/**
+ * Renders the Goodreads reading library page.
+ * @example <ReadingPage /> for /reading
+ */
 export default async function ReadingPage() {
   const full = await loadContent();
   const content = toPublicContent(full);

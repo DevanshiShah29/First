@@ -23,6 +23,10 @@ interface AppearanceScreenProps {
   dirty: boolean;
 }
 
+/**
+ * Renders theme color editors and live preview.
+ * @example <AppearanceScreen data={data} setData={setData} … />
+ */
 export function AppearanceScreen({
   data,
   setData,

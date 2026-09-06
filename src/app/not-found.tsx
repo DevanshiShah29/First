@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+/**
+ * Renders the 404 page.
+ * @example <NotFound /> default export for missing routes
+ */
 export default function NotFound() {
   return (
     <main className="section-shell flex min-h-screen flex-col items-center justify-center py-24 text-center">

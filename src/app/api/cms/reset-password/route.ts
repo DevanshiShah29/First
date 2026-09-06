@@ -9,6 +9,10 @@ import {
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/cms/reset-password.
+ * @example POST {token,new,confirm} // Set-Cookie + {ok:true}
+ */
 export async function POST(req: Request) {
   let token = "";
   let newPassword = "";

@@ -5,8 +5,8 @@ import { youtubeVideoId } from "@/lib/media-url";
 export const runtime = "nodejs";
 
 /**
- * Opaque same-origin piano player. Resolves the YouTube URL only on the server
- * so public pages never receive the raw media URL in RSC/client props.
+ * Handles GET /api/media/piano.
+ * @example GET // HTML YouTube embed (URL stays server-side)
  */
 export async function GET(req: Request) {
   const { site } = await loadContent();

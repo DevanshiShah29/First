@@ -1,3 +1,7 @@
+/**
+ * Document Y offset of an element via offsetParents.
+ * @example sectionTop(sectionEl) // 840
+ */
 export function sectionTop(el: HTMLElement) {
   let y = 0;
   let node: HTMLElement | null = el;
@@ -8,6 +12,10 @@ export function sectionTop(el: HTMLElement) {
   return y;
 }
 
+/**
+ * Smooth-scrolls to a hash target under the sticky header.
+ * @example scrollToHash("#projects") // void
+ */
 export function scrollToHash(hash: string, instant = false) {
   if (typeof window === "undefined") return;
   if (hash === "#top" || hash === "#") {

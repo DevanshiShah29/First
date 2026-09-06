@@ -28,6 +28,10 @@ export type GenerateExperienceOutcome =
   | { ok: true; data: GenerateExperienceResult }
   | { ok: false; error: string; status: number };
 
+/**
+ * Parses Gemini JSON into summary/bullets/tags.
+ * @example parseGenerated('{"summary":"…"}') // { summary, bullets, tags } | null
+ */
 function parseGenerated(raw: string): GenerateExperienceResult | null {
   const obj = parseJsonObject(raw);
   if (!obj) return null;
@@ -38,6 +42,10 @@ function parseGenerated(raw: string): GenerateExperienceResult | null {
   return { summary, bullets, tags };
 }
 
+/**
+ * Generates experience copy via Gemini + profile context.
+ * @example await generateExperience(key, body) // { ok: true, data } | { ok: false, … }
+ */
 export async function generateExperience(
   apiKey: string,
   body: GenerateExperienceInput,

@@ -7,7 +7,10 @@ export type CmsAiGate =
   | { ok: true; apiKey: string }
   | { ok: false; response: NextResponse };
 
-/** Session + same-origin + AI rate limit + Gemini key for generate routes. */
+/**
+ * Gates AI routes with session, rate limit, and Gemini key.
+ * @example await requireCmsAi(req) // { ok: true, apiKey } | { ok: false, response }
+ */
 export async function requireCmsAi(req: Request): Promise<CmsAiGate> {
   const gate = await requireCmsMutation(req);
   if (!gate.ok) {

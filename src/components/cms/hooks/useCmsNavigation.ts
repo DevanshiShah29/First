@@ -8,6 +8,10 @@ import type { ContentData } from "@/content/types";
 import { newId } from "../types";
 import type { BreadcrumbItem, Screen } from "../types";
 
+/**
+ * Manages CMS screen routing, breadcrumbs, and add-entity actions.
+ * @example useCmsNavigation(data, setData, clear) // { screen, go, breadcrumbs }
+ */
 export function useCmsNavigation(
   data: ContentData,
   setData: Dispatch<SetStateAction<ContentData>>,
@@ -26,6 +30,10 @@ export function useCmsNavigation(
   const memIndex = memoriesList.findIndex((m) => m.id === editId);
   const memory = memIndex >= 0 ? memoriesList[memIndex] : null;
 
+  /**
+   * Navigates to a CMS screen and optional edit id.
+   * @example go("projects-edit", id) // void
+   */
   function go(next: Screen, id: string | null = null) {
     setScreen(next);
     setEditId(id);
@@ -33,6 +41,10 @@ export function useCmsNavigation(
     clearNotice();
   }
 
+  /**
+   * Appends a blank experience and opens its editor.
+   * @example addExperience() // void
+   */
   function addExperience() {
     const id = newId();
     setData({
@@ -54,6 +66,10 @@ export function useCmsNavigation(
     go("experience-edit", id);
   }
 
+  /**
+   * Appends a blank project and opens its editor.
+   * @example addProject() // void
+   */
   function addProject() {
     const id = newId();
     setData({
@@ -66,6 +82,10 @@ export function useCmsNavigation(
     go("projects-edit", id);
   }
 
+  /**
+   * Appends a blank memory and opens its editor.
+   * @example addMemory() // void
+   */
   function addMemory() {
     const id = newId();
     const memories = data.memories ?? [];

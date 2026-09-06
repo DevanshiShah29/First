@@ -6,6 +6,10 @@ import { useState } from "react";
 // Application services & types
 import type { SiteContent, ThemeContent } from "@/content/types";
 
+/**
+ * Renders live light/dark/mobile theme mockups.
+ * @example <AppearancePreview theme={theme} site={site} />
+ */
 export function AppearancePreview({
   theme,
   site,
@@ -17,8 +21,16 @@ export function AppearancePreview({
   const [mobileMode, setMobileMode] = useState<"dark" | "light">("dark");
   const [hoveredToken, setHoveredToken] = useState<string | null>(null);
 
+  /**
+   * Whether a theme token swatch is hovered.
+   * @example isHighlighted("brand") // true
+   */
   const isHighlighted = (token: string) => hoveredToken === token;
 
+  /**
+   * Builds one site mockup frame for a palette mode.
+   * @example renderMockup("dark") // ReactNode
+   */
   const renderMockup = (mode: "dark" | "light", isMobile = false) => {
     const palette = theme[mode];
     const isDark = mode === "dark";

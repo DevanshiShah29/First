@@ -9,6 +9,10 @@ interface PaperStarProps {
   style?: CSSProperties;
 }
 
+/**
+ * Renders a colored paper-star image.
+ * @example <PaperStar color="yellow" size={32} />
+ */
 export function PaperStar({
   color,
   size = 32,

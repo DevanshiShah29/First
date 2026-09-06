@@ -16,10 +16,18 @@ type GeminiPart =
   | { text: string }
   | { inline_data: { mime_type: string; data: string } };
 
+/**
+ * Coerces unknown to a trimmed string capped at max.
+ * @example str(" hi ", 2) // "hi"
+ */
 function str(v: unknown, max = 400): string {
   return typeof v === "string" ? v.trim().slice(0, max) : "";
 }
 
+/**
+ * Pulls the first matching meta tag content from HTML.
+ * @example metaContent(html, ["og:title"]) // "Jane Doe"
+ */
 function metaContent(html: string, names: string[]): string {
   for (const name of names) {
     const re = new RegExp(
@@ -33,6 +41,10 @@ function metaContent(html: string, names: string[]): string {
   return "";
 }
 
+/**
+ * Decodes common HTML entities and collapses whitespace.
+ * @example decodeEntities("A &amp; B") // "A & B"
+ */
 function decodeEntities(value: string): string {
   return value
     .replace(/&amp;/g, "&")
@@ -44,6 +56,10 @@ function decodeEntities(value: string): string {
     .trim();
 }
 
+/**
+ * Fetches a URL and aborts after FETCH_TIMEOUT_MS.
+ * @example await fetchWithTimeout(url) // Response
+ */
 async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -54,7 +70,10 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
   }
 }
 
-/** Normalize to an https linkedin.com URL, or "" if the host is not LinkedIn. */
+/**
+ * Normalizes to an https linkedin.com URL or "".
+ * @example normalizeLinkedInUrl("linkedin.com/in/x") // "https://linkedin.com/in/x"
+ */
 function normalizeLinkedInUrl(raw: string): string {
   const value = raw.trim();
   if (!value) return "";
@@ -71,6 +90,10 @@ function normalizeLinkedInUrl(raw: string): string {
   }
 }
 
+/**
+ * Builds a short LinkedIn text summary from HTML.
+ * @example summarizeLinkedInHtml(html, url) // "URL: …\nTitle: …"
+ */
 function summarizeLinkedInHtml(html: string, url: string): string {
   const title = decodeEntities(metaContent(html, ["og:title", "twitter:title"]));
   const description = decodeEntities(
@@ -97,6 +120,10 @@ function summarizeLinkedInHtml(html: string, url: string): string {
   return lines.join("\n").slice(0, MAX_LINKEDIN_TEXT);
 }
 
+/**
+ * Fetches and summarizes a LinkedIn profile URL.
+ * @example await gatherLinkedIn(url) // { url, text, ok }
+ */
 async function gatherLinkedIn(urlRaw: string): Promise<ProfileContext["linkedin"]> {
   const url = normalizeLinkedInUrl(urlRaw);
   if (!url) return { url: "", text: "", ok: false };
@@ -145,9 +172,8 @@ async function gatherLinkedIn(urlRaw: string): Promise<ProfileContext["linkedin"
 }
 
 /**
- * Resolve a resume URL to a local file only when it points under public/uploads.
- * Rejects path traversal (`..`, absolute escapes) so CMS-controlled URLs cannot
- * read files outside the uploads directory.
+ * Resolves a resume URL to a path under public/uploads or null.
+ * @example localResumePath("/uploads/resume/x.pdf") // "/…/public/uploads/resume/x.pdf"
  */
 function localResumePath(resumeUrl: string): string | null {
   const clean = resumeUrl.trim().split("?")[0].split("#")[0];
@@ -176,6 +202,10 @@ function localResumePath(resumeUrl: string): string | null {
   return resolved;
 }
 
+/**
+ * Loads resume PDF bytes from disk or HTTPS.
+ * @example await gatherResume(url) // { url, pdfBase64?, note }
+ */
 async function gatherResume(resumeUrlRaw: string): Promise<ProfileContext["resume"]> {
   const url = str(resumeUrlRaw, 500);
   if (!url) return { url: "", note: "Resume: (not set in Site settings)" };
@@ -228,6 +258,10 @@ async function gatherResume(resumeUrlRaw: string): Promise<ProfileContext["resum
   }
 }
 
+/**
+ * Loads LinkedIn + resume context in parallel.
+ * @example await gatherProfileContext({ linkedin, resume }) // ProfileContext
+ */
 export async function gatherProfileContext(input: {
   linkedin?: string;
   resume?: string;
@@ -239,6 +273,10 @@ export async function gatherProfileContext(input: {
   return { linkedin, resume };
 }
 
+/**
+ * Formats profile context as prompt sections.
+ * @example formatProfileContextForPrompt(ctx) // "### LinkedIn profile\n…"
+ */
 export function formatProfileContextForPrompt(ctx: ProfileContext): string {
   return [
     "### LinkedIn profile",
@@ -253,6 +291,10 @@ export function formatProfileContextForPrompt(ctx: ProfileContext): string {
   ].join("\n");
 }
 
+/**
+ * Builds Gemini parts with optional resume PDF inline.
+ * @example geminiPartsWithProfile(prompt, ctx) // [{ text }, { inline_data? }]
+ */
 export function geminiPartsWithProfile(prompt: string, ctx: ProfileContext): GeminiPart[] {
   const parts: GeminiPart[] = [{ text: prompt }];
   if (ctx.resume.pdfBase64) {
@@ -266,6 +308,10 @@ export function geminiPartsWithProfile(prompt: string, ctx: ProfileContext): Gem
   return parts;
 }
 
+/**
+ * Reports whether LinkedIn/resume URLs are present.
+ * @example profileContextReady(ctx) // { hasLinkedIn, hasResume, hasAny }
+ */
 export function profileContextReady(ctx: ProfileContext): {
   hasLinkedIn: boolean;
   hasResume: boolean;

@@ -10,6 +10,10 @@ export type AiBasisItem = {
   optional?: boolean;
 };
 
+/**
+ * Renders a numbered AI assist card section.
+ * @example <AiFormSection step={1} title="Sources">…</AiFormSection>
+ */
 export function AiFormSection({
   step,
   title,
@@ -39,6 +43,10 @@ export function AiFormSection({
   );
 }
 
+/**
+ * Renders AI generate button with basis chips.
+ * @example <AiGeneratePanel fills="blurb & tags" onGenerate={…} … />
+ */
 export function AiGeneratePanel({
   basisItems,
   fills,

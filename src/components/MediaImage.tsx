@@ -7,7 +7,10 @@ type MediaImageProps = Omit<ImageProps, "src"> & {
   src: string;
 };
 
-/** Hosts configured in next.config.ts `images.remotePatterns`. */
+/**
+ * True when hostname is allowlisted for next/image.
+ * @example isOptimizedRemoteHost("i.gr-assets.com") // true
+ */
 function isOptimizedRemoteHost(hostname: string): boolean {
   const host = hostname.toLowerCase();
   if (
@@ -22,8 +25,8 @@ function isOptimizedRemoteHost(hostname: string): boolean {
 }
 
 /**
- * True when next/image can optimize this src (local path or allowlisted remote).
- * CMS skill icons / memory photos may use arbitrary HTTPS hosts — those fall back to <img>.
+ * True when next/image can optimize this src.
+ * @example canOptimizeImageSrc("/images/a.jpg") // true
  */
 export function canOptimizeImageSrc(src: string): boolean {
   const clean = src.trim();
@@ -39,7 +42,10 @@ export function canOptimizeImageSrc(src: string): boolean {
   }
 }
 
-/** next/image for local + allowlisted remotes; plain <img> for other CMS/external URLs. */
+/**
+ * Renders next/image or a plain img fallback.
+ * @example <MediaImage src="/a.jpg" alt="Cover" width={200} height={300} />
+ */
 export function MediaImage({
   src,
   alt,

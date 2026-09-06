@@ -2,6 +2,10 @@ import type { MetadataRoute } from "next";
 import { loadContent } from "@/content/store";
 import { siteOrigin } from "@/lib/site-url";
 
+/**
+ * Builds the public sitemap including craft when published.
+ * @example sitemap() // MetadataRoute.Sitemap
+ */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = siteOrigin();
   const now = new Date();

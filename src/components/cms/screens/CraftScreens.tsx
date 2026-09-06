@@ -19,14 +19,26 @@ interface CraftScreenProps {
   dirty: boolean;
 }
 
+/**
+ * Returns craft content or EMPTY_CRAFT.
+ * @example craftOf(data) // CraftContent
+ */
 function craftOf(data: ContentData): CraftContent {
   return data.craft ?? EMPTY_CRAFT;
 }
 
+/**
+ * Returns data with craft replaced.
+ * @example setCraft(data, craft) // ContentData
+ */
 function setCraft(data: ContentData, craft: CraftContent): ContentData {
   return { ...data, craft };
 }
 
+/**
+ * Renders Craft page and group editors.
+ * @example <CraftScreen data={data} setData={setData} … />
+ */
 export function CraftScreen({
   data,
   setData,
@@ -42,10 +54,18 @@ export function CraftScreen({
   const groupSectionIds = groups.map((_, gi) => `craft_group_${gi}`);
   const allSectionIds = [...pageSectionIds, ...groupSectionIds];
 
+  /**
+   * Merges a patch into craft content.
+   * @example patchCraft({ intro: "…" }) // void
+   */
   function patchCraft(patch: Partial<CraftContent>) {
     setData(setCraft(data, { ...craft, ...patch }));
   }
 
+  /**
+   * Replaces craft groups in document state.
+   * @example setGroups(next) // void
+   */
   function setGroups(nextGroups: CraftGroup[]) {
     patchCraft({ groups: nextGroups });
   }

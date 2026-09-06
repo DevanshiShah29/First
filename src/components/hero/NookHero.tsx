@@ -52,6 +52,10 @@ const mobileSpots: Spot[] = [
   { id: "yoga", label: "Yoga", left: "52%", top: "68%", w: "40%", h: "28%" },
 ];
 
+/**
+ * Renders responsive nook hero art via picture/source.
+ * @example <NookHeroArt />
+ */
 function NookHeroArt() {
   const alt =
     "Illustrated cozy nook with a piano, books, a memory jar, plants, a laptop, and art supplies.";
@@ -73,6 +77,10 @@ function NookHeroArt() {
   );
 }
 
+/**
+ * Renders floating jar symbols FX.
+ * @example <JarNotes />
+ */
 function JarNotes() {
   return (
     <div className="world-fx is-loop" aria-hidden>
@@ -85,6 +93,10 @@ function JarNotes() {
   );
 }
 
+/**
+ * Renders colorful paint-dot particles.
+ * @example <PaintDots />
+ */
 function PaintDots() {
   return (
     <div className="world-bits" aria-hidden>
@@ -95,6 +107,10 @@ function PaintDots() {
   );
 }
 
+/**
+ * Renders hotspot FX for a nook spot id.
+ * @example <SpotFx id="piano" playing />
+ */
 function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
   if (id === "piano") return playing ? <Notes looping /> : null;
   if (id === "laptop") return <MiniUi />;
@@ -111,6 +127,10 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
   return null;
 }
 
+/**
+ * Renders the interactive cozy-nook hero.
+ * @example <NookHero site={site} />
+ */
 export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const reduce = useReducedMotion();
   const { stage, onMove, onLeave } = useHeroTilt(reduce);

@@ -12,12 +12,20 @@ const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 
 const MEDIA_EXTS = new Set(["jpg", "png", "webp", "gif", "avif", "mp4", "webm", "ogv", "mov"]);
 
+/**
+ * Reads upload folder from FormData.
+ * @example folderName(form) // "hero" | "skills" | …
+ */
 function folderName(form: FormData): UploadFolder {
   const raw = form.get("folder");
   const value = typeof raw === "string" ? raw.trim() : "";
   return FOLDERS.has(value as UploadFolder) ? (value as UploadFolder) : "hero";
 }
 
+/**
+ * Handles POST /api/cms/upload.
+ * @example POST multipart // {url, kind}
+ */
 export async function POST(req: Request) {
   const gate = await requireCmsMutation(req);
   if (!gate.ok) {
@@ -88,6 +96,10 @@ export async function POST(req: Request) {
   }
 }
 
+/**
+ * Stores an uploaded PDF resume and returns its public URL.
+ * @example await saveResume(file) // JSON
+ */
 async function saveResume(file: File) {
   if (file.size > MAX_RESUME_BYTES) {
     return NextResponse.json({ error: "Resume must be 10MB or smaller." }, { status: 400 });

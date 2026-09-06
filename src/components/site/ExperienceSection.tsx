@@ -1,6 +1,10 @@
 import type { ExperienceItem, PublicSiteContent } from "@/content/types";
 import { Fade } from "@/components/Fade";
 
+/**
+ * Renders the experience timeline.
+ * @example <ExperienceSection site={site} experience={jobs} />
+ */
 export function ExperienceSection({
   site,
   experience,

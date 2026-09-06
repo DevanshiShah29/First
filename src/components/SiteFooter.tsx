@@ -7,6 +7,10 @@ import { Logo } from "./Logo";
 import { IconGitHub, IconLinkedIn, IconMail } from "./icons";
 import { siteMap } from "@/lib/sitemap";
 
+/**
+ * Renders site footer with logo, socials, and sitemap groups.
+ * @example <SiteFooter site={site} craft={craft} />
+ */
 export function SiteFooter({
   site,
   craft,
@@ -18,6 +22,10 @@ export function SiteFooter({
 }) {
   const groups = siteMap(site, craft);
 
+  /**
+   * Forwards footer link clicks to optional onNavigate.
+   * @example onClick(event, "/#about")
+   */
   function onClick(e: MouseEvent<HTMLAnchorElement>, href: string) {
     onNavigate?.(e, href);
   }

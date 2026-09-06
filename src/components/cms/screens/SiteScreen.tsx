@@ -22,6 +22,10 @@ interface SiteScreenProps {
   onPasswordError?: (message: string) => void;
 }
 
+/**
+ * Renders general site settings and password.
+ * @example <SiteScreen data={data} go={go} save={save} … />
+ */
 export function SiteScreen({
   data,
   setData,

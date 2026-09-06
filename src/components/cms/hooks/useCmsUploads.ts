@@ -7,6 +7,10 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import type { ContentData, HeroMedia } from "@/content/types";
 import { uploadCmsFile } from "@/lib/cms-client";
 
+/**
+ * Provides hero/memory/resume/skill upload helpers.
+ * @example useCmsUploads(data, setData, setError, setNotice) // { uploading, uploadHeroFile }
+ */
 export function useCmsUploads(
   data: ContentData,
   setData: Dispatch<SetStateAction<ContentData>>,
@@ -16,6 +20,10 @@ export function useCmsUploads(
   const [uploading, setUploading] = useState(false);
   const site = data.site;
 
+  /**
+   * Merges a patch into site.heroMedia.
+   * @example setHeroMedia({ kind: "image" }) // void
+   */
   function setHeroMedia(patch: Partial<HeroMedia>) {
     setData({
       ...data,
@@ -23,6 +31,10 @@ export function useCmsUploads(
     });
   }
 
+  /**
+   * Uploads a hero media file and stores its URL.
+   * @example uploadHeroFile(file) // void
+   */
   async function uploadHeroFile(file: File) {
     setUploading(true);
     setError("");
@@ -35,6 +47,10 @@ export function useCmsUploads(
     setHeroMedia({ url: res.data.url, kind: res.data.kind ?? "image" });
   }
 
+  /**
+   * Uploads a memory photo and attaches it by id.
+   * @example uploadMemoryPhoto(file, id) // void
+   */
   async function uploadMemoryPhoto(file: File, id: string) {
     setUploading(true);
     setError("");
@@ -51,6 +67,10 @@ export function useCmsUploads(
     setNotice("Memory photo uploaded. Save changes to update.");
   }
 
+  /**
+   * Uploads a resume PDF/file into site.resume.
+   * @example uploadResume(file) // void
+   */
   async function uploadResume(file: File) {
     setUploading(true);
     setError("");
@@ -69,6 +89,10 @@ export function useCmsUploads(
     setNotice("Resume uploaded. Save changes to publish the new file.");
   }
 
+  /**
+   * Uploads a skill/technology icon into a group item.
+   * @example uploadSkillIcon(file, "skills", 0, 1) // void
+   */
   async function uploadSkillIcon(
     file: File,
     kind: "skills" | "technologies",

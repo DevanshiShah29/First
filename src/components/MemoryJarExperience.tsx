@@ -15,6 +15,10 @@ import { jarAudio } from "@/lib/memory-jar-audio";
 import { MasonJar } from "./memory-jar/MasonJar";
 import { RevealCard } from "./memory-jar/RevealCard";
 
+/**
+ * Renders the interactive memory jar page.
+ * @example <MemoryJarExperience content={data} />
+ */
 export function MemoryJarExperience({ content }: { content: PublicContentData }) {
   const memories = content.memories ?? [];
 
@@ -36,17 +40,29 @@ export function MemoryJarExperience({ content }: { content: PublicContentData })
         ? "one paper star waits inside."
         : `${totalStars} stars captured inside.`;
 
+  /**
+   * Toggles jar sound effects on/off.
+   * @example toggleSound() // muted or unmuted
+   */
   function toggleSound() {
     jarAudio.enabled = !soundOn;
     setSoundOn(!soundOn);
   }
 
+  /**
+   * Picks a random memory, optionally excluding one id.
+   * @example pickMemory(activeId) // MemoryItem
+   */
   function pickMemory(excludeId?: string | null) {
     const pool = excludeId ? memories.filter((m) => m.id !== excludeId) : memories;
     const list = pool.length > 0 ? pool : memories;
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  /**
+   * Starts stir/rise animation then opens a reveal card.
+   * @example onJarTap() // RevealCard
+   */
   function onJarTap() {
     if (isStirring || memories.length === 0) return;
     const chosen = pickMemory();
@@ -74,6 +90,10 @@ export function MemoryJarExperience({ content }: { content: PublicContentData })
     }, 400);
   }
 
+  /**
+   * Reveals another random memory from the jar.
+   * @example onUnfoldAnother() // next MemoryItem
+   */
   function onUnfoldAnother() {
     if (memories.length === 0) return;
     const next = pickMemory(activeMemory?.id);
@@ -83,6 +103,10 @@ export function MemoryJarExperience({ content }: { content: PublicContentData })
     setRevealNonce((n) => n + 1);
   }
 
+  /**
+   * Closes the reveal card and restores the hidden star.
+   * @example onCloseReveal() // jar idle
+   */
   function onCloseReveal() {
     setActiveMemory(null);
     setHiddenId(null);

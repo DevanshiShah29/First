@@ -1,6 +1,6 @@
 /**
- * Absolute site origin for sitemap, robots, and metadataBase.
- * Prefer SITE_URL in env; fall back to Vercel URL in hosted deploys.
+ * Absolute site origin from SITE_URL / Vercel / localhost.
+ * @example siteOrigin() // "https://example.com"
  */
 export function siteOrigin(): string {
   const explicit = process.env.SITE_URL?.trim() || process.env.NEXT_PUBLIC_SITE_URL?.trim();

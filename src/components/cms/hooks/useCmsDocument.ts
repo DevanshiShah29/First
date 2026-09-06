@@ -9,6 +9,10 @@ import type { ContentData } from "@/content/types";
 import { saveCmsContent } from "@/lib/cms-client";
 import { clone } from "../types";
 
+/**
+ * Owns CMS document state, dirty tracking, and save.
+ * @example useCmsDocument(initial) // { data, setData, save, dirty }
+ */
 export function useCmsDocument(initial: ContentData) {
   const router = useRouter();
   const [data, setData] = useState(() => clone(initial));
@@ -20,6 +24,10 @@ export function useCmsDocument(initial: ContentData) {
 
   const dirty = useMemo(() => JSON.stringify(data) !== saved, [data, saved]);
 
+  /**
+   * Persists current CMS content to the server.
+   * @example save() // void
+   */
   const save = useCallback(async () => {
     setStatus("saving");
     setError("");
@@ -38,6 +46,10 @@ export function useCmsDocument(initial: ContentData) {
   }, [data, router]);
 
   useEffect(() => {
+    /**
+     * Saves on Cmd/Ctrl+S when the document is dirty.
+     * @example onKey(event) // void
+     */
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
@@ -49,6 +61,10 @@ export function useCmsDocument(initial: ContentData) {
   }, [dirty, save]);
 
   useEffect(() => {
+    /**
+     * Warns before unload when unsaved CMS edits exist.
+     * @example onLeave(event) // void
+     */
     function onLeave(e: BeforeUnloadEvent) {
       if (!dirty) return;
       e.preventDefault();
@@ -58,6 +74,10 @@ export function useCmsDocument(initial: ContentData) {
     return () => window.removeEventListener("beforeunload", onLeave);
   }, [dirty]);
 
+  /**
+   * Opens named metabox sections and persists open state.
+   * @example expandAll(["about_copy"]) // void
+   */
   function expandAll(ids: string[]) {
     setSectionState((prev) => {
       const next = { ...prev };
@@ -73,6 +93,10 @@ export function useCmsDocument(initial: ContentData) {
     });
   }
 
+  /**
+   * Closes named metabox sections and persists closed state.
+   * @example collapseAll(["about_copy"]) // void
+   */
   function collapseAll(ids: string[]) {
     setSectionState((prev) => {
       const next = { ...prev };

@@ -15,6 +15,10 @@ type FieldControlProps = {
   "aria-describedby"?: string;
 };
 
+/**
+ * Injects id/aria-describedby onto the first field control.
+ * @example enhanceControl(child, id, hintId) // node
+ */
 function enhanceControl(
   child: ReactNode,
   id: string,
@@ -29,6 +33,10 @@ function enhanceControl(
   });
 }
 
+/**
+ * Renders a labeled WP-style form row.
+ * @example <Field label="Email"><TextInput … /></Field>
+ */
 export function Field({
   label,
   hint,
@@ -64,6 +72,10 @@ export function Field({
   );
 }
 
+/**
+ * Renders a CMS text input bound to a string.
+ * @example <TextInput value={email} onChange={setEmail} />
+ */
 export function TextInput({
   id,
   value,
@@ -97,6 +109,10 @@ export function TextInput({
   );
 }
 
+/**
+ * Renders a CMS textarea bound to a string.
+ * @example <TextArea value={bio} onChange={setBio} rows={6} />
+ */
 export function TextArea({
   id,
   value,
@@ -143,6 +159,10 @@ const MONTH_NAMES = [
   "Dec",
 ] as const;
 
+/**
+ * Formats a Date as "D Mon YYYY".
+ * @example formatReadableDate(new Date()) // "6 Sep 2026"
+ */
 export function formatReadableDate(d: Date): string {
   const day = d.getDate();
   const month = MONTH_NAMES[d.getMonth()];
@@ -150,6 +170,10 @@ export function formatReadableDate(d: Date): string {
   return `${day} ${month} ${year}`;
 }
 
+/**
+ * Parses readable/ISO dates into YYYY-MM-DD.
+ * @example toIsoDate("6 Sep 2026") // "2026-09-06"
+ */
 export function toIsoDate(val?: string): string {
   if (!val) return "";
   const trimmed = val.trim();
@@ -178,6 +202,10 @@ export function toIsoDate(val?: string): string {
   return "";
 }
 
+/**
+ * Renders calendar + text date controls.
+ * @example <DatePicker value={date} onChange={setDate} />
+ */
 export function DatePicker({
   id,
   value,
@@ -194,6 +222,10 @@ export function DatePicker({
   const iso = toIsoDate(value);
   const calendarId = id ? `${id}-calendar` : undefined;
 
+  /**
+   * Converts a calendar ISO value into readable date text.
+   * @example handleDateChange("2026-09-06") // void
+   */
   const handleDateChange = (isoVal: string) => {
     if (!isoVal) {
       onChange("");
@@ -204,6 +236,10 @@ export function DatePicker({
     onChange(formatReadableDate(dateObj));
   };
 
+  /**
+   * Sets the date field to today's readable value.
+   * @example setToday() // void
+   */
   const setToday = () => {
     onChange(formatReadableDate(new Date()));
   };
@@ -244,6 +280,10 @@ export function DatePicker({
   );
 }
 
+/**
+ * Normalizes a CSS hex string or returns null.
+ * @example parseCssHex("#abc") // "#aabbcc"
+ */
 export function parseCssHex(raw: string): string | null {
   const match = raw.trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
   if (!match) return null;
@@ -253,6 +293,10 @@ export function parseCssHex(raw: string): string | null {
   return `#${hex.toLowerCase()}`;
 }
 
+/**
+ * Renders hex text + color picker for theme colors.
+ * @example <HexColorInput value={hex} onChange={setHex} />
+ */
 export function HexColorInput({
   id,
   value,
@@ -299,6 +343,10 @@ export function HexColorInput({
   );
 }
 
+/**
+ * Renders an editable reorderable string list.
+ * @example <StringList values={tags} onChange={setTags} addLabel="Tag" />
+ */
 export function StringList({
   id,
   values,
@@ -314,6 +362,10 @@ export function StringList({
   placeholder?: string;
   "aria-describedby"?: string;
 }) {
+  /**
+   * Moves a string-list item up or down.
+   * @example moveItem(1, -1) // void
+   */
   const moveItem = (index: number, dir: -1 | 1) => {
     const j = index + dir;
     if (j < 0 || j >= values.length) return;

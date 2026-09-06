@@ -3,6 +3,10 @@ import { NewTabHint } from "@/components/a11y";
 import { Fade } from "@/components/Fade";
 import { IconCode, IconExternal } from "@/components/icons";
 
+/**
+ * Renders the projects grid with GitHub/demo links.
+ * @example <ProjectsSection projects={items} />
+ */
 export function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
   return (
     <section id="projects" tabIndex={-1} aria-labelledby="projects-heading" className="py-16 sm:py-24">

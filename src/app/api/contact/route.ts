@@ -4,6 +4,10 @@ import { clientIp, deliverContact, parseContactBody, rateLimited } from "@/serve
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/contact.
+ * @example POST {name,email,message} // {ok:true}
+ */
 export async function POST(req: Request) {
   let body: unknown;
   try {

@@ -1,3 +1,7 @@
+/**
+ * Normalizes a hex color string, falling back when invalid.
+ * @example normalizeHex("#abc", "#000000") // "#AABBCC"
+ */
 export function normalizeHex(value: unknown, fallback: string): string {
   if (typeof value !== "string") return fallback;
   const match = value.trim().match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);

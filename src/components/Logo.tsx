@@ -8,6 +8,10 @@ type LogoProps = {
   title?: string;
 };
 
+/**
+ * Renders the brand SVG mark.
+ * @example <LogoMark className="h-9 w-9" title="Home" />
+ */
 export function LogoMark({ className = "h-9 w-9", title }: LogoProps) {
   const uid = useId().replace(/:/g, "");
   return (
@@ -43,6 +47,10 @@ export function LogoMark({ className = "h-9 w-9", title }: LogoProps) {
   );
 }
 
+/**
+ * Renders logo mark plus site name.
+ * @example <Logo name="Devanshi" />
+ */
 export function Logo({ name }: { name: string }) {
   const [first] = name.split(" ");
   return (

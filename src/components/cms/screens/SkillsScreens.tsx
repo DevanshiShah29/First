@@ -29,6 +29,10 @@ interface SkillGroupsScreenProps {
   dirty: boolean;
 }
 
+/**
+ * Dedupes trimmed strings case-insensitively.
+ * @example collectUnique(["React","react"]) // ["React"]
+ */
 function collectUnique(values: string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -43,6 +47,10 @@ function collectUnique(values: string[]): string[] {
   return out;
 }
 
+/**
+ * Keeps existing custom iconUrl values on AI-generated skills.
+ * @example preserveCustomIcons(gen, cur) // SkillGroup[]
+ */
 function preserveCustomIcons(generated: SkillGroup[], existing: SkillGroup[]): SkillGroup[] {
   const iconByName = new Map<string, string>();
   for (const group of existing) {
@@ -63,6 +71,10 @@ function preserveCustomIcons(generated: SkillGroup[], existing: SkillGroup[]): S
   }));
 }
 
+/**
+ * Renders Skills or Technologies group editors.
+ * @example <SkillGroupsScreen kind="skills" title="Skills" … />
+ */
 export function SkillGroupsScreen({
   kind,
   title,
@@ -109,6 +121,10 @@ export function SkillGroupsScreen({
   const hasResume = Boolean(data.site.resume?.trim());
   const hasProfile = hasLinkedIn || hasResume;
 
+  /**
+   * Generates skill/technology groups via AI.
+   * @example onGenerate() // void
+   */
   async function onGenerate() {
     if (generating) return;
     setGenerateError(null);

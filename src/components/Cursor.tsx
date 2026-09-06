@@ -8,6 +8,10 @@ import { usePathname } from "next/navigation";
 const hoverSel = "a, button, [role='button'], summary, .card-surface, .btn-primary";
 const textSel = "input, textarea, select, [contenteditable='true']";
 
+/**
+ * Renders the custom pointer + trail cursor.
+ * @example <Cursor />
+ */
 export function Cursor() {
   const pathname = usePathname();
   const reduce = useReducedMotion();
@@ -26,17 +30,37 @@ export function Cursor() {
       return;
     }
     const mq = window.matchMedia("(pointer: fine) and (hover: hover)");
+    /**
+     * Enables the custom cursor class on <html>.
+     * @example enable() // has-custom-cursor
+     */
     const enable = () => document.documentElement.classList.add("has-custom-cursor");
+    /**
+     * Removes custom cursor classes from <html>.
+     * @example disable() // default cursor
+     */
     const disable = () => {
       document.documentElement.classList.remove("has-custom-cursor", "cursor-text-field");
     };
     if (mq.matches) enable();
+    /**
+     * Toggles cursor enablement when pointer media query changes.
+     * @example onMq() // enable|disable
+     */
     const onMq = () => (mq.matches ? enable() : disable());
 
+    /**
+     * Tracks pointer position for the custom cursor.
+     * @example move(mouseEvent) // x/y set
+     */
     const move = (e: MouseEvent) => {
       x.set(e.clientX);
       y.set(e.clientY);
     };
+    /**
+     * Updates hover/text cursor modes from the event target.
+     * @example over(mouseEvent) // hover state
+     */
     const over = (e: MouseEvent) => {
       const el = e.target as HTMLElement | null;
       const onText = Boolean(el?.closest(textSel));
@@ -44,7 +68,15 @@ export function Cursor() {
       setHover(!onText && Boolean(el?.closest(hoverSel)));
       document.documentElement.classList.toggle("cursor-text-field", onText);
     };
+    /**
+     * Marks the pointer as pressed.
+     * @example downH() // down true
+     */
     const downH = () => setDown(true);
+    /**
+     * Marks the pointer as released.
+     * @example upH() // down false
+     */
     const upH = () => setDown(false);
 
     mq.addEventListener("change", onMq);

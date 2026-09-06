@@ -16,6 +16,10 @@ export interface HeroProps {
   onProjects: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 
+/**
+ * Renders hero copy block variants for media layouts.
+ * @example <HeroCopy site={site} onProjects={fn} template="classic" />
+ */
 export function HeroCopy({
   site,
   onProjects,
@@ -118,6 +122,10 @@ export function HeroCopy({
   );
 }
 
+/**
+ * Renders the classic left-aligned hero.
+ * @example <ClassicHero site={site} onProjects={fn} />
+ */
 export function ClassicHero({ site, onProjects }: HeroProps) {
   return (
     <section id="top" className="relative overflow-hidden py-20 sm:py-24">
@@ -146,6 +154,10 @@ export function ClassicHero({ site, onProjects }: HeroProps) {
   );
 }
 
+/**
+ * Renders the centered hero layout.
+ * @example <CenteredHero site={site} onProjects={fn} />
+ */
 export function CenteredHero({ site, onProjects }: HeroProps) {
   return (
     <section id="top" className="relative overflow-hidden py-24 sm:py-32">
@@ -174,6 +186,10 @@ export function CenteredHero({ site, onProjects }: HeroProps) {
   );
 }
 
+/**
+ * Renders the split hero with roles sidebar.
+ * @example <SplitHero site={site} onProjects={fn} />
+ */
 export function SplitHero({ site, onProjects }: HeroProps) {
   return (
     <section id="top" className="relative overflow-hidden py-20 sm:py-24">
@@ -227,6 +243,10 @@ export function SplitHero({ site, onProjects }: HeroProps) {
   );
 }
 
+/**
+ * Renders the minimal border-accent hero.
+ * @example <MinimalHero site={site} onProjects={fn} />
+ */
 export function MinimalHero({ site, onProjects }: HeroProps) {
   return (
     <section id="top" className="border-b border-line py-16 sm:py-20">
@@ -253,6 +273,10 @@ export function MinimalHero({ site, onProjects }: HeroProps) {
   );
 }
 
+/**
+ * Renders the large-type spotlight hero.
+ * @example <SpotlightHero site={site} onProjects={fn} />
+ */
 export function SpotlightHero({ site, onProjects }: HeroProps) {
   return (
     <section id="top" className="relative overflow-hidden py-20 sm:py-28">

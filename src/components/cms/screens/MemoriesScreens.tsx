@@ -11,6 +11,10 @@ import { move, type Screen } from "../types";
 import { Metabox } from "../components/Metabox";
 import { DatePicker, Field, HexColorInput, TextArea, TextInput } from "../fields";
 
+/**
+ * Renders the Memory Jar list with photo upload.
+ * @example <MemoriesListScreen memoriesList={…} go={go} … />
+ */
 export function MemoriesListScreen({
   data,
   setData,
@@ -164,6 +168,10 @@ export function MemoriesListScreen({
   );
 }
 
+/**
+ * Renders a single memory editor.
+ * @example <MemoriesEditScreen memory={memory} memIndex={0} … />
+ */
 export function MemoriesEditScreen({
   data,
   setData,

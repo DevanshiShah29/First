@@ -4,6 +4,10 @@ import { generateTechnologies } from "@/server/ai/generate-technologies";
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/cms/generate-technologies.
+ * @example POST body // {groups}
+ */
 export async function POST(req: Request) {
   const gate = await requireCmsAi(req);
   if (!gate.ok) return gate.response;

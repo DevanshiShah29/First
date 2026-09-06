@@ -4,6 +4,10 @@ import { generateSkills } from "@/server/ai/generate-skills";
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/cms/generate-skills.
+ * @example POST body // {groups}
+ */
 export async function POST(req: Request) {
   const gate = await requireCmsAi(req);
   if (!gate.ok) return gate.response;

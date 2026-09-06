@@ -18,6 +18,10 @@ interface ChangePasswordFormProps {
   onError?: (message: string) => void;
 }
 
+/**
+ * Renders the change-password metabox.
+ * @example <ChangePasswordForm isOpen onSuccess={setNotice} />
+ */
 export function ChangePasswordForm({ isOpen, onSuccess, onError }: ChangePasswordFormProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -26,6 +30,10 @@ export function ChangePasswordForm({ isOpen, onSuccess, onError }: ChangePasswor
   const [localError, setLocalError] = useState("");
   const [localSuccess, setLocalSuccess] = useState("");
 
+  /**
+   * Validates and updates the CMS login password.
+   * @example onSubmit(event) // void
+   */
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setLocalError("");

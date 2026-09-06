@@ -14,6 +14,10 @@ import { LogoMark } from "@/components/Logo";
 // Icons
 import { IconEye, IconEyeOff } from "./wp-icons";
 
+/**
+ * Renders the CMS login and forgot-password UI.
+ * @example <LoginForm configured={true} />
+ */
 export function LoginForm({ configured }: { configured: boolean }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -23,6 +27,10 @@ export function LoginForm({ configured }: { configured: boolean }) {
   const [pending, setPending] = useState(false);
   const [forgotPending, setForgotPending] = useState(false);
 
+  /**
+   * Submits the admin password and redirects on success.
+   * @example onSubmit(event) // void
+   */
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setPending(true);
@@ -38,6 +46,10 @@ export function LoginForm({ configured }: { configured: boolean }) {
     router.refresh();
   }
 
+  /**
+   * Requests a password-reset email for the admin.
+   * @example onForgotPassword() // void
+   */
   async function onForgotPassword() {
     setForgotPending(true);
     setError("");

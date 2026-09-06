@@ -52,7 +52,10 @@ const mobileSpots: Spot[] = [
 
 type Hitmap = { left: number; top: number; width: number; height: number };
 
-/** Map hotspot layer onto the visible object-fit:cover content box. */
+/**
+ * Maps hotspot layer onto the visible object-fit:cover box.
+ * @example coverHitmap(1280, 720, w, h, 0.5, 0.48) // Hitmap
+ */
 function coverHitmap(
   naturalW: number,
   naturalH: number,
@@ -83,6 +86,10 @@ const paperStars = [
   { l: "28%", t: "78%", d: "0.26s", c: "#f9a8d4", r: -6 },
 ];
 
+/**
+ * Renders paper-star FX inside the studio jar hotspot.
+ * @example <PaperStars />
+ */
 function PaperStars() {
   return (
     <div className="studio-jar-vessel" aria-hidden>
@@ -103,6 +110,10 @@ function PaperStars() {
   );
 }
 
+/**
+ * Renders baking steam FX.
+ * @example <Steam />
+ */
 function Steam() {
   return (
     <div className="studio-steam" aria-hidden>
@@ -113,10 +124,18 @@ function Steam() {
   );
 }
 
+/**
+ * Renders yoga breath pulse FX.
+ * @example <Breath />
+ */
 function Breath() {
   return <span className="studio-breath" aria-hidden />;
 }
 
+/**
+ * Renders photo-wall sparkles FX.
+ * @example <FrameSparks />
+ */
 function FrameSparks() {
   return (
     <div className="studio-sparks" aria-hidden>
@@ -128,6 +147,10 @@ function FrameSparks() {
   );
 }
 
+/**
+ * Renders swaying leaf FX for plant hotspots.
+ * @example <LeafSway />
+ */
 function LeafSway() {
   return (
     <div className="studio-leaves" aria-hidden>
@@ -138,6 +161,10 @@ function LeafSway() {
   );
 }
 
+/**
+ * Renders responsive studio hero art.
+ * @example <StudioHeroArt artRef={ref} onLoad={syncHitmap} />
+ */
 function StudioHeroArt({
   artRef,
   onLoad,
@@ -165,6 +192,10 @@ function StudioHeroArt({
   );
 }
 
+/**
+ * Renders hotspot FX for a studio spot id.
+ * @example <SpotFx id="cook" playing />
+ */
 function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
   if (id === "piano") return playing ? <Notes looping /> : null;
   if (id === "laptop") return <MiniUi className="world-ui studio-ui" />;
@@ -176,6 +207,10 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
   return null;
 }
 
+/**
+ * Renders the interactive miniature-studio hero.
+ * @example <StudioHero site={site} />
+ */
 export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
@@ -201,6 +236,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     bookTip,
   } = usePianoPlayback(site);
 
+  /**
+   * Recalculates hotspot hitmap from art natural size.
+   * @example syncHitmap() // setHitmap(...)
+   */
   function syncHitmap() {
     const img = artRef.current;
     const host = stage.current;
@@ -223,11 +262,19 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     let raf = 0;
     let active = true;
     let last = "";
+    /**
+     * Cancels the studio tilt RAF loop.
+     * @example stop() // idle stage
+     */
     const stop = () => {
       if (raf) window.cancelAnimationFrame(raf);
       raf = 0;
       el.classList.remove("is-tilting");
     };
+    /**
+     * Advances idle/pointer tilt interpolation.
+     * @example tick(now) // updated transform
+     */
     const tick = (now: number) => {
       if (!active) {
         raf = 0;
@@ -249,6 +296,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
       }
       raf = window.requestAnimationFrame(tick);
     };
+    /**
+     * Starts the studio tilt RAF loop.
+     * @example start() // is-tilting
+     */
     const start = () => {
       if (raf || !active) return;
       el.classList.add("is-tilting");
@@ -273,10 +324,18 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     if (!host) return;
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => syncHitmap()) : null;
     ro?.observe(host);
+    /**
+     * Resyncs hitmap on window resize.
+     * @example onResize() // syncHitmap()
+     */
     const onResize = () => syncHitmap();
     window.addEventListener("resize", onResize);
     img?.addEventListener("load", syncHitmap);
     const mq = window.matchMedia("(max-width: 720px)");
+    /**
+     * Resyncs hitmap when crossing the mobile breakpoint.
+     * @example onMq() // syncHitmap()
+     */
     const onMq = () => syncHitmap();
     mq.addEventListener("change", onMq);
     return () => {
@@ -287,6 +346,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     };
   }, []);
 
+  /**
+   * Maps pointer position to studio tilt targets.
+   * @example tiltFromEvent(pointerEvent) // target rotation
+   */
   function tiltFromEvent(e: PointerEvent<HTMLDivElement>) {
     if (reduce) return;
     const box = stage.current?.getBoundingClientRect();
@@ -298,6 +361,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     interacting.current = true;
   }
 
+  /**
+   * Records drag start and begins touch tilt.
+   * @example onPointerDown(event) // drag.current
+   */
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     drag.current = { x: e.clientX, y: e.clientY, moved: false };
     if (e.pointerType === "touch") {
@@ -306,6 +373,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     }
   }
 
+  /**
+   * Updates tilt while dragging/moving.
+   * @example onPointerMove(event) // tiltFromEvent
+   */
   function onPointerMove(e: PointerEvent<HTMLDivElement>) {
     if (e.pointerType === "touch") {
       const dx = e.clientX - drag.current.x;
@@ -316,6 +387,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     tiltFromEvent(e);
   }
 
+  /**
+   * Ends touch interaction and resets tilt target.
+   * @example onPointerUp(event) // idle
+   */
   function onPointerUp(e: PointerEvent<HTMLDivElement>) {
     if (e.pointerType === "touch") {
       interacting.current = false;
@@ -323,6 +398,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     }
   }
 
+  /**
+   * Ends mouse interaction when leaving the stage.
+   * @example onPointerLeave(event) // idle
+   */
   function onPointerLeave(e: PointerEvent<HTMLDivElement>) {
     if (e.pointerType === "mouse") {
       interacting.current = false;
@@ -330,6 +409,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     }
   }
 
+  /**
+   * Triggers a brief camera flash on the photo wall.
+   * @example onFramesClick() // flash
+   */
   function onFramesClick() {
     setFlash(true);
     window.setTimeout(() => setFlash(false), 280);
@@ -339,6 +422,10 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
   const bookActive = bookOn(active, "books");
   const deskTip = site.roles[0] ? `Building · ${site.roles[0]}` : "This is my desk";
 
+  /**
+   * Builds hotspot buttons for desktop or mobile layout.
+   * @example renderSpots("desktop") // JSX
+   */
   function renderSpots(layout: "desktop" | "mobile") {
     const spots = layout === "mobile" ? mobileSpots : desktopSpots;
     return (

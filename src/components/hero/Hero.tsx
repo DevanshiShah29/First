@@ -31,6 +31,10 @@ interface HeroProps {
   onProjects: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 
+/**
+ * Renders the configured hero template (world/nook/studio or copy layouts).
+ * @example <Hero site={site} onProjects={fn} />
+ */
 export function Hero({ site, onProjects }: HeroProps) {
   const media = site.heroMedia;
   const template = site.heroTemplate;

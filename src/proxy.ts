@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifySessionCookie } from "@/server/cms-auth";
 
+/**
+ * Guards /admin routes behind the CMS session cookie.
+ * @example await proxy(req) // NextResponse
+ */
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   if (pathname.startsWith("/admin/login") || pathname.startsWith("/admin/reset-password")) {

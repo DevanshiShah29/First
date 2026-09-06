@@ -3,6 +3,10 @@
 // External dependencies
 import { useMemo, useState, type ReactNode } from "react";
 
+/**
+ * Renders a collapsible CMS metabox section.
+ * @example <Metabox id="about_copy" title="About">…</Metabox>
+ */
 export function Metabox({
   title,
   children,
@@ -41,6 +45,10 @@ export function Metabox({
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
 
+  /**
+   * Toggles metabox open state and persists it.
+   * @example toggle() // void
+   */
   const toggle = () => {
     const next = !open;
     setInternalOpen(next);
@@ -95,6 +103,10 @@ export function Metabox({
   );
 }
 
+/**
+ * Renders expand/collapse-all controls for metaboxes.
+ * @example <SectionTools onExpandAll={…} onCollapseAll={…} />
+ */
 export function SectionTools({
   onExpandAll,
   onCollapseAll,

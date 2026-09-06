@@ -7,7 +7,10 @@ export interface ContactMessageInput {
   company?: string;
 }
 
-/** Submit contact form message to the public API. */
+/**
+ * Submit contact form message to the public API.
+ * @example await sendContactMessage({ name, email, message }) // { ok: true }
+ */
 export async function sendContactMessage(input: ContactMessageInput): Promise<ApiResponse> {
   try {
     const res = await fetch("/api/contact", {

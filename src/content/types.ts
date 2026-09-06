@@ -19,6 +19,10 @@ export const SKILL_ICONS = [
 
 export type SkillIcon = (typeof SKILL_ICONS)[number];
 
+/**
+ * Type guard for SkillIcon ids.
+ * @example isSkillIcon("react") // true
+ */
 export function isSkillIcon(value: string): value is SkillIcon {
   return (SKILL_ICONS as readonly string[]).includes(value);
 }
@@ -68,6 +72,10 @@ export const HERO_TEMPLATES = [
 
 export type HeroTemplateId = (typeof HERO_TEMPLATES)[number]["id"];
 
+/**
+ * Type guard for HeroTemplateId values.
+ * @example isHeroTemplate("classic") // true
+ */
 export function isHeroTemplate(value: string): value is HeroTemplateId {
   return HERO_TEMPLATES.some((t) => t.id === value);
 }
@@ -267,6 +275,10 @@ export type PublicContentData = Omit<ContentData, "site"> & {
   site: PublicSiteContent;
 };
 
+/**
+ * Strips sensitive media URLs for public pages.
+ * @example toPublicContent(data) // PublicContentData
+ */
 export function toPublicContent(content: ContentData): PublicContentData {
   const { pianoYoutubeUrl, ...rest } = content.site;
   return {
@@ -278,6 +290,10 @@ export function toPublicContent(content: ContentData): PublicContentData {
   };
 }
 
+/**
+ * True when piano media is available on public or full site.
+ * @example siteHasPiano(site) // true
+ */
 export function siteHasPiano(site: PublicSiteContent | SiteContent) {
   if ("pianoAvailable" in site && typeof site.pianoAvailable === "boolean") {
     return site.pianoAvailable;

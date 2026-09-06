@@ -20,6 +20,10 @@ import { SkillsSection } from "./site/SkillsSection";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
+/**
+ * Renders the full public homepage from CMS content.
+ * @example <Site content={data} />
+ */
 export function Site({ content }: { content: PublicContentData }) {
   const {
     site,
@@ -61,6 +65,10 @@ export function Site({ content }: { content: PublicContentData }) {
     };
   }, []);
 
+  /**
+   * Smooth-scrolls homepage section anchors.
+   * @example onSectionLink(event, "#projects") // scrolled
+   */
   function onSectionLink(e: MouseEvent<HTMLAnchorElement>, href: string) {
     if (!href.startsWith("#")) return;
     e.preventDefault();

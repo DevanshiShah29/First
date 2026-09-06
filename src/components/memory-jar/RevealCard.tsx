@@ -25,6 +25,10 @@ interface RevealCardProps {
   onPullAnother: () => void;
 }
 
+/**
+ * Renders the unfolded memory reveal dialog.
+ * @example <RevealCard memory={item} onClose={fn} onPullAnother={fn} />
+ */
 export function RevealCard({
   memory,
   nonce = 0,
@@ -37,12 +41,20 @@ export function RevealCard({
   const titleId = useId();
   const dialogRef = useDialogFocus<HTMLDivElement>(true, `${memory.id}-${nonce}`);
 
+  /**
+   * Plays a pop and closes the reveal dialog.
+   * @example handleClose() // onClose()
+   */
   const handleClose = useCallback(() => {
     jarAudio.playPop();
     onClose();
   }, [onClose]);
 
   useEffect(() => {
+    /**
+     * Closes the dialog on Escape.
+     * @example onKeyDown({ key: "Escape" }) // closed
+     */
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.stopPropagation();
@@ -56,6 +68,10 @@ export function RevealCard({
   const backdropStars = useMemo(() => {
     let seed = 0;
     for (let i = 0; i < memory.id.length; i++) seed = (seed * 31 + memory.id.charCodeAt(i)) >>> 0;
+    /**
+     * Deterministic 0–1 float from seed + n.
+     * @example rand(3.1) // 0.42
+     */
     const rand = (n: number) => {
       const t = Math.sin(n + seed) * 10000;
       return t - Math.floor(t);

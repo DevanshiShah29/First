@@ -6,6 +6,10 @@ import { useEffect, useState } from "react";
 // Application services & types
 import { useReducedMotion } from "@/hooks/reduced-motion";
 
+/**
+ * Renders the animated type/delete cycle for role words.
+ * @example <TypewriterLive words={roles} />
+ */
 function TypewriterLive({ words }: { words: readonly string[] }) {
   const [index, setIndex] = useState(0);
   const [text, setText] = useState(words[0] ?? "");
@@ -39,6 +43,10 @@ function TypewriterLive({ words }: { words: readonly string[] }) {
   );
 }
 
+/**
+ * Renders rotating role text, static when reduced motion.
+ * @example <Typewriter words={site.roles} />
+ */
 export function Typewriter({ words }: { words: readonly string[] }) {
   const reduce = useReducedMotion();
   const list = words.filter(Boolean);

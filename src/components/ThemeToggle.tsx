@@ -6,6 +6,10 @@ import { useCallback, useSyncExternalStore } from "react";
 // Icons
 import { IconMoon, IconSun } from "./icons";
 
+/**
+ * Applies theme to <html> and persists it.
+ * @example applyTheme("dark") // data-theme="dark"
+ */
 function applyTheme(next: "light" | "dark") {
   document.documentElement.setAttribute("data-theme", next);
   try {
@@ -15,11 +19,19 @@ function applyTheme(next: "light" | "dark") {
   }
 }
 
+/**
+ * Reads the current theme from the document.
+ * @example readTheme() // "light" | "dark"
+ */
 function readTheme(): "light" | "dark" {
   if (typeof document === "undefined") return "dark";
   return document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
 }
 
+/**
+ * Subscribes to data-theme mutations.
+ * @example subscribe(onChange) // unsubscribe
+ */
 function subscribe(onStoreChange: () => void) {
   const root = document.documentElement;
   const obs = new MutationObserver(onStoreChange);
@@ -27,9 +39,17 @@ function subscribe(onStoreChange: () => void) {
   return () => obs.disconnect();
 }
 
+/**
+ * Renders the light/dark mode switch.
+ * @example <ThemeToggle className="ml-2" />
+ */
 export function ThemeToggle({ className = "" }: { className?: string }) {
   const theme = useSyncExternalStore(subscribe, readTheme, () => "dark" as const);
 
+  /**
+   * Flips between light and dark themes.
+   * @example toggle() // opposite theme
+   */
   const toggle = useCallback(() => {
     applyTheme(theme === "light" ? "dark" : "light");
   }, [theme]);

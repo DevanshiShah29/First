@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
 import { siteOrigin } from "@/lib/site-url";
 
+/**
+ * Builds an absolute URL from a site path.
+ * @example absoluteUrl("/reading") // "https://example.com/reading"
+ */
 export function absoluteUrl(path = "/"): string {
   const origin = siteOrigin();
   if (!path || path === "/") return origin;
   return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
-/** Shared public-page metadata: canonical, Open Graph, Twitter. */
+/**
+ * Shared public-page metadata (canonical, Open Graph, Twitter).
+ * @example buildPageMetadata({ title, description }) // Metadata
+ */
 export function buildPageMetadata(input: {
   title: string;
   description: string;

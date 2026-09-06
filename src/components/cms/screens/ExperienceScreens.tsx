@@ -13,6 +13,10 @@ import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";
 
+/**
+ * Splits bullet/tag textarea lines into a list.
+ * @example linesToList("a\nb") // ["a","b"]
+ */
 function linesToList(text: string): string[] {
   return text
     .split(/\r?\n/)
@@ -20,10 +24,18 @@ function linesToList(text: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Joins a list into newline-separated textarea text.
+ * @example listToLines(["a","b"]) // "a\nb"
+ */
 function listToLines(values: string[]): string {
   return values.join("\n");
 }
 
+/**
+ * Renders the experience list table.
+ * @example <ExperienceListScreen data={data} go={go} addExperience={…} />
+ */
 export function ExperienceListScreen({
   data,
   setData,
@@ -106,6 +118,10 @@ export function ExperienceListScreen({
   );
 }
 
+/**
+ * Renders the experience editor wrapper.
+ * @example <ExperienceEditScreen job={job} expIndex={0} … />
+ */
 export function ExperienceEditScreen({
   data,
   setData,
@@ -137,6 +153,10 @@ export function ExperienceEditScreen({
   );
 }
 
+/**
+ * Renders experience fields and AI copy assist.
+ * @example <ExperienceEditForm job={job} expIndex={0} … />
+ */
 function ExperienceEditForm({
   data,
   setData,
@@ -159,12 +179,20 @@ function ExperienceEditForm({
   const [bulletsText, setBulletsText] = useState(() => listToLines(job.bullets));
   const [tagsText, setTagsText] = useState(() => listToLines(job.stack));
 
+  /**
+   * Merges a patch into the active experience item.
+   * @example patchJob({ role: "Engineer" }) // void
+   */
   function patchJob(patch: Partial<ExperienceItem>) {
     const experience = [...data.experience];
     experience[expIndex] = { ...job, ...patch };
     setData({ ...data, experience });
   }
 
+  /**
+   * Generates experience summary/bullets/stack via AI.
+   * @example onGenerate() // void
+   */
   async function onGenerate() {
     if (generating) return;
     setGenerateError(null);

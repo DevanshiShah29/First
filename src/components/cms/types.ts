@@ -24,10 +24,18 @@ export interface BreadcrumbItem {
   current?: boolean;
 }
 
+/**
+ * Deep-clones CMS content for safe local edits.
+ * @example clone(initial) // ContentData
+ */
 export function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
+/**
+ * Swaps an item one step up/down in a CMS list.
+ * @example move(experience, 2, -1) // reordered[]
+ */
 export function move<T>(list: T[], index: number, dir: -1 | 1): T[] {
   const next = [...list];
   const j = index + dir;
@@ -36,10 +44,18 @@ export function move<T>(list: T[], index: number, dir: -1 | 1): T[] {
   return next;
 }
 
+/**
+ * Creates a UUID for a new CMS entity.
+ * @example newId() // "a1b2…"
+ */
 export function newId(): string {
   return crypto.randomUUID();
 }
 
+/**
+ * Explains Goodreads URL validity for the 3D books object.
+ * @example goodreadsHint(url) // hint
+ */
 export function goodreadsHint(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) {
@@ -51,6 +67,10 @@ export function goodreadsHint(url: string): string {
   return "Could not find a Goodreads user ID. Paste a profile URL like https://www.goodreads.com/user/show/123-name";
 }
 
+/**
+ * Explains YouTube URL validity for the 3D piano.
+ * @example pianoMusicHint(url) // hint
+ */
 export function pianoMusicHint(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) {

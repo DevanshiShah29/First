@@ -4,6 +4,10 @@ import { generateExperience } from "@/server/ai/generate-experience";
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/cms/generate-experience.
+ * @example POST body // {summary, bullets, tags}
+ */
 export async function POST(req: Request) {
   const gate = await requireCmsAi(req);
   if (!gate.ok) return gate.response;

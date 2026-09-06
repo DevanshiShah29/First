@@ -5,6 +5,10 @@
 
 const PREFIX = "enc:v1:";
 
+/**
+ * Returns the encryption key from env.
+ * @example encryptionSecret() // "my-long-secret-key…"
+ */
 function encryptionSecret() {
   return (
     process.env.CONTENT_ENCRYPTION_KEY?.trim() ||
@@ -13,10 +17,18 @@ function encryptionSecret() {
   );
 }
 
+/**
+ * True when a usable encryption key (≥16 chars) is set.
+ * @example encryptionConfigured() // true
+ */
 export function encryptionConfigured() {
   return encryptionSecret().length >= 16;
 }
 
+/**
+ * Encodes bytes to URL-safe base64.
+ * @example bytesToB64(new Uint8Array([1,2])) // "AQI"
+ */
 function bytesToB64(bytes: ArrayBuffer | Uint8Array) {
   const arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
   let bin = "";
@@ -24,6 +36,10 @@ function bytesToB64(bytes: ArrayBuffer | Uint8Array) {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
+/**
+ * Decodes URL-safe base64 to bytes.
+ * @example b64ToBytes("AQI") // Uint8Array([1,2])
+ */
 function b64ToBytes(value: string) {
   const padded = value.replace(/-/g, "+").replace(/_/g, "/");
   const pad = padded.length % 4 === 0 ? "" : "=".repeat(4 - (padded.length % 4));
@@ -33,6 +49,10 @@ function b64ToBytes(value: string) {
   return out;
 }
 
+/**
+ * Imports AES-GCM key derived from the env secret.
+ * @example await importAesKey() // CryptoKey
+ */
 async function importAesKey() {
   const secret = encryptionSecret();
   if (!secret) throw new Error("CONTENT_ENCRYPTION_KEY or CMS_SECRET is required for encryption.");
@@ -40,10 +60,18 @@ async function importAesKey() {
   return crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
 }
 
+/**
+ * Checks if a value is already encrypted.
+ * @example isEncryptedValue("enc:v1:…") // true
+ */
 export function isEncryptedValue(value: string) {
   return value.startsWith(PREFIX);
 }
 
+/**
+ * Encrypts plaintext for storage.
+ * @example await encryptSecret("youtube.com/…") // "enc:v1:iv.cipher"
+ */
 export async function encryptSecret(plaintext: string): Promise<string> {
   const trimmed = plaintext.trim();
   if (!trimmed) return "";
@@ -64,6 +92,10 @@ export async function encryptSecret(plaintext: string): Promise<string> {
   return `${PREFIX}${bytesToB64(iv)}.${bytesToB64(cipher)}`;
 }
 
+/**
+ * Decrypts an encrypted value, or returns plaintext as-is.
+ * @example await decryptSecret("enc:v1:…") // "youtube.com/…"
+ */
 export async function decryptSecret(value: string): Promise<string> {
   const trimmed = value.trim();
   if (!trimmed) return "";

@@ -9,6 +9,10 @@ import { clientIp, deliverSimpleMail, requestOrigin } from "@/server/contact";
 
 export const runtime = "nodejs";
 
+/**
+ * Escapes HTML special characters for email bodies.
+ * @example escapeHtml('<a>') // "&lt;a&gt;"
+ */
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -17,6 +21,10 @@ function escapeHtml(value: string) {
     .replaceAll('"', "&quot;");
 }
 
+/**
+ * Handles POST /api/cms/forgot-password.
+ * @example POST // email reset link + {ok:true}
+ */
 export async function POST(req: Request) {
   const ip = clientIp(req);
   if (await forgotPasswordRateLimited(ip)) {

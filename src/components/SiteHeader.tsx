@@ -29,6 +29,10 @@ const pageNav = [
   { href: "/#contact", label: "Contact" },
 ] as const;
 
+/**
+ * Renders sticky primary navigation.
+ * @example <SiteHeader name="Devanshi" allowToggle variant="home" />
+ */
 export function SiteHeader({
   name,
   allowToggle,
@@ -44,6 +48,10 @@ export function SiteHeader({
   const nav = variant === "home" ? homeNav : pageNav;
 
   useEffect(() => {
+    /**
+     * Closes the mobile menu on Escape.
+     * @example onKey({ key: "Escape" }) // menu closed
+     */
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
@@ -51,6 +59,10 @@ export function SiteHeader({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  /**
+   * Handles in-page hash nav on the home header.
+   * @example onHashLink(event, "#about") // scrolled
+   */
   function onHashLink(e: MouseEvent<HTMLAnchorElement>, href: string) {
     if (variant !== "home" || !href.startsWith("#")) {
       setOpen(false);

@@ -7,6 +7,10 @@ import { useEffect, useRef, type PointerEvent } from "react";
 import { createVisibilityGate } from "@/hooks/active-loop";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 
+/**
+ * Renders the decorative tilting contact card scene.
+ * @example <ContactScene />
+ */
 export function ContactScene() {
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
@@ -28,6 +32,10 @@ export function ContactScene() {
     let active = false;
     let last = "";
 
+    /**
+     * Cancels the tilt RAF loop and clears live classes.
+     * @example stop() // idle scene
+     */
     const stop = () => {
       if (raf) window.cancelAnimationFrame(raf);
       raf = 0;
@@ -35,6 +43,10 @@ export function ContactScene() {
       host.classList.remove("is-live");
     };
 
+    /**
+     * Advances idle/pointer tilt interpolation each frame.
+     * @example tick(now) // updated transform
+     */
     const tick = (now: number) => {
       if (!active) {
         raf = 0;
@@ -54,6 +66,10 @@ export function ContactScene() {
       raf = window.requestAnimationFrame(tick);
     };
 
+    /**
+     * Starts the tilt RAF loop when the scene is visible.
+     * @example start() // is-tilting
+     */
     const start = () => {
       if (raf || !active) return;
       host.classList.add("is-live");
@@ -74,6 +90,10 @@ export function ContactScene() {
     };
   }, [reduce]);
 
+  /**
+   * Maps pointer position to tilt targets.
+   * @example tiltFromEvent(pointerEvent) // target rotation
+   */
   function tiltFromEvent(e: PointerEvent<HTMLDivElement>) {
     if (reduce) return;
     const box = stage.current?.getBoundingClientRect();

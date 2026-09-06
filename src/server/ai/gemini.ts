@@ -10,8 +10,8 @@ export type GeminiCallResult =
   | { ok: false; error: string; status: number };
 
 /**
- * Call Gemini generateContent and return concatenated text from the first candidate.
- * API key is sent as a query param (Gemini convention); never log the key.
+ * Calls Gemini generateContent and returns JSON text.
+ * @example await callGeminiJson(key, parts) // { ok: true, text } | { ok: false, … }
  */
 export async function callGeminiJson(
   apiKey: string,
@@ -58,6 +58,10 @@ export async function callGeminiJson(
   return { ok: true, text };
 }
 
+/**
+ * Reads GEMINI_API_KEY from env or null.
+ * @example requireGeminiApiKey() // "AIza…" | null
+ */
 export function requireGeminiApiKey(): string | null {
   return process.env.GEMINI_API_KEY?.trim() || null;
 }

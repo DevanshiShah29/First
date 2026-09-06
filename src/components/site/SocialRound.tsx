@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { NewTabHint } from "@/components/a11y";
 
+/**
+ * Renders a round social icon link.
+ * @example <SocialRound href={url} label="GitHub"><IconGitHub /></SocialRound>
+ */
 export function SocialRound({
   href,
   label,

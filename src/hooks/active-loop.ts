@@ -1,6 +1,9 @@
 "use client";
 
-/** True when the element is on-screen and the tab is visible. */
+/**
+ * Watches element + tab visibility and reports when both are active.
+ * @example createVisibilityGate(el, onChange) // cleanup
+ */
 export function createVisibilityGate(
   el: Element,
   onChange: (active: boolean) => void,
@@ -9,6 +12,10 @@ export function createVisibilityGate(
   let inView = false;
   let pageVisible = typeof document === "undefined" ? true : !document.hidden;
 
+  /**
+   * Notifies when the element is in view and the tab is visible.
+   * @example emit() // void
+   */
   const emit = () => onChange(inView && pageVisible);
 
   const io = new IntersectionObserver(
@@ -20,6 +27,10 @@ export function createVisibilityGate(
   );
   io.observe(el);
 
+  /**
+   * Syncs pageVisible from document.hidden.
+   * @example onVis() // void
+   */
   const onVis = () => {
     pageVisible = !document.hidden;
     emit();

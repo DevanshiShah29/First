@@ -7,6 +7,10 @@ import { requireCmsMutation, verifySessionCookie } from "@/server/cms-auth";
 
 export const runtime = "nodejs";
 
+/**
+ * Handles GET /api/cms/content.
+ * @example GET // {content} when session cookie is valid
+ */
 export async function GET() {
   const token = (await cookies()).get("cms_session")?.value;
   if (!(await verifySessionCookie(token))) {
@@ -16,6 +20,10 @@ export async function GET() {
   return NextResponse.json({ content });
 }
 
+/**
+ * Handles POST /api/cms/content.
+ * @example POST {content} // save + revalidate + {ok:true}
+ */
 export async function POST(req: Request) {
   const gate = await requireCmsMutation(req);
   if (!gate.ok) {

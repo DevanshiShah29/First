@@ -1,5 +1,9 @@
 import Image from "next/image";
 
+/**
+ * Renders the memories route loading UI.
+ * @example <MemoryJarLoading /> for /memories
+ */
 export default function MemoryJarLoading() {
   return (
     <div className="jar-of-stars flex min-h-dvh items-center justify-center px-4">

@@ -6,6 +6,10 @@ export const alt = "Portfolio";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+/**
+ * Renders the default Open Graph image.
+ * @example <OpenGraphImage /> for /opengraph-image
+ */
 export default async function OpenGraphImage() {
   let name = "Portfolio";
   let line = "Product-minded work, clearly told.";

@@ -4,12 +4,17 @@
 import { useEffect, useState } from "react";
 
 /**
- * Dynamically size the jar container based on viewport dimensions.
+ * Viewport-aware jar container size (capped on small screens).
+ * @example useJarSize(440) // 360
  */
 export function useJarSize(base = 440) {
   const [size, setSize] = useState(base);
 
   useEffect(() => {
+    /**
+     * Recomputes jar size from viewport width/height.
+     * @example measure() // void
+     */
     function measure() {
       const width = window.visualViewport?.width ?? window.innerWidth;
       const height = window.visualViewport?.height ?? window.innerHeight;

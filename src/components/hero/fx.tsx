@@ -1,5 +1,9 @@
 /** Shared decorative FX used by World / Nook / Studio interactive heroes. */
 
+/**
+ * Renders floating music-note FX.
+ * @example <Notes looping />
+ */
 export function Notes({ looping }: { looping?: boolean }) {
   return (
     <div className={`world-fx${looping ? " is-loop" : ""}`} aria-hidden>
@@ -12,6 +16,10 @@ export function Notes({ looping }: { looping?: boolean }) {
   );
 }
 
+/**
+ * Renders a tiny UI window decoration.
+ * @example <MiniUi className="world-ui" />
+ */
 export function MiniUi({ className = "world-ui" }: { className?: string }) {
   return (
     <div className={className} aria-hidden>
@@ -22,6 +30,10 @@ export function MiniUi({ className = "world-ui" }: { className?: string }) {
   );
 }
 
+/**
+ * Renders floating cooking-bit particles.
+ * @example <Ingredients />
+ */
 export function Ingredients() {
   return (
     <div className="world-bits" aria-hidden>

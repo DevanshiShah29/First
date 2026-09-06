@@ -15,10 +15,18 @@ interface HeroMediaViewProps {
   decorative?: boolean;
 }
 
+/**
+ * True when hero media has a usable URL.
+ * @example hasMedia({ kind: "image", url: "/a.jpg" }) // true
+ */
 export function hasMedia(media: HeroMedia): boolean {
   return media.kind !== "none" && media.url.trim().length > 0;
 }
 
+/**
+ * Renders hero image, video, or iframe media.
+ * @example <HeroMediaView media={media} alt="Portrait" />
+ */
 export function HeroMediaView({
   media,
   className,

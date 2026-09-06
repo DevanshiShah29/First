@@ -3,6 +3,10 @@ import { MediaImage } from "./MediaImage";
 import { NewTabHint } from "./a11y";
 import { Fade } from "./Fade";
 
+/**
+ * Formats a Goodreads date string for display.
+ * @example prettyDate("2024-01-15") // "Jan 15, 2024"
+ */
 function prettyDate(raw: string) {
   if (!raw) return "";
   const date = new Date(raw);
@@ -10,6 +14,10 @@ function prettyDate(raw: string) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
+/**
+ * Renders a 1–5 star rating row.
+ * @example <Stars value={4} />
+ */
 function Stars({ value }: { value: number }) {
   if (value <= 0) return null;
   return (
@@ -23,6 +31,10 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+/**
+ * Renders a book cover image or empty placeholder.
+ * @example <Cover book={book} decorative />
+ */
 function Cover({
   book,
   className,
@@ -46,6 +58,10 @@ function Cover({
   );
 }
 
+/**
+ * Renders author/year/pages/read-date meta line.
+ * @example <Meta book={book} />
+ */
 function Meta({ book }: { book: GoodreadsBook }) {
   const bits = [book.author, book.year, book.pages ? `${book.pages} pages` : "", prettyDate(book.readAt)].filter(
     Boolean,
@@ -53,6 +69,10 @@ function Meta({ book }: { book: GoodreadsBook }) {
   return <p className="reading-meta">{bits.join(" · ")}</p>;
 }
 
+/**
+ * Renders a single shelf book card.
+ * @example <BookCard book={book} featured />
+ */
 function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: boolean }) {
   return (
     <article className={`reading-card${featured ? " is-featured" : ""}`}>
@@ -73,6 +93,10 @@ function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: 
   );
 }
 
+/**
+ * Renders Goodreads shelves (reading / read / want-to-read).
+ * @example <ReadingLibrary library={data} />
+ */
 export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
   const total = library.currentlyReading.length + library.read.length + library.toRead.length;
 

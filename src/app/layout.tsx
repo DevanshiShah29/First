@@ -13,6 +13,10 @@ const outfit = Outfit({
   display: "swap",
 });
 
+/**
+ * Builds root layout metadata from CMS site fields.
+ * @example generateMetadata() // Metadata
+ */
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const content = await loadContent();
@@ -34,6 +38,10 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
+/**
+ * Renders the root layout with theme CSS and font.
+ * @example default export for /
+ */
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const content = await loadContent();
   return (

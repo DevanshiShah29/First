@@ -6,6 +6,10 @@ export type PlayableMedia =
 const FILE_EXT = /\.(mp4|webm|ogg|ogv|mov|m4v)(?:\?|#|$)/i;
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|avif|svg)(?:\?|#|$)/i;
 
+/**
+ * Extracts a YouTube video id from a URL or bare id.
+ * @example youtubeVideoId("https://youtu.be/dQw4w9WgXcQ") // "dQw4w9WgXcQ"
+ */
 export function youtubeVideoId(url: string) {
   const raw = url.trim();
   if (!raw) return null;
@@ -18,16 +22,28 @@ export function youtubeVideoId(url: string) {
   return fromQuery?.[1] ?? null;
 }
 
+/**
+ * Extracts a Vimeo video id from a URL.
+ * @example vimeoId("https://vimeo.com/123") // "123"
+ */
 function vimeoId(url: string) {
   const m = url.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
   return m?.[1] ?? null;
 }
 
+/**
+ * Extracts a Pexels video id from a page/download URL.
+ * @example pexelsVideoId("…/video/foo-123") // "123"
+ */
 function pexelsVideoId(url: string) {
   const m = url.match(/pexels\.com\/(?:video\/(?:[a-z0-9-]+-)?|download\/video\/)(\d+)/i);
   return m?.[1] ?? null;
 }
 
+/**
+ * Classifies a media URL into file, iframe, or unsupported.
+ * @example parsePlayableMedia(url) // { type: "iframe", src }
+ */
 export function parsePlayableMedia(raw: string, preferred?: "image" | "video" | "none"): PlayableMedia {
   const url = raw.trim();
   if (!url) return { type: "unsupported", reason: "No URL yet." };
@@ -80,6 +96,10 @@ export function parsePlayableMedia(raw: string, preferred?: "image" | "video" | 
   return { type: "file", src: url, kind: preferred === "video" ? "video" : "image" };
 }
 
+/**
+ * Short CMS hint for how a media URL will be used.
+ * @example mediaHint(ytUrl) // "YouTube link — will embed in the hero."
+ */
 export function mediaHint(url: string) {
   const parsed = parsePlayableMedia(url, "video");
   if (parsed.type === "unsupported") return parsed.reason;

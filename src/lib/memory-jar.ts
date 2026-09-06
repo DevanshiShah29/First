@@ -155,6 +155,10 @@ const ALIASES: Record<string, StarColor> = {
   "#ea580c": "peach",
   "#f97316": "peach",
 };
+/**
+ * Maps a color name/hex/seed to a paper-star color.
+ * @example resolveStarColor("#a78bfa") // "lavender"
+ */
 export function resolveStarColor(color?: string, seed = ""): StarColor {
   if (!color) {
     let hash = 0;
@@ -176,7 +180,15 @@ export const JAR_ASSETS = {
   masonJarDark: "/memory-jar/mason-jar-dark.png",
   parchment: "/memory-jar/parchment.png",
   cursor: "/memory-jar/cursor-star.png",
+  /**
+   * Star image path for a color.
+   * @example JAR_ASSETS.star("pink") // "/memory-jar/stars/pink.png"
+   */
   star: (color: StarColor) => `/memory-jar/stars/${color}.png`,
+  /**
+   * Paper texture path for a color.
+   * @example JAR_ASSETS.paper("sage") // "/memory-jar/papers/sage.png"
+   */
   paper: (color: StarColor) => `/memory-jar/papers/${color}.png`,
 } as const;
 

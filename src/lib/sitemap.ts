@@ -11,6 +11,10 @@ export type SiteMapGroup = {
   links: SiteLink[];
 };
 
+/**
+ * Footer/nav sitemap groups from site + optional craft content.
+ * @example siteMap(site, craft) // [{ title, links }, …]
+ */
 export function siteMap(
   site: PublicSiteContent | SiteContent,
   craft?: CraftContent,

@@ -12,6 +12,10 @@ import type {
 } from "@/content/types";
 import { parsePlayableMedia } from "@/lib/media-url";
 
+/**
+ * Renders a decorative mini nav for hero thumbnails.
+ * @example <MiniNav />
+ */
 export function MiniNav() {
   return (
     <div className="wp-mini-nav" aria-hidden>
@@ -21,6 +25,10 @@ export function MiniNav() {
   );
 }
 
+/**
+ * Renders decorative CTA pills in hero thumbnails.
+ * @example <MiniBtns align="center" />
+ */
 export function MiniBtns({ align = "start" }: { align?: "start" | "center" }) {
   return (
     <div className={`wp-mini-btns${align === "center" ? " is-center" : ""}`} aria-hidden>
@@ -30,6 +38,10 @@ export function MiniBtns({ align = "start" }: { align?: "start" | "center" }) {
   );
 }
 
+/**
+ * Maps theme colors to CSS variables for previews.
+ * @example themeSkin(theme) // CSSProperties
+ */
 export function themeSkin(theme: ThemeContent): CSSProperties {
   const pal = theme.dark;
   return {
@@ -43,6 +55,10 @@ export function themeSkin(theme: ThemeContent): CSSProperties {
   } as CSSProperties;
 }
 
+/**
+ * Renders hero media as image/video/iframe.
+ * @example <MediaVisual media={heroMedia} compact />
+ */
 export function MediaVisual({ media, compact = false }: { media: HeroMedia; compact?: boolean }) {
   const playable = parsePlayableMedia(media.url, media.kind === "image" ? "image" : "video");
   if (playable.type === "unsupported") {
@@ -69,6 +85,10 @@ export function MediaVisual({ media, compact = false }: { media: HeroMedia; comp
   );
 }
 
+/**
+ * Renders hero copy layout for a template.
+ * @example <MediaCopy site={site} template="classic" />
+ */
 export function MediaCopy({ site, template }: { site: SiteContent; template: HeroTemplateId }) {
   const kicker = site.kicker || "Kicker";
   const title = site.greeting || "Hello";
@@ -113,6 +133,10 @@ export function MediaCopy({ site, template }: { site: SiteContent; template: Her
   );
 }
 
+/**
+ * Renders live hero media placement preview.
+ * @example <MediaLayoutPreview site={site} theme={theme} media={media} />
+ */
 export function MediaLayoutPreview({
   site,
   theme,
@@ -174,6 +198,10 @@ export function MediaLayoutPreview({
   );
 }
 
+/**
+ * Renders a selectable hero template thumbnail.
+ * @example <HeroThumb id="world" site={site} theme={theme} />
+ */
 export function HeroThumb({
   id,
   site,

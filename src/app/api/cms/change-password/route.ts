@@ -9,6 +9,10 @@ import {
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/cms/change-password.
+ * @example POST {current,new,confirm} // Set-Cookie + {ok:true}
+ */
 export async function POST(req: Request) {
   const gate = await requireCmsMutation(req);
   if (!gate.ok) {

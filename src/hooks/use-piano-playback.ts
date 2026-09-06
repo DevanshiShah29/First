@@ -9,7 +9,8 @@ import type { PublicSiteContent, SiteContent } from "@/content/types";
 import { goodreadsUserId } from "@/lib/goodreads";
 
 /**
- * Shared piano iframe playback + “taking a break” rest tips for interactive heroes.
+ * Piano iframe playback and rest-tip state for interactive heroes.
+ * @example usePianoPlayback(site) // { audioHost, onPianoToggle, … }
  */
 export function usePianoPlayback(site: PublicSiteContent | SiteContent) {
   const audioHost = useRef<HTMLDivElement>(null);
@@ -22,12 +23,20 @@ export function usePianoPlayback(site: PublicSiteContent | SiteContent) {
   const hasPiano = siteHasPiano(site);
   const goodreadsId = goodreadsUserId(site.goodreadsUrl ?? "");
 
+  /**
+   * Removes the piano iframe from the audio host.
+   * @example stopMusic() // void
+   */
   function stopMusic() {
     iframeRef.current?.remove();
     iframeRef.current = null;
     audioHost.current?.replaceChildren();
   }
 
+  /**
+   * Mounts a fresh piano media iframe.
+   * @example startMusic() // void
+   */
   function startMusic() {
     const host = audioHost.current;
     if (!host) return;
@@ -51,6 +60,10 @@ export function usePianoPlayback(site: PublicSiteContent | SiteContent) {
     };
   }, []);
 
+  /**
+   * Toggles piano playback or shows the rest tip.
+   * @example onPianoToggle() // void
+   */
   function onPianoToggle() {
     window.clearTimeout(restTimer.current);
     if (!hasPiano) {
@@ -70,6 +83,10 @@ export function usePianoPlayback(site: PublicSiteContent | SiteContent) {
     setPianoPlaying(true);
   }
 
+  /**
+   * Shows the books rest tip when Goodreads is missing.
+   * @example onBooksClick() // void
+   */
   function onBooksClick() {
     if (goodreadsId) return;
     window.clearTimeout(restTimer.current);
@@ -77,10 +94,18 @@ export function usePianoPlayback(site: PublicSiteContent | SiteContent) {
     restTimer.current = window.setTimeout(() => setBookRest(false), 2400);
   }
 
+  /**
+   * Whether the piano hotspot should look active.
+   * @example pianoOn("piano") // true
+   */
   function pianoOn(activeId: string | null) {
     return activeId === "piano" || pianoPlaying || pianoRest;
   }
 
+  /**
+   * Whether the book hotspot should look active.
+   * @example bookOn(null) // false
+   */
   function bookOn(activeId: string | null, bookSpotId = "book") {
     return activeId === bookSpotId || bookRest;
   }

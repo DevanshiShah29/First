@@ -11,6 +11,10 @@ import { clientIp } from "@/server/contact";
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/cms/login.
+ * @example POST {password} // Set-Cookie + {ok:true}
+ */
 export async function POST(req: Request) {
   if (!(await cmsConfigured())) {
     return NextResponse.json(

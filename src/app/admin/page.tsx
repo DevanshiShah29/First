@@ -6,6 +6,10 @@ import { verifySessionCookie } from "@/server/cms-auth";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Renders the CMS dashboard when session is valid.
+ * @example <AdminPage /> for /admin
+ */
 export default async function AdminPage() {
   const token = (await cookies()).get("cms_session")?.value;
   if (!(await verifySessionCookie(token))) {

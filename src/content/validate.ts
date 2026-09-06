@@ -10,6 +10,10 @@ import {
 const heroTemplateIds = HERO_TEMPLATES.map((t) => t.id) as [HeroTemplateId, ...HeroTemplateId[]];
 const skillIconIds = [...SKILL_ICONS] as [SkillIcon, ...SkillIcon[]];
 
+/**
+ * Builds a required trimmed-string Zod schema.
+ * @example nonEmpty("Name") // ZodString
+ */
 const nonEmpty = (label: string) =>
   z.string().trim().min(1, `${label} is required.`);
 
@@ -166,9 +170,8 @@ export type ParseContentSaveResult =
   | { ok: false; error: string };
 
 /**
- * Strict CMS save validation. Rejects incomplete payloads instead of
- * inventing identity defaults (name, role, untitled, etc.).
- * Soft coercion via parseContent remains for seed import only.
+ * Strict Zod validation for CMS saves.
+ * @example parseContentForSave(payload) // {ok:true, content} | {ok:false, error}
  */
 export function parseContentForSave(value: unknown): ParseContentSaveResult {
   const parsed = contentSaveSchema.safeParse(value);

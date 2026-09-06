@@ -7,10 +7,18 @@ import { type MouseEvent, type ReactNode } from "react";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 
+/**
+ * Renders screen-reader hint for links that open a new tab.
+ * @example <NewTabHint />
+ */
 export function NewTabHint() {
   return <span className="sr-only"> (opens in a new tab)</span>;
 }
 
+/**
+ * Renders a skip-to-content link.
+ * @example <SkipLink href="#main-content" />
+ */
 export function SkipLink({
   href = "#main-content",
   children = "Skip to content",
@@ -20,6 +28,10 @@ export function SkipLink({
 }) {
   const reduce = useReducedMotion();
 
+  /**
+   * Smooth-scrolls in-page hash targets.
+   * @example onClick(event) // scrolled #main-content
+   */
   function onClick(e: MouseEvent<HTMLAnchorElement>) {
     if (!href.startsWith("#")) return;
     e.preventDefault();

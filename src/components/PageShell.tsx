@@ -12,6 +12,10 @@ import { Cursor } from "./Cursor";
 import { SiteFooter } from "./SiteFooter";
 import { SiteHeader } from "./SiteHeader";
 
+/**
+ * Renders page chrome (header, footer, skip link) around children.
+ * @example <PageShell content={data}>…</PageShell>
+ */
 export function PageShell({
   content,
   children,

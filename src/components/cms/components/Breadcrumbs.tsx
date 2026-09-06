@@ -1,5 +1,9 @@
 import type { BreadcrumbItem } from "../types";
 
+/**
+ * Renders CMS breadcrumb trail.
+ * @example <Breadcrumbs items={[{ label: "Dashboard", current: true }]} />
+ */
 export function Breadcrumbs({ items }: { items: BreadcrumbItem[] }) {
   if (items.length === 0) return null;
 

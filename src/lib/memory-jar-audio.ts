@@ -2,6 +2,10 @@ export class JarAudio {
   private ctx: AudioContext | null = null;
   public enabled = true;
 
+  /**
+   * Lazily creates/resumes the AudioContext.
+   * @example this.init() // void
+   */
   private init() {
     if (!this.ctx && typeof window !== "undefined") {
       const AudioCtx =
@@ -12,6 +16,10 @@ export class JarAudio {
     if (this.ctx && this.ctx.state === "suspended") void this.ctx.resume();
   }
 
+  /**
+   * Plays a short sine chime for the given note index.
+   * @example jarAudio.playChime(0) // void
+   */
   playChime(noteIndex = 0) {
     if (!this.enabled) return;
     try {
@@ -35,6 +43,10 @@ export class JarAudio {
     }
   }
 
+  /**
+   * Plays a quick triangle pop sound.
+   * @example jarAudio.playPop() // void
+   */
   playPop() {
     if (!this.enabled) return;
     try {

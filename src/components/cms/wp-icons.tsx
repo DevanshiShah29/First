@@ -2,6 +2,10 @@ import type { ReactNode } from "react";
 
 type IconProps = { className?: string };
 
+/**
+ * Shared 20×20 SVG wrapper for CMS menu icons.
+ * @example <Svg><path … /></Svg>
+ */
 function Svg({ children, className = "wp-menu-icon" }: IconProps & { children: ReactNode }) {
   return (
     <svg
@@ -17,6 +21,10 @@ function Svg({ children, className = "wp-menu-icon" }: IconProps & { children: R
   );
 }
 
+/**
+ * Renders the Dashboard menu icon.
+ * @example <IconDash />
+ */
 export function IconDash({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -25,6 +33,10 @@ export function IconDash({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Experience/pin menu icon.
+ * @example <IconPin />
+ */
 export function IconPin({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -33,6 +45,10 @@ export function IconPin({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Projects/pages menu icon.
+ * @example <IconPages />
+ */
 export function IconPages({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -41,6 +57,10 @@ export function IconPages({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Skills/star menu icon.
+ * @example <IconStar />
+ */
 export function IconStar({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -49,6 +69,10 @@ export function IconStar({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Hero menu icon.
+ * @example <IconHero />
+ */
 export function IconHero({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -57,6 +81,10 @@ export function IconHero({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Appearance menu icon.
+ * @example <IconAppearance />
+ */
 export function IconAppearance({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -65,6 +93,10 @@ export function IconAppearance({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Settings menu icon.
+ * @example <IconSettings />
+ */
 export function IconSettings({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -73,6 +105,10 @@ export function IconSettings({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the About menu icon.
+ * @example <IconAbout />
+ */
 export function IconAbout({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -81,6 +117,10 @@ export function IconAbout({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Contact menu icon.
+ * @example <IconContact />
+ */
 export function IconContact({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -89,6 +129,10 @@ export function IconContact({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Visit Site/home icon.
+ * @example <IconHome />
+ */
 export function IconHome({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -97,6 +141,10 @@ export function IconHome({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the New/plus bar icon.
+ * @example <IconPlus />
+ */
 export function IconPlus({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -105,6 +153,10 @@ export function IconPlus({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the hamburger menu icon.
+ * @example <IconMenu />
+ */
 export function IconMenu({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -113,6 +165,10 @@ export function IconMenu({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Craft menu icon.
+ * @example <IconCraft />
+ */
 export function IconCraft({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -121,6 +177,10 @@ export function IconCraft({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Memory Jar menu icon.
+ * @example <IconJar />
+ */
 export function IconJar({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -129,6 +189,10 @@ export function IconJar({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the Technologies/code menu icon.
+ * @example <IconCode />
+ */
 export function IconCode({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -137,6 +201,10 @@ export function IconCode({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the show-password eye icon.
+ * @example <IconEye />
+ */
 export function IconEye({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -145,6 +213,10 @@ export function IconEye({ className }: IconProps) {
   );
 }
 
+/**
+ * Renders the hide-password eye-off icon.
+ * @example <IconEyeOff />
+ */
 export function IconEyeOff({ className }: IconProps) {
   return (
     <Svg className={className}>

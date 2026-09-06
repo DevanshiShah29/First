@@ -13,6 +13,10 @@ import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
 import { Field, StringList, TextArea, TextInput } from "../fields";
 
+/**
+ * Renders the projects list table.
+ * @example <ProjectsListScreen data={data} go={go} addProject={…} />
+ */
 export function ProjectsListScreen({
   data,
   setData,
@@ -95,6 +99,10 @@ export function ProjectsListScreen({
   );
 }
 
+/**
+ * Renders the project editor wrapper.
+ * @example <ProjectsEditScreen project={project} projIndex={0} … />
+ */
 export function ProjectsEditScreen({
   data,
   setData,
@@ -126,6 +134,10 @@ export function ProjectsEditScreen({
   );
 }
 
+/**
+ * Renders project fields and AI blurb/tags assist.
+ * @example <ProjectsEditForm project={project} projIndex={0} … />
+ */
 function ProjectsEditForm({
   data,
   setData,
@@ -146,12 +158,20 @@ function ProjectsEditForm({
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
 
+  /**
+   * Merges a patch into the active project.
+   * @example patchProject({ name: "Portfolio" }) // void
+   */
   function patchProject(patch: Partial<ProjectItem>) {
     const projects = [...data.projects];
     projects[projIndex] = { ...project, ...patch };
     setData({ ...data, projects });
   }
 
+  /**
+   * Generates project blurb and tags via AI.
+   * @example onGenerate() // void
+   */
   async function onGenerate() {
     if (generating) return;
     setGenerateError(null);

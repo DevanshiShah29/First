@@ -2,6 +2,10 @@ import { ResetPasswordForm } from "@/components/cms/ResetPasswordForm";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Renders the CMS reset-password page from ?token.
+ * @example <ResetPasswordPage /> for /admin/reset-password
+ */
 export default async function ResetPasswordPage({
   searchParams,
 }: {

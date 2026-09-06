@@ -2,6 +2,10 @@ import type { SkillGroup } from "@/content/types";
 import { Fade } from "@/components/Fade";
 import { SkillMark } from "@/components/icons";
 
+/**
+ * Renders skills and technology groups.
+ * @example <SkillsSection skillGroups={skills} techGroups={tech} />
+ */
 export function SkillsSection({
   skillGroups = [],
   techGroups = [],

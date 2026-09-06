@@ -9,19 +9,25 @@ export type StoredUpload = {
   url: string;
 };
 
+/**
+ * Reads BLOB_READ_WRITE_TOKEN from env.
+ * @example blobToken() // "vercel_blob_…" | ""
+ */
 function blobToken() {
   return process.env.BLOB_READ_WRITE_TOKEN?.trim() || "";
 }
 
-/** True when uploads should go to Vercel Blob (required in production). */
+/**
+ * True when uploads should go to Vercel Blob.
+ * @example usesBlobStorage() // true
+ */
 export function usesBlobStorage() {
   return Boolean(blobToken());
 }
 
 /**
- * Persist a CMS upload. Uses Vercel Blob when BLOB_READ_WRITE_TOKEN is set;
- * otherwise writes under public/uploads (local/dev only).
- * Production without a blob token fails closed.
+ * Persists a CMS upload to Blob or local public/uploads.
+ * @example await storeCmsUpload({…}) // { url }
  */
 export async function storeCmsUpload(input: {
   folder: UploadFolder;

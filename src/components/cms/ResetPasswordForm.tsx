@@ -16,11 +16,19 @@ import { IconEye, IconEyeOff } from "./wp-icons";
 
 const MIN_LENGTH = 8;
 
+/**
+ * Reads the reset token from ?token= in the URL.
+ * @example readTokenFromUrl() // "abc…"
+ */
 function readTokenFromUrl() {
   if (typeof window === "undefined") return "";
   return new URLSearchParams(window.location.search).get("token")?.replace(/\s+/g, "") ?? "";
 }
 
+/**
+ * Renders the reset-password form from an email link.
+ * @example <ResetPasswordForm token={token} />
+ */
 export function ResetPasswordForm({ token: initialToken }: { token: string }) {
   const router = useRouter();
   const [token, setToken] = useState(initialToken.replace(/\s+/g, ""));
@@ -56,6 +64,10 @@ export function ResetPasswordForm({ token: initialToken }: { token: string }) {
     );
   }
 
+  /**
+   * Submits a new password using the reset token.
+   * @example onSubmit(event) // void
+   */
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");

@@ -9,6 +9,10 @@ import { HexColorInput, TextInput } from "./fields";
 // Icons
 import { SkillMark } from "@/components/icons";
 
+/**
+ * Returns a usable icon src or undefined for invalid values.
+ * @example previewableIconUrl("/x.png") // "/x.png"
+ */
 function previewableIconUrl(raw: string) {
   const src = raw.trim();
   if (!src) return undefined;
@@ -16,6 +20,10 @@ function previewableIconUrl(raw: string) {
   return undefined;
 }
 
+/**
+ * Renders one skill/technology row with icon upload.
+ * @example <SkillItemRow item={item} index={0} total={3} … />
+ */
 export function SkillItemRow({
   item,
   index,

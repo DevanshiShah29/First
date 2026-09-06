@@ -20,6 +20,10 @@ export type FadeProps = {
 
 const dosFeEase: Transition["ease"] = [0.4, 0, 0.2, 1];
 
+/**
+ * Renders children with a fade/slide-in-on-view animation.
+ * @example <Fade y={24} delay={0.1}>…</Fade>
+ */
 export function Fade({
   children,
   className,

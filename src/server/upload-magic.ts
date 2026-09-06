@@ -4,11 +4,19 @@ export type SniffedMedia = {
   kind: "image" | "video" | "file";
 };
 
+/**
+ * True when buf starts with the given byte sequence.
+ * @example startsWith(buf, [0xff, 0xd8]) // true
+ */
 function startsWith(buf: Buffer, bytes: number[]): boolean {
   if (buf.length < bytes.length) return false;
   return bytes.every((b, i) => buf[i] === b);
 }
 
+/**
+ * True when buf has ASCII text at offset.
+ * @example asciiAt(buf, 0, "%PDF") // true
+ */
 function asciiAt(buf: Buffer, offset: number, text: string): boolean {
   if (buf.length < offset + text.length) return false;
   for (let i = 0; i < text.length; i += 1) {
@@ -17,6 +25,10 @@ function asciiAt(buf: Buffer, offset: number, text: string): boolean {
   return true;
 }
 
+/**
+ * Reads the ISO BMFF major_brand from an ftyp box.
+ * @example ftypBrand(buf) // "isom" | null
+ */
 function ftypBrand(buf: Buffer): string | null {
   // ISO BMFF: size(4) + 'ftyp'(4) + major_brand(4)
   if (buf.length < 12 || !asciiAt(buf, 4, "ftyp")) return null;
@@ -24,8 +36,8 @@ function ftypBrand(buf: Buffer): string | null {
 }
 
 /**
- * Detect allowed upload types from file magic bytes (not client MIME/extension).
- * Returns null when the buffer does not match a supported type.
+ * Detects allowed upload type from magic bytes.
+ * @example sniffUploadMagic(buf) // { ext: "png", … } | null
  */
 export function sniffUploadMagic(buf: Buffer): SniffedMedia | null {
   if (!buf.length) return null;

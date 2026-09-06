@@ -5,6 +5,10 @@ import { loadContent } from "@/content/store";
 import { EMPTY_CRAFT, toPublicContent } from "@/content/types";
 import { buildPageMetadata } from "@/lib/seo";
 
+/**
+ * Builds craft page metadata from CMS craft fields.
+ * @example generateMetadata() // Metadata
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
   const craft = content.craft ?? EMPTY_CRAFT;
@@ -21,6 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+/**
+ * Renders the craft notes page.
+ * @example <CraftPage /> default export for /craft
+ */
 export default async function CraftPage() {
   const content = toPublicContent(await loadContent());
   const craft = content.craft ?? EMPTY_CRAFT;

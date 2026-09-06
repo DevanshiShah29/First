@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/**
+ * Renders the admin layout (noindex shell).
+ * @example default export for /admin
+ */
 export default function AdminLayout({ children }: LayoutProps<"/admin">) {
   return children;
 }

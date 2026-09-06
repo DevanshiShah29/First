@@ -24,6 +24,10 @@ const sunrise = Waiting_for_the_Sunrise({
   display: "swap",
 });
 
+/**
+ * Renders the memories layout with jar fonts.
+ * @example default export for /memories
+ */
 export default function MemoriesLayout({ children }: { children: ReactNode }) {
   return (
     <div className={`${cormorant.variable} ${spaceMono.variable} ${sunrise.variable}`}>

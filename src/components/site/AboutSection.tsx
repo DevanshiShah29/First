@@ -3,6 +3,10 @@ import type { CraftContent, PublicSiteContent } from "@/content/types";
 import { Fade } from "@/components/Fade";
 import { CountUp } from "./CountUp";
 
+/**
+ * Renders the About section with stats and philosophy.
+ * @example <AboutSection site={site} craft={craft} />
+ */
 export function AboutSection({
   site,
   craft,

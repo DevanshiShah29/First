@@ -26,6 +26,10 @@ type GeneratedFields = {
   groups: SkillGroup[];
 };
 
+/**
+ * Normalizes a hex color to #RRGGBB or undefined.
+ * @example normalizeHex("#abc") // "#AABBCC"
+ */
 function normalizeHex(raw: unknown): string | undefined {
   if (typeof raw !== "string") return undefined;
   const value = raw.trim();
@@ -38,6 +42,10 @@ function normalizeHex(raw: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Maps a raw icon name/alias to a tech SkillIcon.
+ * @example mapIcon("nextjs") // "next"
+ */
 function mapIcon(raw: unknown): SkillIcon {
   if (typeof raw !== "string") return "empty";
   const key = raw.trim().toLowerCase();
@@ -64,6 +72,10 @@ function mapIcon(raw: unknown): SkillIcon {
   return "empty";
 }
 
+/**
+ * Coerces request body groups into SkillGroup[].
+ * @example parseExistingGroups(body.existingGroups) // [{ title, items }]
+ */
 function parseExistingGroups(v: unknown): SkillGroup[] {
   if (!Array.isArray(v)) return [];
   return v.slice(0, 8).map((group) => {
@@ -83,6 +95,10 @@ function parseExistingGroups(v: unknown): SkillGroup[] {
   });
 }
 
+/**
+ * Parses Gemini JSON into technology groups.
+ * @example parseGenerated(raw) // { groups } | null
+ */
 function parseGenerated(raw: string): GeneratedFields | null {
   const obj = parseJsonObject(raw);
   if (!obj) return null;
@@ -121,6 +137,10 @@ export type GenerateTechnologiesOutcome =
   | { ok: true; data: GeneratedFields }
   | { ok: false; error: string; status: number };
 
+/**
+ * Generates technology groups via Gemini + profile.
+ * @example await generateTechnologies(key, body) // { ok: true, data } | { ok: false, … }
+ */
 export async function generateTechnologies(
   apiKey: string,
   body: GenerateTechnologiesInput,

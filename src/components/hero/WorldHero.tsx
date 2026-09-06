@@ -36,6 +36,10 @@ const jarStars = [
   { g: "★", l: "28%", t: "78%", d: "0.28s", s: "0.2rem", c: "#fde68a" },
 ];
 
+/**
+ * Renders decorative stars inside the world jar hotspot.
+ * @example <JarStars />
+ */
 function JarStars() {
   return (
     <div className="world-jar-vessel" aria-hidden>
@@ -58,6 +62,10 @@ function JarStars() {
   );
 }
 
+/**
+ * Renders the interactive world-desk hero.
+ * @example <WorldHero site={site} />
+ */
 export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const reduce = useReducedMotion();
   const { stage, onMove, onLeave } = useHeroTilt(reduce);
@@ -76,6 +84,10 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const [active, setActive] = useState<SpotId | null>(null);
   const [flash, setFlash] = useState(false);
 
+  /**
+   * Activates a hotspot and flashes the camera.
+   * @example onSpot("camera", true) // flash
+   */
   function onSpot(id: SpotId, on: boolean) {
     setActive(on ? id : null);
     if (on && id === "camera") {

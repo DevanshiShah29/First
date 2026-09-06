@@ -8,6 +8,7 @@ export interface UploadFileResponse {
 
 /**
  * Authenticate CMS session.
+ * @example await cmsLogin("secret") // { ok: true }
  */
 export async function cmsLogin(password: string): Promise<ApiResponse> {
   try {
@@ -37,13 +38,15 @@ export async function cmsLogin(password: string): Promise<ApiResponse> {
 
 /**
  * Destroy CMS session.
+ * @example await cmsLogout() // undefined
  */
 export async function cmsLogout(): Promise<void> {
   await fetch("/api/cms/logout", { method: "POST" });
 }
 
 /**
- * Request a CMS password-reset email to the admin address.
+ * Request a CMS password-reset email.
+ * @example await cmsForgotPassword() // { ok: true, data: { message } }
  */
 export async function cmsForgotPassword(): Promise<ApiResponse<{ message?: string }>> {
   try {
@@ -71,7 +74,8 @@ export async function cmsForgotPassword(): Promise<ApiResponse<{ message?: strin
 }
 
 /**
- * Complete CMS password reset with a one-time email token.
+ * Complete CMS password reset with a one-time token.
+ * @example await cmsResetPassword({ token, newPassword, confirmPassword }) // { ok: true }
  */
 export async function cmsResetPassword(input: {
   token: string;
@@ -104,7 +108,8 @@ export async function cmsResetPassword(input: {
 }
 
 /**
- * Change CMS login password (requires an active session).
+ * Change CMS login password (requires session).
+ * @example await cmsChangePassword({ currentPassword, newPassword, confirmPassword }) // { ok: true }
  */
 export async function cmsChangePassword(input: {
   currentPassword: string;
@@ -137,7 +142,8 @@ export async function cmsChangePassword(input: {
 }
 
 /**
- * Persist modified portfolio content to CMS backend.
+ * Persist portfolio content to the CMS backend.
+ * @example await saveCmsContent(content) // { ok: true, data: { content } }
  */
 export async function saveCmsContent(content: ContentData): Promise<ApiResponse<{ content: ContentData }>> {
   try {
@@ -190,7 +196,8 @@ export interface GenerateExperienceResult {
 }
 
 /**
- * Generate experience summary, bullets, and tags via Gemini (CMS auth required).
+ * Generate experience summary, bullets, and tags via Gemini.
+ * @example await generateExperienceCopy(input) // { ok: true, data: { summary, bullets, tags } }
  */
 export async function generateExperienceCopy(
   input: GenerateExperienceInput,
@@ -246,7 +253,8 @@ export interface GenerateProjectResult {
 }
 
 /**
- * Generate project description and tags from GitHub / live URLs (CMS auth required).
+ * Generate project blurb and tags from GitHub/demo URLs.
+ * @example await generateProjectCopy(input) // { ok: true, data: { blurb, tags } }
  */
 export async function generateProjectCopy(
   input: GenerateProjectInput,
@@ -315,7 +323,8 @@ export interface GenerateTechnologiesResult {
 }
 
 /**
- * Generate technology groups/items from portfolio signals (CMS auth required).
+ * Generate technology groups from portfolio signals.
+ * @example await generateTechnologiesCopy(input) // { ok: true, data: { groups } }
  */
 export async function generateTechnologiesCopy(
   input: GenerateTechnologiesInput,
@@ -352,7 +361,8 @@ export async function generateTechnologiesCopy(
 }
 
 /**
- * Generate skill groups/items from resume, LinkedIn, and experience (CMS auth required).
+ * Generate skill groups from resume, LinkedIn, and experience.
+ * @example await generateSkillsCopy(input) // { ok: true, data: { groups } }
  */
 export async function generateSkillsCopy(
   input: GenerateSkillsInput,
@@ -389,7 +399,8 @@ export async function generateSkillsCopy(
 }
 
 /**
- * Upload an asset (hero media, memory photo, skill icon, or resume) to the server.
+ * Upload a CMS asset (hero, memory, skill icon, or resume).
+ * @example await uploadCmsFile(file, "hero") // { ok: true, data: { url, kind } }
  */
 export async function uploadCmsFile(
   file: File,

@@ -19,11 +19,19 @@ import { IconDownload, IconGitHub, IconLinkedIn, IconMail } from "@/components/i
 const fieldClass =
   "mt-1.5 w-full rounded-lg border border-line bg-inset px-4 py-3 text-sm text-foreground transition focus-visible:border-violet-500/60";
 
+/**
+ * Renders the contact form, scene, and social links.
+ * @example <ContactSection site={site} />
+ */
 export function ContactSection({ site }: { site: PublicSiteContent }) {
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [formError, setFormError] = useState("");
   const resume = resumeDownloadProps(site.resume, site.name);
 
+  /**
+   * Submits the contact form via the API client.
+   * @example onSubmit(event) // status "sent" | "error"
+   */
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;

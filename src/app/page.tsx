@@ -4,6 +4,10 @@ import { loadContent } from "@/content/store";
 import { toPublicContent } from "@/content/types";
 import { buildPageMetadata } from "@/lib/seo";
 
+/**
+ * Builds home page metadata from CMS.
+ * @example generateMetadata() // Metadata
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
   return buildPageMetadata({
@@ -14,6 +18,10 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
+/**
+ * Renders the home portfolio page.
+ * @example <Home /> default export for /
+ */
 export default async function Home() {
   const content = toPublicContent(await loadContent());
   return <Site content={content} />;

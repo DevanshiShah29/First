@@ -31,6 +31,10 @@ interface HeroScreenProps {
   dirty: boolean;
 }
 
+/**
+ * Renders hero template, copy, and media editors.
+ * @example <HeroScreen data={data} setHeroMedia={…} … />
+ */
 export function HeroScreen({
   data,
   setData,

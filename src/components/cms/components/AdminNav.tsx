@@ -41,6 +41,10 @@ interface AdminBarProps {
   addMemory: () => void;
 }
 
+/**
+ * Renders the top CMS admin bar with save/new/logout.
+ * @example <AdminBar dirty save={save} logout={logout} … />
+ */
 export function AdminBar({
   menuOpen,
   setMenuOpen,
@@ -141,6 +145,10 @@ export function AdminBar({
   );
 }
 
+/**
+ * Renders the left CMS screen menu.
+ * @example <AdminMenu menu={menu} go={go} setMenuOpen={setMenuOpen} />
+ */
 export function AdminMenu({
   menu,
   go,

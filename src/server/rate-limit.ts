@@ -6,6 +6,10 @@ const memoryBuckets = new Map<string, Bucket>();
 
 let redisClient: Redis | null | undefined;
 
+/**
+ * Gets or creates an in-memory bucket map for a scope.
+ * @example memoryBucket("login") // Map
+ */
 function memoryBucket(scope: string) {
   let bucket = memoryBuckets.get(scope);
   if (!bucket) {
@@ -15,6 +19,10 @@ function memoryBucket(scope: string) {
   return bucket;
 }
 
+/**
+ * Returns timestamps still inside the window for a key.
+ * @example memoryRecent(scope, key, 60000) // [t1, t2]
+ */
 function memoryRecent(scope: string, key: string, windowMs: number) {
   const bucket = memoryBucket(scope);
   const now = Date.now();
@@ -23,6 +31,10 @@ function memoryRecent(scope: string, key: string, windowMs: number) {
   return recent;
 }
 
+/**
+ * True when Upstash Redis env vars are set.
+ * @example redisConfigured() // true
+ */
 function redisConfigured() {
   return Boolean(
     process.env.UPSTASH_REDIS_REST_URL?.trim() &&
@@ -30,6 +42,10 @@ function redisConfigured() {
   );
 }
 
+/**
+ * Lazily creates the shared Upstash Redis client or null.
+ * @example getRedis() // Redis | null
+ */
 function getRedis(): Redis | null {
   if (redisClient !== undefined) return redisClient;
   if (!redisConfigured()) {
@@ -45,11 +61,18 @@ function getRedis(): Redis | null {
   return redisClient;
 }
 
+/**
+ * Builds a Redis key for a rate-limit bucket.
+ * @example redisKey("login", "1.2.3.4") // "rl:login:1.2.3.4"
+ */
 function redisKey(scope: string, key: string) {
   return `rl:${scope}:${key}`;
 }
 
-/** True when the key is already over the limit (does not record a new hit). */
+/**
+ * True when the key is already over the limit (no new hit).
+ * @example await isRateLimited(scope, key, 5, 60000) // false
+ */
 export async function isRateLimited(
   scope: string,
   key: string,
@@ -72,7 +95,10 @@ export async function isRateLimited(
   return count >= max;
 }
 
-/** Record one hit. Returns true if the key is now over the limit. */
+/**
+ * Records one hit; true if now over the limit.
+ * @example await recordRateLimitHit(scope, key, 5, 60000) // false
+ */
 export async function recordRateLimitHit(
   scope: string,
   key: string,
@@ -101,6 +127,10 @@ export async function recordRateLimitHit(
   return count >= max;
 }
 
+/**
+ * Clears rate-limit hits for a scope/key.
+ * @example await clearRateLimit("login", ip) // void
+ */
 export async function clearRateLimit(scope: string, key: string): Promise<void> {
   const redis = getRedis();
   if (!redis) {
@@ -111,8 +141,8 @@ export async function clearRateLimit(scope: string, key: string): Promise<void> 
 }
 
 /**
- * Sliding-window helper that records a hit and reports whether limited.
- * Prefer isRateLimited + recordRateLimitHit when only failures should count.
+ * Records a hit and reports whether limited.
+ * @example await rateLimited(scope, key, 5, 60000) // false
  */
 export async function rateLimited(
   scope: string,

@@ -27,6 +27,10 @@ interface MasonJarProps {
   showRising?: boolean;
 }
 
+/**
+ * Renders the tappable mason jar with floating stars.
+ * @example <MasonJar memories={items} onTap={fn} size={440} jiggling={false} floating />
+ */
 export function MasonJar({
   memories,
   jiggling,

@@ -4,6 +4,10 @@ import { generateProject } from "@/server/ai/generate-project";
 
 export const runtime = "nodejs";
 
+/**
+ * Handles POST /api/cms/generate-project.
+ * @example POST body // {blurb, tags}
+ */
 export async function POST(req: Request) {
   const gate = await requireCmsAi(req);
   if (!gate.ok) return gate.response;

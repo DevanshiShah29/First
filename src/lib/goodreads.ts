@@ -22,6 +22,10 @@ export type GoodreadsLibrary = {
   toRead: GoodreadsBook[];
 };
 
+/**
+ * Extracts a Goodreads user id from a profile URL or digits.
+ * @example goodreadsUserId("…/user/show/123") // "123"
+ */
 export function goodreadsUserId(raw: string) {
   const url = raw.trim();
   if (!url) return null;
@@ -31,6 +35,10 @@ export function goodreadsUserId(raw: string) {
   return match?.[1] ?? null;
 }
 
+/**
+ * Empty unconfigured library shell.
+ * @example emptyLibrary(profileUrl) // { configured: false, … }
+ */
 export function emptyLibrary(profileUrl = ""): GoodreadsLibrary {
   return {
     configured: false,
@@ -42,6 +50,10 @@ export function emptyLibrary(profileUrl = ""): GoodreadsLibrary {
   };
 }
 
+/**
+ * Decodes common XML/HTML entities.
+ * @example decode("&amp;") // "&"
+ */
 function decode(value: string) {
   return value
     .replace(/&amp;/g, "&")
@@ -52,6 +64,10 @@ function decode(value: string) {
     .trim();
 }
 
+/**
+ * Strips HTML tags and normalizes whitespace.
+ * @example stripHtml("<p>Hi</p>") // "Hi"
+ */
 function stripHtml(value: string) {
   return decode(value)
     .replace(/<br\s*\/?>/gi, "\n")
@@ -63,6 +79,10 @@ function stripHtml(value: string) {
     .trim();
 }
 
+/**
+ * Reads a named RSS item field (CDATA or text).
+ * @example field(itemXml, "title") // "Book Title"
+ */
 function field(block: string, name: string) {
   const re = new RegExp(
     `<${name}(?:\\s[^>]*)?>(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([^<]*))</${name}>`,
@@ -72,11 +92,19 @@ function field(block: string, name: string) {
   return decode(match?.[1] ?? match?.[2] ?? "");
 }
 
+/**
+ * Upgrades a Goodreads cover URL to a larger size.
+ * @example nicerCover("…_SX98_.jpg") // "…_SY475_.jpg"
+ */
 function nicerCover(url: string) {
   if (!url) return "";
   return url.replace(/_S[YX]\d+(_\.)?/i, "_SY475_.");
 }
 
+/**
+ * Parses Goodreads RSS XML into book records.
+ * @example parseGoodreadsRss(xml) // GoodreadsBook[]
+ */
 export function parseGoodreadsRss(xml: string): GoodreadsBook[] {
   const blocks = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].map((m) => m[1] ?? "");
   const books: GoodreadsBook[] = [];
@@ -111,6 +139,10 @@ export function parseGoodreadsRss(xml: string): GoodreadsBook[] {
   return books;
 }
 
+/**
+ * Fetches one Goodreads RSS page for a shelf.
+ * @example await fetchGoodreadsPage("123", "read", 1) // GoodreadsBook[]
+ */
 async function fetchGoodreadsPage(userId: string, shelf: string, page: number) {
   const url = `https://www.goodreads.com/review/list_rss/${userId}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}`;
   const res = await fetch(url, {
@@ -124,6 +156,10 @@ async function fetchGoodreadsPage(userId: string, shelf: string, page: number) {
   return parseGoodreadsRss(await res.text());
 }
 
+/**
+ * Loads all pages of a Goodreads shelf (up to 8).
+ * @example await fetchGoodreadsShelf("123", "read") // GoodreadsBook[]
+ */
 export async function fetchGoodreadsShelf(userId: string, shelf: string) {
   const books: GoodreadsBook[] = [];
   const seen = new Set<string>();
@@ -141,6 +177,10 @@ export async function fetchGoodreadsShelf(userId: string, shelf: string) {
   return books;
 }
 
+/**
+ * Loads currently-reading, read, and to-read shelves.
+ * @example await loadGoodreadsLibrary(url, name) // GoodreadsLibrary
+ */
 export async function loadGoodreadsLibrary(profileUrl: string, name: string): Promise<GoodreadsLibrary> {
   const userId = goodreadsUserId(profileUrl);
   if (!userId) return emptyLibrary(profileUrl);

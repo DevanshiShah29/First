@@ -54,6 +54,10 @@ import {
   IconStar,
 } from "./wp-icons";
 
+/**
+ * Renders the authenticated CMS shell and active screen.
+ * @example <AdminApp initial={content} />
+ */
 export function AdminApp({ initial }: { initial: ContentData }) {
   const router = useRouter();
   const doc = useCmsDocument(initial);
@@ -106,6 +110,10 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   const site = data.site;
   const [firstName] = (site.name || "Admin").split(" ");
 
+  /**
+   * Logs out of the CMS and returns to login.
+   * @example logout() // void
+   */
   async function logout() {
     await cmsLogout();
     router.push("/admin/login");

@@ -1,6 +1,10 @@
 import { lookup } from "dns/promises";
 import { isIP } from "net";
 
+/**
+ * True for private, loopback, link-local, or cloud-metadata IPs.
+ * @example isPrivateIp("127.0.0.1") // true
+ */
 function isPrivateIp(ip: string) {
   const v = ip.toLowerCase();
   if (v === "127.0.0.1" || v === "::1" || v === "0.0.0.0") return true;
@@ -13,7 +17,8 @@ function isPrivateIp(ip: string) {
 }
 
 /**
- * Allow only public https URLs; resolve DNS and reject private/link-local targets.
+ * Allows only public HTTPS URLs after DNS checks.
+ * @example await assertPublicHttpsUrl("example.com") // URL
  */
 export async function assertPublicHttpsUrl(raw: string): Promise<URL> {
   let normalized = raw.trim();

@@ -15,6 +15,10 @@ interface DashboardScreenProps {
   addMemory: () => void;
 }
 
+/**
+ * Renders the CMS dashboard overview widgets.
+ * @example <DashboardScreen data={data} go={go} … />
+ */
 export function DashboardScreen({
   data,
   go,

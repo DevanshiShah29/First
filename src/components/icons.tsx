@@ -4,6 +4,10 @@ import { MediaImage } from "@/components/MediaImage";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
+/**
+ * Renders a shared stroke SVG wrapper for icons.
+ * @example <Svg width={16}><path /></Svg>
+ */
 function Svg({ children, ...props }: IconProps) {
   return (
     <svg
@@ -95,6 +99,10 @@ const brand = {
   ),
 } as const;
 
+/**
+ * Resolves skill icon color, mapping white to mono token.
+ * @example resolvedSkillColor("#fff") // "var(--skill-mono)"
+ */
 function resolvedSkillColor(color?: string) {
   if (!color) return "var(--accent-text)";
   if (color.toLowerCase() === "#ffffff") return "var(--skill-mono)";
@@ -144,14 +152,26 @@ const product: Record<string, ReactNode> = {
 
 const MARK_SIZE = 28;
 
+/**
+ * True when src points at an SVG asset.
+ * @example isSvgSrc("/icons/react.svg") // true
+ */
 function isSvgSrc(src: string) {
   return /\.svg(\?|#|$)/i.test(src) || /^data:image\/svg/i.test(src);
 }
 
+/**
+ * True when src is a local path or data URL.
+ * @example isLocalSrc("/icons/a.svg") // true
+ */
 function isLocalSrc(src: string) {
   return src.startsWith("/") || src.startsWith("data:");
 }
 
+/**
+ * Renders a CMS-uploaded skill mark (masked SVG or image).
+ * @example <CustomSkillMark src="/a.svg" color="#7c3aed" />
+ */
 function CustomSkillMark({
   src,
   color,
@@ -192,6 +212,10 @@ function CustomSkillMark({
   );
 }
 
+/**
+ * Renders a skill/tech mark from CMS icon, URL, or built-in path.
+ * @example <SkillMark icon="react" color="#61dafb" />
+ */
 export function SkillMark({
   icon,
   color,
@@ -230,6 +254,10 @@ export function SkillMark({
   );
 }
 
+/**
+ * Renders a right-arrow icon.
+ * @example <IconArrowRight />
+ */
 export function IconArrowRight(props: IconProps) {
   return (
     <Svg width={16} height={16} {...props}>
@@ -239,6 +267,10 @@ export function IconArrowRight(props: IconProps) {
   );
 }
 
+/**
+ * Renders a download icon.
+ * @example <IconDownload />
+ */
 export function IconDownload(props: IconProps) {
   return (
     <Svg width={16} height={16} {...props}>
@@ -249,6 +281,10 @@ export function IconDownload(props: IconProps) {
   );
 }
 
+/**
+ * Renders a sun icon for light mode.
+ * @example <IconSun />
+ */
 export function IconSun(props: IconProps) {
   return (
     <Svg width={18} height={18} strokeWidth="2" {...props}>
@@ -265,6 +301,10 @@ export function IconSun(props: IconProps) {
   );
 }
 
+/**
+ * Renders a moon icon for dark mode.
+ * @example <IconMoon />
+ */
 export function IconMoon(props: IconProps) {
   return (
     <Svg width={18} height={18} strokeWidth="2" {...props}>
@@ -273,6 +313,10 @@ export function IconMoon(props: IconProps) {
   );
 }
 
+/**
+ * Renders a hamburger menu icon.
+ * @example <IconMenu />
+ */
 export function IconMenu(props: IconProps) {
   return (
     <Svg width={20} height={20} {...props}>
@@ -283,6 +327,10 @@ export function IconMenu(props: IconProps) {
   );
 }
 
+/**
+ * Renders a close (X) icon.
+ * @example <IconClose />
+ */
 export function IconClose(props: IconProps) {
   return (
     <Svg width={20} height={20} {...props}>
@@ -292,6 +340,10 @@ export function IconClose(props: IconProps) {
   );
 }
 
+/**
+ * Renders a code brackets icon.
+ * @example <IconCode />
+ */
 export function IconCode(props: IconProps) {
   return (
     <Svg width={16} height={16} {...props}>
@@ -301,6 +353,10 @@ export function IconCode(props: IconProps) {
   );
 }
 
+/**
+ * Renders an external-link icon.
+ * @example <IconExternal />
+ */
 export function IconExternal(props: IconProps) {
   return (
     <Svg width={16} height={16} {...props}>
@@ -311,6 +367,10 @@ export function IconExternal(props: IconProps) {
   );
 }
 
+/**
+ * Renders the LinkedIn brand icon.
+ * @example <IconLinkedIn size={22} />
+ */
 export function IconLinkedIn({ size = 22 }: { size?: number }) {
   return (
     <svg
@@ -328,6 +388,10 @@ export function IconLinkedIn({ size = 22 }: { size?: number }) {
   );
 }
 
+/**
+ * Renders the GitHub brand icon.
+ * @example <IconGitHub size={22} />
+ */
 export function IconGitHub({ size = 22 }: { size?: number }) {
   return (
     <svg
@@ -345,6 +409,10 @@ export function IconGitHub({ size = 22 }: { size?: number }) {
   );
 }
 
+/**
+ * Renders a mail envelope icon.
+ * @example <IconMail size={22} />
+ */
 export function IconMail({ size = 22 }: { size?: number }) {
   return (
     <svg

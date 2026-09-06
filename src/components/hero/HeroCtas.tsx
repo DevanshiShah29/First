@@ -16,6 +16,10 @@ interface HeroCtasProps {
   onProjects: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 
+/**
+ * Renders View Work + Resume CTAs.
+ * @example <HeroCtas resume={url} name="Devanshi" onProjects={fn} />
+ */
 export function HeroCtas({
   resume,
   name,

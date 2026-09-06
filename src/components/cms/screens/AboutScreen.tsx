@@ -18,6 +18,10 @@ interface AboutScreenProps {
   dirty: boolean;
 }
 
+/**
+ * Renders About section editors.
+ * @example <AboutScreen data={data} setData={setData} save={save} … />
+ */
 export function AboutScreen({
   data,
   setData,

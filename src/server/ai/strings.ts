@@ -1,9 +1,17 @@
 /** Shared string coercion for CMS AI request bodies and model JSON. */
 
+/**
+ * Coerces unknown to a trimmed string capped at max.
+ * @example str(" hi ", 2) // "hi"
+ */
 export function str(v: unknown, max = 200): string {
   return typeof v === "string" ? v.trim().slice(0, max) : "";
 }
 
+/**
+ * Coerces an unknown array to trimmed strings.
+ * @example strList(["a", 1, "b"]) // ["a", "b"]
+ */
 export function strList(v: unknown, maxItems = 12, maxLen = 200): string[] {
   if (!Array.isArray(v)) return [];
   return v
@@ -13,6 +21,10 @@ export function strList(v: unknown, maxItems = 12, maxLen = 200): string[] {
     .slice(0, maxItems);
 }
 
+/**
+ * Flattens nested string lists and dedupes.
+ * @example strListNested([["React"], "Node"]) // ["React", "Node"]
+ */
 export function strListNested(v: unknown, maxLists = 20, maxItems = 16): string[] {
   if (!Array.isArray(v)) return [];
   const flat: string[] = [];
@@ -34,6 +46,10 @@ export function strListNested(v: unknown, maxLists = 20, maxItems = 16): string[
   return [...new Set(flat)].slice(0, 60);
 }
 
+/**
+ * Strips markdown JSON fences from model output.
+ * @example stripJsonFence(fenced) // "{}"
+ */
 export function stripJsonFence(raw: string): string {
   return raw
     .trim()
@@ -42,6 +58,10 @@ export function stripJsonFence(raw: string): string {
     .trim();
 }
 
+/**
+ * Parses fenced JSON into a plain object or null.
+ * @example parseJsonObject('{"a":1}') // { a: 1 }
+ */
 export function parseJsonObject(raw: string): Record<string, unknown> | null {
   try {
     const parsed: unknown = JSON.parse(stripJsonFence(raw));

@@ -7,6 +7,10 @@ import { parseContent, persistContent } from "../src/content/store";
 const prisma = new PrismaClient();
 const SITE_ID = "main";
 
+/**
+ * Seeds CMS tables from src/content/data.json (refuses prod/overwrite unless forced).
+ * @example await main() // void
+ */
 async function main() {
   const isProd = process.env.NODE_ENV === "production";
   const allowProdSeed = process.env.ALLOW_PROD_SEED === "1";

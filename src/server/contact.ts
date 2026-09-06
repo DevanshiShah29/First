@@ -15,17 +15,28 @@ export type ContactFields = {
   company: string;
 };
 
+/**
+ * Best-effort client IP from forwarded headers.
+ * @example clientIp(req) // "1.2.3.4" | "unknown"
+ */
 export function clientIp(req: Request) {
   const forwarded = req.headers.get("x-forwarded-for");
   const first = forwarded?.split(",")[0]?.trim();
   return first || req.headers.get("x-real-ip") || "unknown";
 }
 
-/** Contact form rate limit (shared store when Upstash is configured). */
+/**
+ * Contact form rate limit (shared store when Upstash is configured).
+ * @example await rateLimited(ip) // false
+ */
 export async function rateLimited(ip: string) {
   return sharedRateLimited(CONTACT_SCOPE, ip || "unknown", MAX_PER_WINDOW, WINDOW_MS);
 }
 
+/**
+ * Parses and validates a contact form body.
+ * @example parseContactBody(json) // { name, email, … } | { error }
+ */
 export function parseContactBody(body: unknown): ContactFields | { error: string } {
   if (body === null || typeof body !== "object" || Array.isArray(body)) {
     return { error: "Invalid request." };
@@ -42,6 +53,10 @@ export function parseContactBody(body: unknown): ContactFields | { error: string
   return { name, email, message, company };
 }
 
+/**
+ * Escapes HTML special characters.
+ * @example escapeHtml('<a>') // "&lt;a&gt;"
+ */
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -50,6 +65,10 @@ function escapeHtml(value: string) {
     .replaceAll('"', "&quot;");
 }
 
+/**
+ * Builds subject/text/html for a contact email.
+ * @example mailCopy(fields, "Site") // { subject, text, html }
+ */
 function mailCopy(fields: ContactFields, siteName: string) {
   const subject = `Portfolio note from ${fields.name}`;
   const text = [
@@ -71,6 +90,10 @@ function mailCopy(fields: ContactFields, siteName: string) {
   return { subject, text, html };
 }
 
+/**
+ * Sends contact mail via Resend when configured.
+ * @example await sendWithResend(to, from, fields, site) // true
+ */
 async function sendWithResend(to: string, from: string, fields: ContactFields, siteName: string) {
   const key = process.env.RESEND_API_KEY?.trim();
   if (!key) return false;
@@ -93,6 +116,10 @@ async function sendWithResend(to: string, from: string, fields: ContactFields, s
   return res.ok;
 }
 
+/**
+ * Resolves request origin from Origin/Host headers.
+ * @example formOrigin(req) // "https://example.com"
+ */
 function formOrigin(req: Request) {
   const origin = req.headers.get("origin")?.trim();
   if (origin) return origin;
@@ -102,6 +129,10 @@ function formOrigin(req: Request) {
   return `${proto}://${host}`;
 }
 
+/**
+ * Sends contact mail via FormSubmit when configured.
+ * @example await sendWithFormSubmit(fields, site, origin) // true
+ */
 async function sendWithFormSubmit(fields: ContactFields, siteName: string, origin: string) {
   const formKey = process.env.FORMSUBMIT_KEY?.trim();
   if (!formKey) return false;
@@ -130,6 +161,10 @@ async function sendWithFormSubmit(fields: ContactFields, siteName: string, origi
   return /activat/i.test(message);
 }
 
+/**
+ * Delivers contact form mail (Resend, then FormSubmit).
+ * @example await deliverContact(req, fields, to, site) // true
+ */
 export async function deliverContact(req: Request, fields: ContactFields, to: string, siteName: string) {
   const from =
     process.env.CONTACT_FROM_EMAIL?.trim() || `${siteName} <onboarding@resend.dev>`;
@@ -137,11 +172,18 @@ export async function deliverContact(req: Request, fields: ContactFields, to: st
   return sendWithFormSubmit(fields, siteName, formOrigin(req));
 }
 
+/**
+ * Public alias for formOrigin.
+ * @example requestOrigin(req) // "https://example.com"
+ */
 export function requestOrigin(req: Request) {
   return formOrigin(req);
 }
 
-/** Send a simple transactional email (Resend first, FormSubmit fallback). */
+/**
+ * Sends a simple transactional email (Resend first, FormSubmit fallback).
+ * @example await deliverSimpleMail(req, input) // true
+ */
 export async function deliverSimpleMail(
   req: Request,
   input: { to: string; subject: string; text: string; html: string; siteName: string },

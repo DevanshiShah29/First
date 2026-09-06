@@ -5,6 +5,10 @@ import { loadContent } from "@/content/store";
 import { toPublicContent } from "@/content/types";
 import { buildPageMetadata } from "@/lib/seo";
 
+/**
+ * Builds memories page metadata.
+ * @example generateMetadata() // Metadata
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
   return {
@@ -19,6 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * Renders the memory jar experience page.
+ * @example <MemoriesPage /> for /memories
+ */
 export default async function MemoriesPage() {
   const content = toPublicContent(await loadContent());
   return (

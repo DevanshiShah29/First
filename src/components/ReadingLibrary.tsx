@@ -1,4 +1,5 @@
 import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
+import { MediaImage } from "./MediaImage";
 import { NewTabHint } from "./a11y";
 import { Fade } from "./Fade";
 
@@ -33,12 +34,14 @@ function Cover({
 }) {
   if (!book.cover) return <div className={`${className ?? ""} reading-cover is-empty`} aria-hidden />;
   return (
-    // Goodreads covers are remote and change per edition.
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <MediaImage
       src={book.cover}
       alt={decorative ? "" : `${book.title} cover`}
       className={`${className ?? ""} reading-cover`}
+      width={200}
+      height={300}
+      sizes="(max-width: 640px) 40vw, 140px"
+      loading="lazy"
     />
   );
 }

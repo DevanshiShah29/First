@@ -1,5 +1,5 @@
 import { LoginForm } from "@/components/cms/LoginForm";
-import { cmsConfigured } from "@/lib/cms-auth";
+import { cmsConfigured } from "@/server/cms-auth";
 
 export const dynamic = "force-dynamic";
 

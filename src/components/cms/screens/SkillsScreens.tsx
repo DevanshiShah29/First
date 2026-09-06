@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { ContentData, SkillGroup, SkillItem } from "@/content/types";
-import { generateSkillsCopy, generateTechnologiesCopy } from "@/lib/api-client";
+import { generateSkillsCopy, generateTechnologiesCopy } from "@/lib/cms-client";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox, SectionTools } from "../components/Metabox";
 import { Field, TextInput } from "../fields";

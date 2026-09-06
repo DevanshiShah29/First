@@ -1,0 +1,53 @@
+/** Shared string coercion for CMS AI request bodies and model JSON. */
+
+export function str(v: unknown, max = 200): string {
+  return typeof v === "string" ? v.trim().slice(0, max) : "";
+}
+
+export function strList(v: unknown, maxItems = 12, maxLen = 200): string[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((x): x is string => typeof x === "string")
+    .map((x) => x.trim().slice(0, maxLen))
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
+export function strListNested(v: unknown, maxLists = 20, maxItems = 16): string[] {
+  if (!Array.isArray(v)) return [];
+  const flat: string[] = [];
+  for (const entry of v.slice(0, maxLists)) {
+    if (typeof entry === "string") {
+      const s = entry.trim().slice(0, 80);
+      if (s) flat.push(s);
+      continue;
+    }
+    if (Array.isArray(entry)) {
+      for (const item of entry.slice(0, maxItems)) {
+        if (typeof item === "string") {
+          const s = item.trim().slice(0, 80);
+          if (s) flat.push(s);
+        }
+      }
+    }
+  }
+  return [...new Set(flat)].slice(0, 60);
+}
+
+export function stripJsonFence(raw: string): string {
+  return raw
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+}
+
+export function parseJsonObject(raw: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(stripJsonFence(raw));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+    return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}

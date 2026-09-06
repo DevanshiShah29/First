@@ -16,11 +16,13 @@ model CmsAuth {
   passwordHash        String?
   resetTokenHash      String?
   resetTokenExpiresAt DateTime?
+  /// Bumped on password change/reset so existing cms_session cookies fail verify.
+  sessionVersion      Int       @default(0)
   updatedAt           DateTime  @updatedAt
   createdAt           DateTime  @default(now())
 }
 
-/// Singleton site + theme settings (id = "main").
+/// Core site identity, copy, and contact/social links (singleton id = "main").
 model SiteSettings {
   id String @id @default("main")
 
@@ -28,11 +30,6 @@ model SiteSettings {
   initials         String
   title            String
   description      String
-  heroTemplate     String
-  heroMediaKind    String
-  heroMediaUrl     String   @default("")
-  heroMediaPlace   String
-  heroMediaSide    String
   pianoYoutubeUrl  String   @default("")
   goodreadsUrl     String   @default("")
   kicker           String   @default("")
@@ -50,33 +47,39 @@ model SiteSettings {
   github           String   @default("")
   resume           String   @default("")
 
-  themeDefaultMode String
-  themeAllowToggle Boolean
-  themeBrandFrom   String
-  themeBrandTo     String
-
-  darkBackground  String
-  darkForeground  String
-  darkCard        String
-  darkCardHover   String
-  darkChip        String
-  darkAccentText  String
-  darkAccentHover String
-  darkBadge       String
-
-  lightBackground  String
-  lightForeground  String
-  lightCard        String
-  lightCardHover   String
-  lightChip        String
-  lightAccentText  String
-  lightAccentHover String
-  lightBadge       String
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   stats SiteStat[]
+  hero  HeroSettings?
+  theme ThemeSettings?
+}
+
+/// Hero template + media (1:1 with SiteSettings).
+model HeroSettings {
+  siteId     String @id @default("main")
+  template   String
+  mediaKind  String
+  mediaUrl   String @default("")
+  mediaPlace String
+  mediaSide  String
+
+  site SiteSettings @relation(fields: [siteId], references: [id], onDelete: Cascade)
+}
+
+/// Theme tokens (1:1 with SiteSettings). Palettes stored as JSON.
+model ThemeSettings {
+  siteId      String  @id @default("main")
+  defaultMode String
+  allowToggle Boolean
+  brandFrom   String
+  brandTo     String
+  /// ThemePalette JSON: background, foreground, card, …
+  dark        Json
+  /// ThemePalette JSON
+  light       Json
+
+  site SiteSettings @relation(fields: [siteId], references: [id], onDelete: Cascade)
 }
 
 model SiteStat {
@@ -166,6 +169,48 @@ model SkillItem {
   iconUrl   String?
 
   group SkillGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, sortOrder])
+}
+
+/// Public /craft page copy (singleton id = "main").
+model CraftSettings {
+  id       String @id @default("main")
+  kicker   String @default("")
+  title    String @default("")
+  intro    String @default("")
+  footnote String @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  groups CraftGroup[]
+}
+
+model CraftGroup {
+  id        String @id @default(cuid())
+  craftId   String @default("main")
+  sortOrder Int
+  title     String
+  intro     String @default("")
+
+  craft CraftSettings @relation(fields: [craftId], references: [id], onDelete: Cascade)
+  items CraftItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([craftId, sortOrder])
+}
+
+model CraftItem {
+  id        String @id @default(cuid())
+  groupId   String
+  sortOrder Int
+  title     String
+  why       String @default("")
+
+  group CraftGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
   @@index([groupId, sortOrder])
 }

@@ -50,6 +50,11 @@ export function DashboardScreen({
               </button>
             </li>
             <li>
+              <button type="button" onClick={() => go("craft")}>
+                {(data.craft?.groups ?? []).reduce((n, g) => n + g.items.length, 0)} Craft
+              </button>
+            </li>
+            <li>
               <button type="button" onClick={() => go("memories")}>
                 {memoriesList.length} Memories
               </button>

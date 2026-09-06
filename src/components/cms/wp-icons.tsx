@@ -113,6 +113,14 @@ export function IconMenu({ className }: IconProps) {
   );
 }
 
+export function IconCraft({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M4 3h9l3 3v11H4V3zm9 1.5V7h2.5L13 4.5zM6 9h8v1.2H6V9zm0 2.8h8v1.2H6v-1.2zm0 2.8h5v1.2H6v-1.2z" />
+    </Svg>
+  );
+}
+
 export function IconJar({ className }: IconProps) {
   return (
     <Svg className={className}>

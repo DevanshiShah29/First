@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ContentData, ExperienceItem } from "@/content/types";
-import { generateExperienceCopy } from "@/lib/api-client";
+import { generateExperienceCopy } from "@/lib/cms-client";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";

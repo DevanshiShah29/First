@@ -1,6 +1,6 @@
 import type { MouseEvent } from "react";
 import Link from "next/link";
-import type { PublicSiteContent, SiteContent } from "@/content/types";
+import type { CraftContent, PublicSiteContent, SiteContent } from "@/content/types";
 import { NewTabHint } from "./a11y";
 import { Fade } from "./Fade";
 import { Logo } from "./Logo";
@@ -9,12 +9,14 @@ import { siteMap } from "@/lib/sitemap";
 
 export function SiteFooter({
   site,
+  craft,
   onNavigate,
 }: {
   site: PublicSiteContent | SiteContent;
+  craft?: CraftContent;
   onNavigate?: (e: MouseEvent<HTMLAnchorElement>, href: string) => void;
 }) {
-  const groups = siteMap(site);
+  const groups = siteMap(site, craft);
 
   function onClick(e: MouseEvent<HTMLAnchorElement>, href: string) {
     onNavigate?.(e, href);

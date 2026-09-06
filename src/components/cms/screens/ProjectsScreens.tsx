@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { ContentData, ProjectItem } from "@/content/types";
-import { generateProjectCopy } from "@/lib/api-client";
+import { generateProjectCopy } from "@/lib/cms-client";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
 import { Field, StringList, TextArea, TextInput } from "../fields";

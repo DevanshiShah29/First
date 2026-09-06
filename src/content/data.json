@@ -29,7 +29,7 @@
     "email": "devanshifour@gmail.com",
     "linkedin": "https://www.linkedin.com/in/devanshishah",
     "github": "https://github.com/DevanshiShah29",
-    "resume": "/uploads/resume/resume.pdf?v=1788188455495",
+    "resume": "",
     "stats": [
       {
         "value": 15,
@@ -239,8 +239,7 @@
         {
           "name": "React",
           "icon": "react",
-          "color": "#61dafb",
-          "iconUrl": "/uploads/skills/1788184761842-react-svgrepo-com.svg"
+          "color": "#61dafb"
         },
         {
           "name": "HTML/CSS",
@@ -255,8 +254,7 @@
         {
           "name": "Node.js new",
           "icon": "node",
-          "color": "#47A248",
-          "iconUrl": "/uploads/skills/1788183617269-nodejs-icon-svgrepo-com.svg"
+          "color": "#47A248"
         },
         {
           "name": "Express",
@@ -275,8 +273,7 @@
         },
         {
           "name": "Figma",
-          "icon": "figma",
-          "iconUrl": "/uploads/skills/1788184839676-figma-svgrepo-com.svg"
+          "icon": "figma"
         }
       ]
     }
@@ -355,8 +352,138 @@
       "date": "15 Aug 2026",
       "category": "",
       "icon": "",
-      "photoUrl": "/uploads/memories/1788498818619-img-0355.png",
+      "photoUrl": "",
       "color": "#A78BFA"
     }
-  ]
+  ],
+  "craft": {
+    "kicker": "Engineering",
+    "title": "Notes on craft",
+    "intro": "This site is a product as much as a portfolio. The list below is what I treat as non‑negotiable when shipping — security, honesty of data, accessibility, performance, and a codebase that stays changeable.",
+    "footnote": "Collaborators get the same checklist in the project README. This page is for anyone who wants to see how I think about shipping.",
+    "groups": [
+      {
+        "title": "Security & trust",
+        "intro": "Assume the network and the browser are hostile. Protect sessions, uploads, and secrets by default.",
+        "items": [
+          {
+            "title": "HttpOnly CMS sessions with revocation",
+            "why": "Cookies are signed and bound to a session version that bumps on password change — stolen cookies stop working when credentials rotate."
+          },
+          {
+            "title": "Same-origin checks on mutating CMS APIs",
+            "why": "Authenticated POSTs verify origin in addition to the session cookie, so cross-site callers can’t casually drive the CMS."
+          },
+          {
+            "title": "Path confinement & SSRF guards",
+            "why": "Resume paths stay under uploads; remote fetches only hit public HTTPS hosts (LinkedIn allowlisted). No reading env files via ../ tricks."
+          },
+          {
+            "title": "Secrets encrypted at rest, never in the client",
+            "why": "Piano media URLs are encrypted in the database and only played through a same-origin proxy. Encrypt fails closed if the key is missing."
+          },
+          {
+            "title": "Upload content sniffing (not MIME trust)",
+            "why": "Images, video, and PDFs are validated by magic bytes. Renamed executables don’t get stored as “photos.”"
+          },
+          {
+            "title": "Durable rate limits",
+            "why": "Login, password reset, contact, AI generate, and uploads share Upstash Redis limits across serverless instances."
+          }
+        ]
+      },
+      {
+        "title": "Honest data — no fake portfolio content",
+        "intro": "Empty means empty. Visitors and operators should never confuse placeholders with live CMS data.",
+        "items": [
+          {
+            "title": "No hardcoded memory fallbacks",
+            "why": "The Memory Jar shows an empty state when the database has no memories — it does not invent sample stories."
+          },
+          {
+            "title": "Strict CMS save validation",
+            "why": "Zod rejects incomplete saves instead of quietly inventing names, roles, or untitled projects."
+          },
+          {
+            "title": "Destructive seed is gated",
+            "why": "Seeding refuses production unless explicitly allowed, and refuses to overwrite an existing site without FORCE_SEED."
+          }
+        ]
+      },
+      {
+        "title": "Architecture that stays changeable",
+        "intro": "Clear boundaries keep security-sensitive code out of the browser and keep features easy to extend.",
+        "items": [
+          {
+            "title": "server / hooks / lib split",
+            "why": "Prisma, auth, crypto, and AI live in server/; client hooks are isolated; lib stays shared utilities and thin API clients."
+          },
+          {
+            "title": "Thin AI routes, fat services",
+            "why": "Generate endpoints only gate and respond; Gemini calls and prompts live in server/ai so routes don’t copy-paste."
+          },
+          {
+            "title": "Normalized content model",
+            "why": "Site, hero, and theme are separate tables — not one mega-row of unrelated columns."
+          },
+          {
+            "title": "CMS admin composed from hooks",
+            "why": "Document state, navigation, and uploads are hooks — AdminApp orchestrates screens instead of owning every concern."
+          },
+          {
+            "title": "Homepage as section islands",
+            "why": "About, experience, projects, skills, and contact are separate components so the home shell stays small."
+          }
+        ]
+      },
+      {
+        "title": "Performance, SEO & accessibility",
+        "intro": "Craft includes what people feel: speed, discoverability, and whether the UI works with a keyboard and a screen reader.",
+        "items": [
+          {
+            "title": "Tagged content cache + revalidation",
+            "why": "Public pages aren’t force-dynamic forever; CMS saves invalidate a cache tag so readers get fresh copy without a DB hit every time."
+          },
+          {
+            "title": "next/image with a safe fallback",
+            "why": "Local and allowlisted remotes are optimized; arbitrary CMS URLs fall back to <img> instead of crashing the page."
+          },
+          {
+            "title": "SSR for interactive heroes",
+            "why": "World / Nook / Studio art can render on the server for LCP; shared hooks own piano playback and tilt."
+          },
+          {
+            "title": "SEO basics done properly",
+            "why": "metadataBase, Open Graph, Twitter cards, robots.txt, and sitemap.xml — including this page."
+          },
+          {
+            "title": "Dialog focus management",
+            "why": "The Memory Jar reveal traps focus, restores it on close, and locks body scroll — Escape still works."
+          },
+          {
+            "title": "CMS fields have real labels",
+            "why": "Admin form rows wire htmlFor / id / aria-describedby so assistive tech can name every control."
+          }
+        ]
+      },
+      {
+        "title": "Production hygiene",
+        "intro": "Small ops details that keep deploys boring — in a good way.",
+        "items": [
+          {
+            "title": "Blob storage for CMS media",
+            "why": "Production uploads go to Vercel Blob; local disk is a dev fallback and is gitignored."
+          },
+          {
+            "title": "Tracked .env.example, ignored secrets",
+            "why": "Clones get a complete template; real .env files never ship in git."
+          },
+          {
+            "title": "No SVG uploads in the CMS",
+            "why": "Icons are PNG/WebP/JPEG — SVG as a public document is an XSS footgun we chose not to leave open."
+          }
+        ]
+      }
+    ]
+  }
 }

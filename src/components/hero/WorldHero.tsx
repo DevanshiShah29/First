@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import { useState } from "react";
+import Image from "next/image";
+import { useHeroTilt } from "@/hooks/use-hero-tilt";
+import { usePianoPlayback } from "@/hooks/use-piano-playback";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import type { PublicSiteContent, SiteContent } from "@/content/types";
-import { siteHasPiano } from "@/content/types";
-import { goodreadsUserId } from "@/lib/goodreads";
+import { Ingredients, MiniUi, Notes } from "./fx";
 
 type SpotId = "piano" | "jar" | "camera" | "laptop" | "book" | "cook" | "travel";
 
@@ -17,18 +19,6 @@ const spots: { id: SpotId; label: string; left: string; top: string; w: string; 
   { id: "cook", label: "Cooking", left: "68%", top: "16%", w: "24%", h: "32%" },
   { id: "travel", label: "Travel", left: "70%", top: "52%", w: "28%", h: "42%" },
 ];
-
-function Notes({ looping }: { looping?: boolean }) {
-  return (
-    <div className={`world-fx${looping ? " is-loop" : ""}`} aria-hidden>
-      {["♪", "♫", "♩"].map((n, i) => (
-        <span key={n} className="world-note" style={{ left: `${18 + i * 14}%`, animationDelay: `${i * 0.18}s` }}>
-          {n}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 const jarStars = [
   { g: "✦", l: "22%", t: "48%", d: "0s", s: "0.28rem", c: "#fde68a" },
@@ -63,78 +53,23 @@ function JarStars() {
   );
 }
 
-function MiniUi() {
-  return (
-    <div className="world-ui" aria-hidden>
-      <span />
-      <span />
-      <span />
-    </div>
-  );
-}
-
-function Ingredients() {
-  return (
-    <div className="world-bits" aria-hidden>
-      <i style={{ left: "10%", animationDelay: "0s" }} />
-      <i style={{ left: "40%", animationDelay: "0.2s" }} />
-      <i style={{ left: "68%", animationDelay: "0.35s" }} />
-    </div>
-  );
-}
-
 export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const reduce = useReducedMotion();
-  const stage = useRef<HTMLDivElement>(null);
-  const audioHost = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const restTimer = useRef<number | NodeJS.Timeout | undefined>(undefined);
+  const { stage, onMove, onLeave } = useHeroTilt(reduce);
+  const {
+    audioHost,
+    pianoPlaying,
+    hasPiano,
+    goodreadsId,
+    onPianoToggle,
+    onBooksClick,
+    pianoOn,
+    bookOn,
+    pianoTip,
+    bookTip,
+  } = usePianoPlayback(site);
   const [active, setActive] = useState<SpotId | null>(null);
   const [flash, setFlash] = useState(false);
-  const [pianoPlaying, setPianoPlaying] = useState(false);
-  const [pianoRest, setPianoRest] = useState(false);
-  const [bookRest, setBookRest] = useState(false);
-  const hasPiano = siteHasPiano(site);
-  const goodreadsId = goodreadsUserId(site.goodreadsUrl ?? "");
-
-  function stopMusic() {
-    iframeRef.current?.remove();
-    iframeRef.current = null;
-    audioHost.current?.replaceChildren();
-  }
-
-  function startMusic() {
-    const host = audioHost.current;
-    if (!host) return;
-    stopMusic();
-    const iframe = document.createElement("iframe");
-    iframe.className = "world-audio";
-    iframe.title = "Piano music";
-    iframe.allow = "autoplay; encrypted-media";
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.tabIndex = -1;
-    iframe.src = `/api/media/piano?t=${Date.now()}`;
-    host.appendChild(iframe);
-    iframeRef.current = iframe;
-  }
-
-  useEffect(() => {
-    return () => {
-      if (restTimer.current) window.clearTimeout(restTimer.current);
-      iframeRef.current?.remove();
-      iframeRef.current = null;
-    };
-  }, []);
-
-  function onMove(e: PointerEvent<HTMLDivElement>) {
-    if (reduce) return;
-    const el = stage.current;
-    if (!el) return;
-    const box = el.getBoundingClientRect();
-    const nx = (e.clientX - box.left) / box.width - 0.5;
-    const ny = (e.clientY - box.top) / box.height - 0.5;
-    el.style.transform = `perspective(1400px) rotateX(${(ny * -7).toFixed(2)}deg) rotateY(${(nx * 9).toFixed(2)}deg)`;
-  }
 
   function onSpot(id: SpotId, on: boolean) {
     setActive(on ? id : null);
@@ -144,40 +79,8 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
     }
   }
 
-  function onPianoToggle() {
-    window.clearTimeout(restTimer.current);
-    if (!hasPiano) {
-      setPianoPlaying(false);
-      setPianoRest(true);
-      stopMusic();
-      restTimer.current = window.setTimeout(() => setPianoRest(false), 2400);
-      return;
-    }
-    setPianoRest(false);
-    if (pianoPlaying) {
-      stopMusic();
-      setPianoPlaying(false);
-      return;
-    }
-    startMusic();
-    setPianoPlaying(true);
-  }
-
-  function onBooksClick() {
-    if (goodreadsId) return;
-    window.clearTimeout(restTimer.current);
-    setBookRest(true);
-    restTimer.current = window.setTimeout(() => setBookRest(false), 2400);
-  }
-
-  const pianoOn = active === "piano" || pianoPlaying || pianoRest;
-  const pianoTip = pianoPlaying
-    ? null
-    : !hasPiano
-      ? "The piano is taking a break 🎹"
-      : "Play something 🎵";
-  const bookOn = active === "book" || bookRest;
-  const bookTip = !goodreadsId ? "The books are taking a break 📚" : "Open my books";
+  const pianoActive = pianoOn(active);
+  const bookActive = bookOn(active);
 
   return (
     <section id="top" className={`world-hero${pianoPlaying ? " is-playing" : ""}`} aria-labelledby="hero-heading">
@@ -189,23 +92,15 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
         the books open the reading list, and the jar of stars opens memories. None of this is required to use
         the rest of the site.
       </p>
-      <div
-        ref={stage}
-        className="world-stage"
-        onPointerMove={onMove}
-        onPointerLeave={() => {
-          if (stage.current) stage.current.style.transform = "";
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/hero-world.jpg?v=paper2"
+      <div ref={stage} className="world-stage" onPointerMove={onMove} onPointerLeave={onLeave}>
+        <Image
+          src="/images/hero-world.jpg"
           alt="Illustrated desk with a piano, a jar of stars, camera, laptop, books, cooking, and travel souvenirs."
           className="world-art"
           width={1280}
           height={720}
-          decoding="async"
-          fetchPriority="high"
+          priority
+          sizes="(max-width: 1280px) 100vw, 1280px"
         />
         <div className="world-watermark-mask" />
         <div ref={audioHost} className="world-audio-host" aria-hidden />
@@ -217,7 +112,7 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
           const isPiano = spot.id === "piano";
           const isBook = spot.id === "book";
           const isJar = spot.id === "jar";
-          const on = isPiano ? pianoOn : isBook ? bookOn : active === spot.id;
+          const on = isPiano ? pianoActive : isBook ? bookActive : active === spot.id;
           const bookHref = isBook && goodreadsId ? "/reading" : undefined;
           const href = bookHref ?? (isJar ? "/memories" : undefined);
           const Spot = href ? "a" : "button";
@@ -294,12 +189,7 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
         })}
 
         {pianoPlaying ? (
-          <button
-            type="button"
-            className="world-playing"
-            onClick={onPianoToggle}
-            aria-label="Stop piano music"
-          >
+          <button type="button" className="world-playing" onClick={onPianoToggle} aria-label="Stop piano music">
             ♪ Playing
           </button>
         ) : null}

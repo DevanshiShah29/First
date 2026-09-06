@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogoMark } from "@/components/Logo";
-import { cmsForgotPassword, cmsLogin } from "@/lib/api-client";
+import { cmsForgotPassword, cmsLogin } from "@/lib/cms-client";
 import { IconEye, IconEyeOff } from "./wp-icons";
 
 export function LoginForm({ configured }: { configured: boolean }) {

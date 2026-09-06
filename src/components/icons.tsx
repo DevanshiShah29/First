@@ -1,5 +1,6 @@
 import type { ReactNode, SVGProps } from "react";
 import type { SkillIcon } from "@/content/types";
+import { MediaImage } from "@/components/MediaImage";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
@@ -178,14 +179,12 @@ function CustomSkillMark({
     );
   }
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <MediaImage
       src={src}
       alt=""
       width={MARK_SIZE}
       height={MARK_SIZE}
       loading="lazy"
-      decoding="async"
       aria-hidden="true"
       className={className}
       style={{ width: MARK_SIZE, height: MARK_SIZE, objectFit: "contain", display: "block", flexShrink: 0 }}

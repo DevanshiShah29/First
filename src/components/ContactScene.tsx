@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type PointerEvent } from "react";
-import { createVisibilityGate } from "@/lib/active-loop";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import { createVisibilityGate } from "@/hooks/active-loop";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 
 export function ContactScene() {
   const reduce = useReducedMotion();

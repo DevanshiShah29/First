@@ -1,50 +1,9 @@
 import type { ContentData } from "@/content/types";
-
-export type ApiResponse<T = void> =
-  | ([T] extends [void]
-      ? { ok: true; data?: undefined; error?: undefined }
-      : { ok: true; data: T; error?: undefined })
-  | { ok: false; error: string; data?: undefined };
-
-export interface ContactMessageInput {
-  name: string;
-  email: string;
-  message: string;
-  company?: string;
-}
+import type { ApiResponse } from "@/lib/api-response";
 
 export interface UploadFileResponse {
   url: string;
   kind?: "image" | "video";
-}
-
-/**
- * Submit contact form message to the backend endpoint.
- */
-export async function sendContactMessage(input: ContactMessageInput): Promise<ApiResponse> {
-  try {
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input),
-    });
-
-    const payload = (await res.json().catch(() => null)) as { error?: string } | null;
-
-    if (!res.ok) {
-      return {
-        ok: false,
-        error: payload?.error || "Could not send your message. Please email me directly.",
-      };
-    }
-
-    return { ok: true };
-  } catch {
-    return {
-      ok: false,
-      error: "Could not send your message. Please email me directly.",
-    };
-  }
 }
 
 /**

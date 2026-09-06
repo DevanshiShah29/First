@@ -22,4 +22,5 @@ API Separation: Keep API calls and request/response handling separate from UI co
 Error Handling: Handle API errors and loading states consistently using existing project patterns.
 Responsive UI: Ensure new UI works across supported screen sizes without breaking existing layouts.
 Performance: Avoid unnecessary re-renders, API calls, and expensive computations; use memoization only when it provides a real benefit.
-No Static Code
+Zero sensitive-data exposure: passwords, API keys, tokens, credentials, private URLs, encrypted values, CMS secrets, or other sensitive data must never be exposed in client-side code, browser storage, HTML, network responses, logs, source maps, or Git.
+Zero hardcoded/fallback content: no mock, placeholder, sample, fictional, default, or fallback portfolio content. All user-facing content must come from the CMS/backend. If data is unavailable, show an appropriate loading, empty, or error state.

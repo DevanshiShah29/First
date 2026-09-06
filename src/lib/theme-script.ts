@@ -1,1 +1,0 @@
-export { themeInitScript } from "./theme";

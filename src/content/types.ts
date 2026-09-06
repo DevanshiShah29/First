@@ -220,6 +220,33 @@ export type MemoryItem = {
   color?: string;
 };
 
+export type CraftItem = {
+  title: string;
+  why: string;
+};
+
+export type CraftGroup = {
+  title: string;
+  intro: string;
+  items: CraftItem[];
+};
+
+export type CraftContent = {
+  kicker: string;
+  title: string;
+  intro: string;
+  footnote: string;
+  groups: CraftGroup[];
+};
+
+export const EMPTY_CRAFT: CraftContent = {
+  kicker: "",
+  title: "",
+  intro: "",
+  footnote: "",
+  groups: [],
+};
+
 export type ContentData = {
   site: SiteContent;
   experience: ExperienceItem[];
@@ -228,6 +255,7 @@ export type ContentData = {
   technologies?: SkillGroup[];
   theme: ThemeContent;
   memories?: MemoryItem[];
+  craft?: CraftContent;
 };
 
 /** Public site props: sensitive media URLs stripped; playback via server proxy. */

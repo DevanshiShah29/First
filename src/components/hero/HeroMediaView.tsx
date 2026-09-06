@@ -1,8 +1,9 @@
 "use client";
 
 import type { HeroMedia } from "@/content/types";
+import { MediaImage } from "@/components/MediaImage";
 import { parsePlayableMedia } from "@/lib/media-url";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 
 interface HeroMediaViewProps {
   media: HeroMedia;
@@ -56,9 +57,14 @@ export function HeroMediaView({
 
   if (playable.type === "file") {
     return (
-      // Hero media can be a local upload or an external URL.
-      // eslint-disable-next-line @next/next/no-img-element
-      <img src={playable.src} alt={decorative ? "" : alt} className={className} />
+      <MediaImage
+        src={playable.src}
+        alt={decorative ? "" : alt}
+        className={className}
+        width={1200}
+        height={900}
+        sizes="(max-width: 768px) 100vw, 50vw"
+      />
     );
   }
 

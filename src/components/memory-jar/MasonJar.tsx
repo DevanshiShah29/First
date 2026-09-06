@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { MemoryItem } from "@/content/types";
 import {
   JAR_ASSETS,
@@ -7,7 +8,7 @@ import {
   resolveStarColor,
   type StarColor,
 } from "@/lib/memory-jar";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import { PaperStar } from "./PaperStar";
 
 interface MasonJarProps {
@@ -70,26 +71,21 @@ export function MasonJar({
       disabled={memories.length === 0 || jiggling}
     >
       <div className="absolute inset-0">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={JAR_ASSETS.masonJar}
           alt=""
           width={1024}
           height={1024}
-          loading="eager"
-          fetchPriority="high"
-          decoding="async"
+          priority
           draggable={false}
           className="jar-photo jar-photo--light relative h-full w-full select-none object-contain"
         />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={JAR_ASSETS.masonJarDark}
           alt=""
           width={1024}
           height={1024}
-          loading="eager"
-          decoding="async"
+          priority
           draggable={false}
           className="jar-photo jar-photo--dark absolute inset-0 h-full w-full select-none object-contain"
         />

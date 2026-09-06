@@ -1,13 +1,18 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { normalizeHex } from "@/lib/hex";
-import { prisma } from "@/lib/prisma";
-import { decryptSecret, encryptSecret } from "@/lib/secrets-crypto";
+import { prisma } from "@/server/prisma";
+import { decryptSecret, encryptSecret } from "@/server/secrets-crypto";
 import {
   DEFAULT_HERO_MEDIA,
   DEFAULT_THEME,
+  EMPTY_CRAFT,
   isHeroTemplate,
   isSkillIcon,
   type ContentData,
+  type CraftContent,
+  type CraftGroup,
   type ExperienceItem,
   type HeroMedia,
   type HeroMediaKind,
@@ -24,6 +29,9 @@ import {
 } from "./types";
 
 const SITE_ID = "main";
+
+/** Tag for on-demand invalidation after CMS saves (`revalidateTag`). */
+export const CMS_CONTENT_TAG = "cms-content";
 
 type DbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -206,6 +214,36 @@ function parseMemories(value: unknown): MemoryItem[] {
   });
 }
 
+function parseCraft(value: unknown): CraftContent {
+  const root = asRecord(value);
+  const groupsRaw = Array.isArray(root.groups) ? root.groups : [];
+  return {
+    kicker: str(root.kicker),
+    title: str(root.title),
+    intro: str(root.intro),
+    footnote: str(root.footnote),
+    groups: groupsRaw.map((group) => {
+      const g = asRecord(group);
+      const itemsRaw = Array.isArray(g.items) ? g.items : [];
+      return {
+        title: str(g.title, "Untitled group"),
+        intro: str(g.intro),
+        items: itemsRaw.map((item) => {
+          const row = asRecord(item);
+          return {
+            title: str(row.title, "Untitled"),
+            why: str(row.why),
+          };
+        }),
+      };
+    }),
+  };
+}
+
+/**
+ * Soft coercion for seed/import only. Invents safe defaults for missing fields.
+ * CMS saves must use parseContentForSave (Zod) so incomplete payloads are rejected.
+ */
 export function parseContent(value: unknown): ContentData {
   const root = asRecord(value);
   return {
@@ -216,20 +254,16 @@ export function parseContent(value: unknown): ContentData {
     technologies: parseSkillGroups(root.technologies, "Technologies"),
     theme: parseTheme(root.theme),
     memories: parseMemories(root.memories),
+    craft: parseCraft(root.craft),
   };
 }
 
-async function siteSettingsData(site: SiteContent, theme: ThemeContent) {
+async function siteCoreData(site: SiteContent) {
   return {
     name: site.name,
     initials: site.initials,
     title: site.title,
     description: site.description,
-    heroTemplate: site.heroTemplate,
-    heroMediaKind: site.heroMedia.kind,
-    heroMediaUrl: site.heroMedia.url,
-    heroMediaPlace: site.heroMedia.place,
-    heroMediaSide: site.heroMedia.side,
     pianoYoutubeUrl: await encryptSecret(site.pianoYoutubeUrl),
     goodreadsUrl: site.goodreadsUrl,
     kicker: site.kicker,
@@ -246,33 +280,42 @@ async function siteSettingsData(site: SiteContent, theme: ThemeContent) {
     linkedin: site.linkedin,
     github: site.github,
     resume: site.resume,
-    themeDefaultMode: theme.defaultMode,
-    themeAllowToggle: theme.allowToggle,
-    themeBrandFrom: theme.brandFrom,
-    themeBrandTo: theme.brandTo,
-    darkBackground: theme.dark.background,
-    darkForeground: theme.dark.foreground,
-    darkCard: theme.dark.card,
-    darkCardHover: theme.dark.cardHover,
-    darkChip: theme.dark.chip,
-    darkAccentText: theme.dark.accentText,
-    darkAccentHover: theme.dark.accentHover,
-    darkBadge: theme.dark.badge,
-    lightBackground: theme.light.background,
-    lightForeground: theme.light.foreground,
-    lightCard: theme.light.card,
-    lightCardHover: theme.light.cardHover,
-    lightChip: theme.light.chip,
-    lightAccentText: theme.light.accentText,
-    lightAccentHover: theme.light.accentHover,
-    lightBadge: theme.light.badge,
   };
 }
 
-/** Write a full ContentData document into normalized tables. */
-export async function persistContent(db: DbClient, raw: ContentData): Promise<void> {
-  const data = parseContent(raw);
-  const siteFields = await siteSettingsData(data.site, data.theme);
+function heroSettingsData(site: SiteContent) {
+  return {
+    template: site.heroTemplate,
+    mediaKind: site.heroMedia.kind,
+    mediaUrl: site.heroMedia.url,
+    mediaPlace: site.heroMedia.place,
+    mediaSide: site.heroMedia.side,
+  };
+}
+
+function themeSettingsData(theme: ThemeContent) {
+  return {
+    defaultMode: theme.defaultMode,
+    allowToggle: theme.allowToggle,
+    brandFrom: theme.brandFrom,
+    brandTo: theme.brandTo,
+    dark: theme.dark,
+    light: theme.light,
+  };
+}
+
+function asThemePalette(value: unknown, fallback: ThemePalette): ThemePalette {
+  return parsePalette(value, fallback);
+}
+
+/**
+ * Write a full ContentData document into normalized tables.
+ * Caller must pass already-validated content (seed: parseContent; CMS: parseContentForSave).
+ */
+export async function persistContent(db: DbClient, data: ContentData): Promise<void> {
+  const siteFields = await siteCoreData(data.site);
+  const heroFields = heroSettingsData(data.site);
+  const themeFields = themeSettingsData(data.theme);
 
   await db.siteSettings.upsert({
     where: { id: SITE_ID },
@@ -280,14 +323,47 @@ export async function persistContent(db: DbClient, raw: ContentData): Promise<vo
     update: siteFields,
   });
 
-  // Clear collections first (SkillGroup cascade removes SkillItem).
+  await Promise.all([
+    db.heroSettings.upsert({
+      where: { siteId: SITE_ID },
+      create: { siteId: SITE_ID, ...heroFields },
+      update: heroFields,
+    }),
+    db.themeSettings.upsert({
+      where: { siteId: SITE_ID },
+      create: { siteId: SITE_ID, ...themeFields },
+      update: themeFields,
+    }),
+  ]);
+
+  const craft = data.craft ?? EMPTY_CRAFT;
+
+  // Clear collections first (SkillGroup / CraftGroup cascade removes items).
   await Promise.all([
     db.siteStat.deleteMany({ where: { siteId: SITE_ID } }),
     db.experience.deleteMany(),
     db.project.deleteMany(),
     db.memory.deleteMany(),
     db.skillGroup.deleteMany(),
+    db.craftGroup.deleteMany(),
   ]);
+
+  await db.craftSettings.upsert({
+    where: { id: SITE_ID },
+    create: {
+      id: SITE_ID,
+      kicker: craft.kicker,
+      title: craft.title,
+      intro: craft.intro,
+      footnote: craft.footnote,
+    },
+    update: {
+      kicker: craft.kicker,
+      title: craft.title,
+      intro: craft.intro,
+      footnote: craft.footnote,
+    },
+  });
 
   const skillCreates: Prisma.SkillGroupCreateInput[] = [];
   const skillBundles: { kind: "skills" | "technologies"; groups: SkillGroup[] }[] = [
@@ -313,6 +389,20 @@ export async function persistContent(db: DbClient, raw: ContentData): Promise<vo
       });
     }
   }
+
+  const craftCreates: Prisma.CraftGroupCreateInput[] = craft.groups.map((group, g) => ({
+    craft: { connect: { id: SITE_ID } },
+    title: group.title,
+    intro: group.intro,
+    sortOrder: g,
+    items: {
+      create: group.items.map((item, i) => ({
+        sortOrder: i,
+        title: item.title,
+        why: item.why,
+      })),
+    },
+  }));
 
   await Promise.all([
     data.site.stats.length > 0
@@ -375,13 +465,20 @@ export async function persistContent(db: DbClient, raw: ContentData): Promise<vo
   for (const create of skillCreates) {
     await db.skillGroup.create({ data: create });
   }
+  for (const create of craftCreates) {
+    await db.craftGroup.create({ data: create });
+  }
 }
 
-export async function loadContent(): Promise<ContentData> {
-  const [site, experience, projects, memories, skillGroups] = await Promise.all([
+async function fetchContentFromDb(): Promise<ContentData> {
+  const [site, experience, projects, memories, skillGroups, craftSettings] = await Promise.all([
     prisma.siteSettings.findUnique({
       where: { id: SITE_ID },
-      include: { stats: { orderBy: { sortOrder: "asc" } } },
+      include: {
+        stats: { orderBy: { sortOrder: "asc" } },
+        hero: true,
+        theme: true,
+      },
     }),
     prisma.experience.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.project.findMany({ orderBy: { sortOrder: "asc" } }),
@@ -390,11 +487,26 @@ export async function loadContent(): Promise<ContentData> {
       orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
       include: { items: { orderBy: { sortOrder: "asc" } } },
     }),
+    prisma.craftSettings.findUnique({
+      where: { id: SITE_ID },
+      include: {
+        groups: {
+          orderBy: { sortOrder: "asc" },
+          include: { items: { orderBy: { sortOrder: "asc" } } },
+        },
+      },
+    }),
   ]);
 
   if (!site) {
     throw new Error(
       'No site settings found. Run `npm run db:seed` after setting DATABASE_URL and DIRECT_URL.',
+    );
+  }
+
+  if (!site.hero || !site.theme) {
+    throw new Error(
+      "Site hero/theme rows missing. Re-run the site-split migration or `npm run db:seed`.",
     );
   }
 
@@ -411,18 +523,27 @@ export async function loadContent(): Promise<ContentData> {
         })),
       }));
 
+  const craftGroups: CraftGroup[] = (craftSettings?.groups ?? []).map((g) => ({
+    title: g.title,
+    intro: g.intro,
+    items: g.items.map((item) => ({
+      title: item.title,
+      why: item.why,
+    })),
+  }));
+
   return parseContent({
     site: {
       name: site.name,
       initials: site.initials,
       title: site.title,
       description: site.description,
-      heroTemplate: site.heroTemplate,
+      heroTemplate: site.hero.template,
       heroMedia: {
-        kind: site.heroMediaKind,
-        url: site.heroMediaUrl,
-        place: site.heroMediaPlace,
-        side: site.heroMediaSide,
+        kind: site.hero.mediaKind,
+        url: site.hero.mediaUrl,
+        place: site.hero.mediaPlace,
+        side: site.hero.mediaSide,
       },
       pianoYoutubeUrl: await decryptSecret(site.pianoYoutubeUrl),
       goodreadsUrl: site.goodreadsUrl,
@@ -467,30 +588,12 @@ export async function loadContent(): Promise<ContentData> {
     skills: toSkillGroups("skills"),
     technologies: toSkillGroups("technologies"),
     theme: {
-      defaultMode: site.themeDefaultMode,
-      allowToggle: site.themeAllowToggle,
-      brandFrom: site.themeBrandFrom,
-      brandTo: site.themeBrandTo,
-      dark: {
-        background: site.darkBackground,
-        foreground: site.darkForeground,
-        card: site.darkCard,
-        cardHover: site.darkCardHover,
-        chip: site.darkChip,
-        accentText: site.darkAccentText,
-        accentHover: site.darkAccentHover,
-        badge: site.darkBadge,
-      },
-      light: {
-        background: site.lightBackground,
-        foreground: site.lightForeground,
-        card: site.lightCard,
-        cardHover: site.lightCardHover,
-        chip: site.lightChip,
-        accentText: site.lightAccentText,
-        accentHover: site.lightAccentHover,
-        badge: site.lightBadge,
-      },
+      defaultMode: site.theme.defaultMode,
+      allowToggle: site.theme.allowToggle,
+      brandFrom: site.theme.brandFrom,
+      brandTo: site.theme.brandTo,
+      dark: asThemePalette(site.theme.dark, DEFAULT_THEME.dark),
+      light: asThemePalette(site.theme.light, DEFAULT_THEME.light),
     },
     memories: memories.map((item) => ({
       id: item.id,
@@ -502,14 +605,31 @@ export async function loadContent(): Promise<ContentData> {
       photoUrl: item.photoUrl,
       color: item.color,
     })),
+    craft: craftSettings
+      ? {
+          kicker: craftSettings.kicker,
+          title: craftSettings.title,
+          intro: craftSettings.intro,
+          footnote: craftSettings.footnote,
+          groups: craftGroups,
+        }
+      : EMPTY_CRAFT,
   });
 }
+
+const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v3"], {
+  tags: [CMS_CONTENT_TAG],
+  // Safety net if on-demand revalidation is missed; CMS save also revalidates the tag.
+  revalidate: 3600,
+});
+
+/** Cached CMS document. Deduped per request; invalidated via CMS_CONTENT_TAG on save. */
+export const loadContent = cache(async (): Promise<ContentData> => getCachedContent());
 
 const TX_OPTIONS = { maxWait: 15_000, timeout: 60_000 } as const;
 
 export async function saveContent(data: ContentData): Promise<void> {
-  const parsed = parseContent(data);
   await prisma.$transaction(async (tx) => {
-    await persistContent(tx, parsed);
+    await persistContent(tx, data);
   }, TX_OPTIONS);
 }

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function MemoryJarLoading() {
   return (
     <div className="jar-of-stars flex min-h-dvh items-center justify-center px-4">
@@ -9,16 +11,20 @@ export default function MemoryJarLoading() {
           There are a few memories hiding in here…
         </p>
         <div className="relative mx-auto mt-8 h-48 w-40">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/memory-jar/mason-jar.png"
             alt=""
+            width={320}
+            height={416}
+            priority
             className="jar-photo jar-photo--light h-full w-full object-contain animate-float-gentle"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/memory-jar/mason-jar-dark.png"
             alt=""
+            width={320}
+            height={416}
+            priority
             className="jar-photo jar-photo--dark absolute inset-0 h-full w-full object-contain animate-float-gentle"
           />
         </div>

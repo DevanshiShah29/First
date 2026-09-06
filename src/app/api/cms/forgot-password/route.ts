@@ -4,8 +4,8 @@ import {
   createPasswordResetToken,
   forgotPasswordRateLimited,
   recordForgotPasswordAttempt,
-} from "@/lib/cms-auth";
-import { clientIp, deliverSimpleMail, requestOrigin } from "@/lib/contact";
+} from "@/server/cms-auth";
+import { clientIp, deliverSimpleMail, requestOrigin } from "@/server/contact";
 
 export const runtime = "nodejs";
 
@@ -19,13 +19,13 @@ function escapeHtml(value: string) {
 
 export async function POST(req: Request) {
   const ip = clientIp(req);
-  if (forgotPasswordRateLimited(ip)) {
+  if (await forgotPasswordRateLimited(ip)) {
     return NextResponse.json(
       { error: "Too many reset requests. Try again in a little while." },
       { status: 429 },
     );
   }
-  recordForgotPasswordAttempt(ip);
+  await recordForgotPasswordAttempt(ip);
 
   const { site } = await loadContent();
   const to = (process.env.CONTACT_TO_EMAIL || site.email).trim();

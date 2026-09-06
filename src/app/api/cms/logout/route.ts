@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearSessionCookie } from "@/lib/cms-auth";
+import { clearSessionCookie } from "@/server/cms-auth";
 
 export const runtime = "nodejs";
 

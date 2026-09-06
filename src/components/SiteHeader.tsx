@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import Link from "next/link";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 import { Logo } from "./Logo";
 import { ThemeToggle } from "./ThemeToggle";

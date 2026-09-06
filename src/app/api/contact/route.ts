@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { loadContent } from "@/content/store";
-import { clientIp, deliverContact, parseContactBody, rateLimited } from "@/lib/contact";
+import { clientIp, deliverContact, parseContactBody, rateLimited } from "@/server/contact";
 
 export const runtime = "nodejs";
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
   if (parsed.company) {
     return NextResponse.json({ ok: true });
   }
-  if (rateLimited(clientIp(req))) {
+  if (await rateLimited(clientIp(req))) {
     return NextResponse.json({ error: "Too many messages. Try again in a few minutes." }, { status: 429 });
   }
 

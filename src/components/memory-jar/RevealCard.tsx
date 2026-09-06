@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, type CSSProperties } from "react";
+import { MediaImage } from "@/components/MediaImage";
 import type { MemoryItem } from "@/content/types";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import { jarAudio } from "@/lib/memory-jar-audio";
 import {
   JAR_ASSETS,
   PAPER_THEMES,
   resolveStarColor,
 } from "@/lib/memory-jar";
-import { useReducedMotion } from "@/lib/reduced-motion";
 import { PaperStar } from "./PaperStar";
 
 interface RevealCardProps {
@@ -28,6 +30,7 @@ export function RevealCard({
   const color = resolveStarColor(memory.color, memory.id);
   const theme = PAPER_THEMES[color];
   const titleId = useId();
+  const dialogRef = useDialogFocus<HTMLDivElement>(true, `${memory.id}-${nonce}`);
 
   const handleClose = useCallback(() => {
     jarAudio.playPop();
@@ -37,6 +40,7 @@ export function RevealCard({
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
+        e.stopPropagation();
         handleClose();
       }
     }
@@ -113,6 +117,7 @@ export function RevealCard({
       ) : null}
 
       <div
+        ref={dialogRef}
         key={`card-${memory.id}-${nonce}`}
         className={`relative z-10 w-full ${reduce ? "" : "animate-paper-unfold"} ${
           hasPhoto ? "max-w-lg" : "max-w-md"
@@ -120,6 +125,7 @@ export function RevealCard({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
       >
         <div
           className={`star-paper-sheet${hasPhoto ? " star-paper-sheet--with-photo" : ""}`}
@@ -187,11 +193,13 @@ export function RevealCard({
                     transform: "rotate(-1.4deg)",
                   }}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <MediaImage
                     src={memory.photoUrl}
                     alt={memory.title || "Memory photo"}
                     className="max-h-48 w-full object-cover select-none"
+                    width={640}
+                    height={480}
+                    sizes="(max-width: 640px) 90vw, 420px"
                     draggable={false}
                   />
                 </div>

@@ -6,8 +6,8 @@ import {
   loginRateLimited,
   passwordsMatch,
   recordFailedLogin,
-} from "@/lib/cms-auth";
-import { clientIp } from "@/lib/contact";
+} from "@/server/cms-auth";
+import { clientIp } from "@/server/contact";
 
 export const runtime = "nodejs";
 
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req);
-  if (loginRateLimited(ip)) {
+  if (await loginRateLimited(ip)) {
     return NextResponse.json(
       { error: "Too many login attempts. Try again in a few minutes." },
       { status: 429 },
@@ -38,10 +38,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
   if (!(await passwordsMatch(password))) {
-    recordFailedLogin(ip);
+    await recordFailedLogin(ip);
     return NextResponse.json({ error: "Wrong password." }, { status: 401 });
   }
-  clearFailedLogins(ip);
+  await clearFailedLogins(ip);
   const session = await createSessionCookie();
   const res = NextResponse.json({ ok: true });
   res.cookies.set(session.name, session.value, session.options);

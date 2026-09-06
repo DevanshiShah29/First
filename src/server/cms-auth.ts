@@ -1,5 +1,11 @@
-import { clearRateLimit, isRateLimited, recordRateLimitHit } from "@/lib/rate-limit";
-import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+import {
+  clearRateLimit,
+  isRateLimited,
+  rateLimited,
+  recordRateLimitHit,
+} from "@/server/rate-limit";
+import { prisma } from "@/server/prisma";
 
 const COOKIE = "cms_session";
 const WEEK = 60 * 60 * 24 * 7;
@@ -13,6 +19,12 @@ const RESET_SCOPE = "cms-forgot";
 const RESET_WINDOW_MS = 60 * 60 * 1000;
 const RESET_MAX = 3;
 const RESET_TOKEN_TTL_MS = 2 * 60 * 60 * 1000;
+const AI_SCOPE = "cms-ai";
+const AI_WINDOW_MS = 10 * 60 * 1000;
+const AI_MAX = 20;
+const UPLOAD_SCOPE = "cms-upload";
+const UPLOAD_WINDOW_MS = 10 * 60 * 1000;
+const UPLOAD_MAX = 40;
 
 function secret() {
   const dedicated = process.env.CMS_SECRET?.trim() || "";
@@ -87,9 +99,23 @@ async function hmac(value: string) {
   return bytesToB64(sig);
 }
 
+async function currentSessionVersion(): Promise<number> {
+  try {
+    const row = await prisma.cmsAuth.findUnique({
+      where: { id: "main" },
+      select: { sessionVersion: true },
+    });
+    return row?.sessionVersion ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Session token: `exp.version.sig` — version must match CmsAuth.sessionVersion. */
 export async function createSessionCookie() {
+  const version = await currentSessionVersion();
   const exp = Math.floor(Date.now() / 1000) + WEEK;
-  const payload = String(exp);
+  const payload = `${exp}.${version}`;
   const token = `${payload}.${await hmac(payload)}`;
   return {
     name: COOKIE,
@@ -119,17 +145,22 @@ export function clearSessionCookie() {
 
 export async function verifySessionCookie(token: string | undefined) {
   if (!token || !secret()) return false;
-  const dot = token.indexOf(".");
-  if (dot < 1) return false;
-  const payload = token.slice(0, dot);
-  const sig = token.slice(dot + 1);
+  const parts = token.split(".");
+  // Expected: exp.version.sig (sig is base64url without '.').
+  if (parts.length !== 3) return false;
+  const [expStr, versionStr, sig] = parts;
+  const payload = `${expStr}.${versionStr}`;
   const expected = await hmac(payload);
   if (sig.length !== expected.length) return false;
   let diff = 0;
   for (let i = 0; i < sig.length; i += 1) diff |= sig.charCodeAt(i) ^ expected.charCodeAt(i);
   if (diff !== 0) return false;
-  const exp = Number(payload);
+  const exp = Number(expStr);
+  const version = Number(versionStr);
   if (!Number.isFinite(exp) || exp * 1000 < Date.now()) return false;
+  if (!Number.isInteger(version) || version < 0) return false;
+  const current = await currentSessionVersion();
+  if (version !== current) return false;
   return true;
 }
 
@@ -220,10 +251,27 @@ export function validateNewPassword(password: string) {
 
 export async function setStoredPassword(password: string) {
   const passwordHash = await hashPassword(password);
+  const existing = await prisma.cmsAuth.findUnique({
+    where: { id: "main" },
+    select: { sessionVersion: true },
+  });
+  // Bump version so any existing cms_session cookies fail verifySessionCookie.
+  const sessionVersion = (existing?.sessionVersion ?? 0) + 1;
   await prisma.cmsAuth.upsert({
     where: { id: "main" },
-    create: { id: "main", passwordHash, resetTokenHash: null, resetTokenExpiresAt: null },
-    update: { passwordHash, resetTokenHash: null, resetTokenExpiresAt: null },
+    create: {
+      id: "main",
+      passwordHash,
+      sessionVersion,
+      resetTokenHash: null,
+      resetTokenExpiresAt: null,
+    },
+    update: {
+      passwordHash,
+      sessionVersion,
+      resetTokenHash: null,
+      resetTokenExpiresAt: null,
+    },
   });
 }
 
@@ -278,30 +326,30 @@ export async function clearPasswordResetToken() {
   });
 }
 
-export function forgotPasswordRateLimited(ip: string) {
+export async function forgotPasswordRateLimited(ip: string) {
   if (process.env.NODE_ENV !== "production") return false;
   return isRateLimited(RESET_SCOPE, ip || "unknown", RESET_MAX, RESET_WINDOW_MS);
 }
 
-export function recordForgotPasswordAttempt(ip: string) {
+export async function recordForgotPasswordAttempt(ip: string) {
   if (process.env.NODE_ENV !== "production") return;
-  recordRateLimitHit(RESET_SCOPE, ip || "unknown", RESET_MAX, RESET_WINDOW_MS);
+  await recordRateLimitHit(RESET_SCOPE, ip || "unknown", RESET_MAX, RESET_WINDOW_MS);
 }
 
-export function loginRateLimited(ip: string) {
+export async function loginRateLimited(ip: string) {
   // Dev has no reliable client IP (often "unknown"), so a shared bucket
   // locked every local browser. Rate-limit only in production.
   if (process.env.NODE_ENV !== "production") return false;
   return isRateLimited(LOGIN_SCOPE, ip || "unknown", LOGIN_MAX, LOGIN_WINDOW_MS);
 }
 
-export function recordFailedLogin(ip: string) {
+export async function recordFailedLogin(ip: string) {
   if (process.env.NODE_ENV !== "production") return;
-  recordRateLimitHit(LOGIN_SCOPE, ip || "unknown", LOGIN_MAX, LOGIN_WINDOW_MS);
+  await recordRateLimitHit(LOGIN_SCOPE, ip || "unknown", LOGIN_MAX, LOGIN_WINDOW_MS);
 }
 
-export function clearFailedLogins(ip: string) {
-  clearRateLimit(LOGIN_SCOPE, ip || "unknown");
+export async function clearFailedLogins(ip: string) {
+  await clearRateLimit(LOGIN_SCOPE, ip || "unknown");
 }
 
 /** Reject cross-site mutating requests (defense in depth with SameSite cookies). */
@@ -315,4 +363,33 @@ export function assertSameOrigin(req: Request) {
   } catch {
     return false;
   }
+}
+
+export type CmsMutationGate =
+  | { ok: true }
+  | { ok: false; status: 401 | 403; error: string };
+
+/**
+ * Session + same-origin gate for authenticated CMS mutating routes
+ * (content, upload, AI generate, change-password, etc.).
+ */
+export async function requireCmsMutation(req: Request): Promise<CmsMutationGate> {
+  const token = (await cookies()).get(COOKIE)?.value;
+  if (!(await verifySessionCookie(token))) {
+    return { ok: false, status: 401, error: "Unauthorized." };
+  }
+  if (!assertSameOrigin(req)) {
+    return { ok: false, status: 403, error: "Forbidden." };
+  }
+  return { ok: true };
+}
+
+/** Shared AI generate quota (per IP). Always on — Gemini cost risk. */
+export async function cmsAiRateLimited(ip: string) {
+  return rateLimited(AI_SCOPE, ip || "unknown", AI_MAX, AI_WINDOW_MS);
+}
+
+/** CMS upload quota (per IP). */
+export async function cmsUploadRateLimited(ip: string) {
+  return rateLimited(UPLOAD_SCOPE, ip || "unknown", UPLOAD_MAX, UPLOAD_WINDOW_MS);
 }

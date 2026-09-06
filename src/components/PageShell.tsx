@@ -14,7 +14,7 @@ export function PageShell({
   content: PublicContentData;
   children: ReactNode;
 }) {
-  const { site } = content;
+  const { site, craft } = content;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -24,7 +24,7 @@ export function PageShell({
       <main id="main-content" tabIndex={-1} className="w-full">
         {children}
       </main>
-      <SiteFooter site={site} />
+      <SiteFooter site={site} craft={craft} />
     </div>
   );
 }

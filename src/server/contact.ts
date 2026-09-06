@@ -1,11 +1,12 @@
+import { rateLimited as sharedRateLimited } from "@/server/rate-limit";
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_MAX = 100;
 const EMAIL_MAX = 254;
 const MESSAGE_MAX = 4000;
+const CONTACT_SCOPE = "contact";
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
-
-const hits = new Map<string, number[]>();
 
 export type ContactFields = {
   name: string;
@@ -20,16 +21,9 @@ export function clientIp(req: Request) {
   return first || req.headers.get("x-real-ip") || "unknown";
 }
 
-export function rateLimited(ip: string) {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  if (recent.length >= MAX_PER_WINDOW) {
-    hits.set(ip, recent);
-    return true;
-  }
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
+/** Contact form rate limit (shared store when Upstash is configured). */
+export async function rateLimited(ip: string) {
+  return sharedRateLimited(CONTACT_SCOPE, ip || "unknown", MAX_PER_WINDOW, WINDOW_MS);
 }
 
 export function parseContactBody(body: unknown): ContactFields | { error: string } {

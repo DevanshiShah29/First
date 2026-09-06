@@ -1,14 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { ContentData, HeroMedia } from "@/content/types";
-import { cmsLogout, saveCmsContent, uploadCmsFile } from "@/lib/api-client";
+import type { ContentData } from "@/content/types";
+import { cmsLogout } from "@/lib/cms-client";
 import { AdminBar, AdminMenu, type MenuItem } from "./components/AdminNav";
 import { Breadcrumbs } from "./components/Breadcrumbs";
+import { useCmsDocument } from "./hooks/useCmsDocument";
+import { useCmsNavigation } from "./hooks/useCmsNavigation";
+import { useCmsUploads } from "./hooks/useCmsUploads";
 import { AboutScreen } from "./screens/AboutScreen";
 import { AppearanceScreen } from "./screens/AppearanceScreen";
 import { ContactScreen } from "./screens/ContactScreen";
+import { CraftScreen } from "./screens/CraftScreens";
 import { DashboardScreen } from "./screens/DashboardScreen";
 import { ExperienceEditScreen, ExperienceListScreen } from "./screens/ExperienceScreens";
 import { HeroScreen } from "./screens/HeroScreen";
@@ -16,12 +19,12 @@ import { MemoriesEditScreen, MemoriesListScreen } from "./screens/MemoriesScreen
 import { ProjectsEditScreen, ProjectsListScreen } from "./screens/ProjectsScreens";
 import { SiteScreen } from "./screens/SiteScreen";
 import { SkillGroupsScreen } from "./screens/SkillsScreens";
-import { clone, newId, type BreadcrumbItem, type Screen } from "./types";
 import {
   IconAbout,
   IconAppearance,
   IconCode,
   IconContact,
+  IconCraft,
   IconDash,
   IconHero,
   IconJar,
@@ -33,89 +36,55 @@ import {
 
 export function AdminApp({ initial }: { initial: ContentData }) {
   const router = useRouter();
-  const [screen, setScreen] = useState<Screen>("dashboard");
-  const [editId, setEditId] = useState<string | null>(null);
-  const [data, setData] = useState(() => clone(initial));
-  const [saved, setSaved] = useState(() => JSON.stringify(initial));
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const [error, setError] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [newOpen, setNewOpen] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [sectionState, setSectionState] = useState<Record<string, boolean>>({});
+  const doc = useCmsDocument(initial);
+  const {
+    data,
+    setData,
+    dirty,
+    status,
+    error,
+    setError,
+    notice,
+    setNotice,
+    sectionState,
+    expandAll,
+    collapseAll,
+    save,
+  } = doc;
 
-  const dirty = useMemo(() => JSON.stringify(data) !== saved, [data, saved]);
+  const nav = useCmsNavigation(data, setData, () => setNotice(""));
+  const {
+    screen,
+    menuOpen,
+    setMenuOpen,
+    newOpen,
+    setNewOpen,
+    go,
+    addExperience,
+    addProject,
+    addMemory,
+    breadcrumbs,
+    expIndex,
+    job,
+    projIndex,
+    project,
+    memoriesList,
+    memIndex,
+    memory,
+  } = nav;
+
+  const uploads = useCmsUploads(data, setData, setError, setNotice);
+  const {
+    uploading,
+    setHeroMedia,
+    uploadHeroFile,
+    uploadMemoryPhoto,
+    uploadResume,
+    uploadSkillIcon,
+  } = uploads;
+
   const site = data.site;
   const [firstName] = (site.name || "Admin").split(" ");
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
-        e.preventDefault();
-        void save();
-      }
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
-
-  function expandAll(ids: string[]) {
-    setSectionState((prev) => {
-      const next = { ...prev };
-      ids.forEach((id) => {
-        next[id] = true;
-        try {
-          localStorage.setItem(`wp_metabox_${id}`, "true");
-        } catch {
-          // Ignore
-        }
-      });
-      return next;
-    });
-  }
-
-  function collapseAll(ids: string[]) {
-    setSectionState((prev) => {
-      const next = { ...prev };
-      ids.forEach((id) => {
-        next[id] = false;
-        try {
-          localStorage.setItem(`wp_metabox_${id}`, "false");
-        } catch {
-          // Ignore
-        }
-      });
-      return next;
-    });
-  }
-
-  useEffect(() => {
-    function onLeave(e: BeforeUnloadEvent) {
-      if (!dirty) return;
-      e.preventDefault();
-      e.returnValue = "";
-    }
-    window.addEventListener("beforeunload", onLeave);
-    return () => window.removeEventListener("beforeunload", onLeave);
-  }, [dirty]);
-
-  async function save() {
-    setStatus("saving");
-    setError("");
-    const res = await saveCmsContent(data);
-    if (!res.ok || !res.data?.content) {
-      setStatus("error");
-      setError(res.error || "Save failed.");
-      return;
-    }
-    const next = clone(res.data.content);
-    setData(next);
-    setSaved(JSON.stringify(next));
-    setStatus("saved");
-    setNotice("Content updated.");
-    router.refresh();
-  }
 
   async function logout() {
     await cmsLogout();
@@ -123,163 +92,13 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     router.refresh();
   }
 
-  function setHeroMedia(patch: Partial<HeroMedia>) {
-    setData({
-      ...data,
-      site: { ...site, heroMedia: { ...site.heroMedia, ...patch } },
-    });
-  }
-
-  async function uploadHeroFile(file: File) {
-    setUploading(true);
-    setError("");
-    const res = await uploadCmsFile(file, "hero");
-    setUploading(false);
-    if (!res.ok || !res.data?.url) {
-      setError(res.error || "Upload failed.");
-      return;
-    }
-    const uploadedUrl = res.data.url;
-    const uploadedKind = res.data.kind ?? "image";
-    setHeroMedia({ url: uploadedUrl, kind: uploadedKind });
-  }
-
-  function go(next: Screen, id: string | null = null) {
-    setScreen(next);
-    setEditId(id);
-    setMenuOpen(false);
-    setNotice("");
-  }
-
-  function addExperience() {
-    const id = newId();
-    setData({
-      ...data,
-      experience: [
-        ...data.experience,
-        {
-          id,
-          when: "",
-          current: false,
-          role: "New role",
-          company: "",
-          summary: "",
-          bullets: [""],
-          stack: [],
-        },
-      ],
-    });
-    go("experience-edit", id);
-  }
-
-  function addProject() {
-    const id = newId();
-    setData({
-      ...data,
-      projects: [
-        ...data.projects,
-        { id, name: "New project", blurb: "", tags: [], github: "", demo: "" },
-      ],
-    });
-    go("projects-edit", id);
-  }
-
-  function addMemory() {
-    const id = newId();
-    const memories = data.memories ?? [];
-    setData({
-      ...data,
-      memories: [
-        ...memories,
-        {
-          id,
-          title: "New memory",
-          note: "",
-          date: "",
-          category: "Tiny Joy",
-          photoUrl: "",
-          color: "#A78BFA",
-        },
-      ],
-    });
-    go("memories-edit", id);
-  }
-
-  async function uploadMemoryPhoto(file: File, id: string) {
-    setUploading(true);
-    setError("");
-    setNotice("");
-    const res = await uploadCmsFile(file, "memories");
-    setUploading(false);
-    if (!res.ok || !res.data?.url) {
-      setError(res.error || "Photo upload failed.");
-      return;
-    }
-    const photoUrl = res.data.url;
-    const memories = (data.memories ?? []).map((m) => (m.id === id ? { ...m, photoUrl } : m));
-    setData({ ...data, memories });
-    setNotice("Memory photo uploaded. Save changes to update.");
-  }
-
-  async function uploadResume(file: File) {
-    setUploading(true);
-    setError("");
-    setNotice("");
-    const res = await uploadCmsFile(file, "resume");
-    setUploading(false);
-    if (!res.ok || !res.data?.url) {
-      setError(res.error || "Resume upload failed.");
-      return;
-    }
-    const resumeUrl = res.data.url;
-    setData((current) => ({
-      ...current,
-      site: { ...current.site, resume: resumeUrl },
-    }));
-    setNotice("Resume uploaded. Save changes to publish the new file.");
-  }
-
-  async function uploadSkillIcon(
-    file: File,
-    kind: "skills" | "technologies",
-    gi: number,
-    ii: number,
-  ) {
-    setUploading(true);
-    setError("");
-    const res = await uploadCmsFile(file, "skills");
-    setUploading(false);
-    if (!res.ok || !res.data?.url) {
-      setError(res.error || "Icon upload failed.");
-      return;
-    }
-    const iconUrl = res.data.url;
-    setData((current) => {
-      const groups = [...(current[kind] ?? [])];
-      const group = groups[gi];
-      if (!group) return current;
-      const items = [...group.items];
-      if (!items[ii]) return current;
-      items[ii] = { ...items[ii], iconUrl };
-      groups[gi] = { ...group, items };
-      return { ...current, [kind]: groups };
-    });
-  }
-
-  const expIndex = data.experience.findIndex((j) => j.id === editId);
-  const job = expIndex >= 0 ? data.experience[expIndex] : null;
-  const projIndex = data.projects.findIndex((p) => p.id === editId);
-  const project = projIndex >= 0 ? data.projects[projIndex] : null;
-  const memoriesList = data.memories ?? [];
-  const memIndex = memoriesList.findIndex((m) => m.id === editId);
-  const memory = memIndex >= 0 ? memoriesList[memIndex] : null;
-
   const menu: MenuItem[] = [
     { id: "dashboard", label: "Dashboard", icon: <IconDash />, match: screen === "dashboard" },
     { id: "experience", label: "Experience", icon: <IconPin />, match: screen.startsWith("experience") },
     { id: "projects", label: "Projects", icon: <IconPages />, match: screen.startsWith("projects") },
     { id: "skills", label: "Skills", icon: <IconStar />, match: screen === "skills" },
     { id: "technologies", label: "Technologies", icon: <IconCode />, match: screen === "technologies" },
+    { id: "craft", label: "Craft", icon: <IconCraft />, match: screen === "craft" },
     { id: "memories", label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
     { id: "about", label: "About", icon: <IconAbout />, match: screen === "about" },
     { id: "contact", label: "Contact", icon: <IconContact />, match: screen === "contact" },
@@ -287,92 +106,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
     { id: "site", label: "Settings", icon: <IconSettings />, match: screen === "site" },
   ];
-
-  const breadcrumbs = useMemo<BreadcrumbItem[]>(() => {
-    switch (screen) {
-      case "dashboard":
-        return [{ label: "Dashboard", current: true }];
-      case "site":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "General Settings", current: true },
-        ];
-      case "about":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "About", current: true },
-        ];
-      case "contact":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Contact", current: true },
-        ];
-      case "hero":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Hero", current: true },
-        ];
-      case "appearance":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Appearance", current: true },
-        ];
-      case "experience":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Experience", current: true },
-        ];
-      case "experience-edit":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Experience", onClick: () => go("experience") },
-          {
-            label: job ? (job.role === "New role" ? "Add New Experience" : job.role || "Untitled Role") : "Edit Experience",
-            current: true,
-          },
-        ];
-      case "projects":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Projects", current: true },
-        ];
-      case "projects-edit":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Projects", onClick: () => go("projects") },
-          {
-            label: project ? (project.name === "New project" ? "Add New Project" : project.name || "Untitled Project") : "Edit Project",
-            current: true,
-          },
-        ];
-      case "skills":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Skills", current: true },
-        ];
-      case "technologies":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Technologies", current: true },
-        ];
-      case "memories":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Memory Jar", current: true },
-        ];
-      case "memories-edit":
-        return [
-          { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Memory Jar", onClick: () => go("memories") },
-          {
-            label: memory ? (memory.title === "New memory" ? "Add New Memory" : memory.title || "Untitled Memory") : "Edit Memory",
-            current: true,
-          },
-        ];
-      default:
-        return [{ label: "Dashboard", current: true }];
-    }
-  }, [screen, job, project, memory]);
 
   return (
     <div className={`wp-app${menuOpen ? " is-menu-open" : ""}`}>
@@ -496,12 +229,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
           )}
 
           {screen === "experience" && (
-            <ExperienceListScreen
-              data={data}
-              setData={setData}
-              go={go}
-              addExperience={addExperience}
-            />
+            <ExperienceListScreen data={data} setData={setData} go={go} addExperience={addExperience} />
           )}
 
           {screen === "experience-edit" && job && (
@@ -517,12 +245,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
           )}
 
           {screen === "projects" && (
-            <ProjectsListScreen
-              data={data}
-              setData={setData}
-              go={go}
-              addProject={addProject}
-            />
+            <ProjectsListScreen data={data} setData={setData} go={go} addProject={addProject} />
           )}
 
           {screen === "projects-edit" && project && (
@@ -566,6 +289,18 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               collapseAll={collapseAll}
               uploadSkillIcon={uploadSkillIcon}
               uploading={uploading}
+              save={save}
+              dirty={dirty}
+            />
+          )}
+
+          {screen === "craft" && (
+            <CraftScreen
+              data={data}
+              setData={setData}
+              sectionState={sectionState}
+              expandAll={expandAll}
+              collapseAll={collapseAll}
               save={save}
               dirty={dirty}
             />

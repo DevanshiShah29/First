@@ -30,8 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — keep .env.example tracked as the template
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -40,6 +41,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-AGENTS.md 
-.env
-.env.local
+# Local CMS uploads — use Vercel Blob in production; keep folder placeholders only
+/public/uploads/**
+!/public/uploads/**/
+!/public/uploads/**/.gitkeep
+
+# Playwright / e2e leftovers
+/test-results/
+
+AGENTS.md

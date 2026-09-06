@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, type PointerEvent } from "react";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import { useState } from "react";
+import { getImageProps } from "next/image";
+import { useHeroTilt } from "@/hooks/use-hero-tilt";
+import { usePianoPlayback } from "@/hooks/use-piano-playback";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import type { PublicSiteContent, SiteContent } from "@/content/types";
-import { siteHasPiano } from "@/content/types";
-import { goodreadsUserId } from "@/lib/goodreads";
+import { Ingredients, MiniUi, Notes } from "./fx";
 
 type SpotId =
   | "piano"
@@ -45,35 +47,24 @@ const mobileSpots: Spot[] = [
   { id: "yoga", label: "Yoga", left: "52%", top: "68%", w: "40%", h: "28%" },
 ];
 
-function Notes({ looping }: { looping?: boolean }) {
+function NookHeroArt() {
+  const alt =
+    "Illustrated cozy nook with a piano, books, a memory jar, plants, a laptop, and art supplies.";
+  const common = {
+    alt,
+    width: 1280,
+    height: 720,
+    priority: true,
+    sizes: "(max-width: 720px) 100vw, 1280px",
+  } as const;
+  const { props: desktop } = getImageProps({ ...common, src: "/images/hero-nook.jpg" });
+  const { props: mobile } = getImageProps({ ...common, src: "/images/hero-nook-portrait.jpg" });
   return (
-    <div className={`world-fx${looping ? " is-loop" : ""}`} aria-hidden>
-      {["♪", "♫", "♩"].map((n, i) => (
-        <span key={n} className="world-note" style={{ left: `${18 + i * 14}%`, animationDelay: `${i * 0.18}s` }}>
-          {n}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function MiniUi() {
-  return (
-    <div className="world-ui" aria-hidden>
-      <span />
-      <span />
-      <span />
-    </div>
-  );
-}
-
-function Ingredients() {
-  return (
-    <div className="world-bits" aria-hidden>
-      <i style={{ left: "10%", animationDelay: "0s" }} />
-      <i style={{ left: "40%", animationDelay: "0.2s" }} />
-      <i style={{ left: "68%", animationDelay: "0.35s" }} />
-    </div>
+    <picture>
+      <source media="(max-width: 720px)" srcSet={mobile.srcSet} sizes={mobile.sizes} />
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- alt comes from getImageProps */}
+      <img {...desktop} className="world-art" />
+    </picture>
   );
 }
 
@@ -117,90 +108,22 @@ function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
 
 export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
   const reduce = useReducedMotion();
-  const stage = useRef<HTMLDivElement>(null);
-  const audioHost = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const restTimer = useRef<number | NodeJS.Timeout | undefined>(undefined);
+  const { stage, onMove, onLeave } = useHeroTilt(reduce);
+  const {
+    audioHost,
+    pianoPlaying,
+    hasPiano,
+    goodreadsId,
+    onPianoToggle,
+    onBooksClick,
+    pianoOn,
+    bookOn,
+    pianoTip,
+    bookTip,
+  } = usePianoPlayback(site);
   const [active, setActive] = useState<SpotId | null>(null);
-  const [pianoPlaying, setPianoPlaying] = useState(false);
-  const [pianoRest, setPianoRest] = useState(false);
-  const [bookRest, setBookRest] = useState(false);
-  const hasPiano = siteHasPiano(site);
-  const goodreadsId = goodreadsUserId(site.goodreadsUrl ?? "");
-
-  function stopMusic() {
-    iframeRef.current?.remove();
-    iframeRef.current = null;
-    audioHost.current?.replaceChildren();
-  }
-
-  function startMusic() {
-    const host = audioHost.current;
-    if (!host) return;
-    stopMusic();
-    const iframe = document.createElement("iframe");
-    iframe.className = "world-audio";
-    iframe.title = "Piano music";
-    iframe.allow = "autoplay; encrypted-media";
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.tabIndex = -1;
-    iframe.src = `/api/media/piano?t=${Date.now()}`;
-    host.appendChild(iframe);
-    iframeRef.current = iframe;
-  }
-
-  useEffect(() => {
-    return () => {
-      if (restTimer.current) window.clearTimeout(restTimer.current);
-      iframeRef.current?.remove();
-      iframeRef.current = null;
-    };
-  }, []);
-
-  function onMove(e: PointerEvent<HTMLDivElement>) {
-    if (reduce) return;
-    const el = stage.current;
-    if (!el) return;
-    const box = el.getBoundingClientRect();
-    const nx = (e.clientX - box.left) / box.width - 0.5;
-    const ny = (e.clientY - box.top) / box.height - 0.5;
-    el.style.transform = `perspective(1400px) rotateX(${(ny * -6).toFixed(2)}deg) rotateY(${(nx * 8).toFixed(2)}deg)`;
-  }
-
-  function onPianoToggle() {
-    window.clearTimeout(restTimer.current);
-    if (!hasPiano) {
-      setPianoPlaying(false);
-      setPianoRest(true);
-      stopMusic();
-      restTimer.current = window.setTimeout(() => setPianoRest(false), 2400);
-      return;
-    }
-    setPianoRest(false);
-    if (pianoPlaying) {
-      stopMusic();
-      setPianoPlaying(false);
-      return;
-    }
-    startMusic();
-    setPianoPlaying(true);
-  }
-
-  function onBooksClick() {
-    if (goodreadsId) return;
-    window.clearTimeout(restTimer.current);
-    setBookRest(true);
-    restTimer.current = window.setTimeout(() => setBookRest(false), 2400);
-  }
-
-  const pianoOn = active === "piano" || pianoPlaying || pianoRest;
-  const pianoTip = pianoPlaying
-    ? null
-    : !hasPiano
-      ? "The piano is taking a break 🎹"
-      : "Play something 🎵";
-  const bookOn = active === "books" || bookRest;
-  const bookTip = !goodreadsId ? "The books are taking a break 📚" : "Open my books";
+  const pianoActive = pianoOn(active);
+  const bookActive = bookOn(active, "books");
 
   return (
     <section id="top" className={`world-hero is-nook${pianoPlaying ? " is-playing" : ""}`} aria-labelledby="hero-heading">
@@ -212,26 +135,8 @@ export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
         the books open the reading list, and the jar opens memories. None of this is required to use the rest of
         the site.
       </p>
-      <div
-        ref={stage}
-        className="world-stage"
-        onPointerMove={onMove}
-        onPointerLeave={() => {
-          if (stage.current) stage.current.style.transform = "";
-        }}
-      >
-        <picture>
-          <source media="(max-width: 720px)" srcSet="/images/hero-nook-portrait.jpg?v=nook2" />
-          <img
-            src="/images/hero-nook.jpg?v=nook2"
-            alt="Illustrated cozy nook with a piano, books, a memory jar, plants, a laptop, and art supplies."
-            className="world-art"
-            width={1280}
-            height={720}
-            decoding="async"
-            fetchPriority="high"
-          />
-        </picture>
+      <div ref={stage} className="world-stage" onPointerMove={onMove} onPointerLeave={onLeave}>
+        <NookHeroArt />
         <div className="world-watermark-mask" />
         <div ref={audioHost} className="world-audio-host" aria-hidden />
         <p role="status" aria-live="polite" className="sr-only">
@@ -244,7 +149,7 @@ export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
               const isPiano = spot.id === "piano";
               const isBook = spot.id === "books";
               const isJar = spot.id === "jar";
-              const on = isPiano ? pianoOn : isBook ? bookOn : active === spot.id;
+              const on = isPiano ? pianoActive : isBook ? bookActive : active === spot.id;
               const href =
                 isBook && goodreadsId ? "/reading" : isJar ? "/memories" : undefined;
               const Spot = href ? "a" : "button";

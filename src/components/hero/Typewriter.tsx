@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 
 function TypewriterLive({ words }: { words: readonly string[] }) {
   const [index, setIndex] = useState(0);

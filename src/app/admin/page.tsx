@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminApp } from "@/components/cms/AdminApp";
 import { loadContent } from "@/content/store";
-import { verifySessionCookie } from "@/lib/cms-auth";
+import { verifySessionCookie } from "@/server/cms-auth";
 
 export const dynamic = "force-dynamic";
 

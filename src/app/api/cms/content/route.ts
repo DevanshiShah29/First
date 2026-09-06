@@ -1,18 +1,15 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { loadContent, parseContent, saveContent } from "@/content/store";
-import { assertSameOrigin, verifySessionCookie } from "@/lib/cms-auth";
+import { CMS_CONTENT_TAG, loadContent, saveContent } from "@/content/store";
+import { parseContentForSave } from "@/content/validate";
+import { requireCmsMutation, verifySessionCookie } from "@/server/cms-auth";
 
 export const runtime = "nodejs";
 
-async function authed() {
-  const token = (await cookies()).get("cms_session")?.value;
-  return verifySessionCookie(token);
-}
-
 export async function GET() {
-  if (!(await authed())) {
+  const token = (await cookies()).get("cms_session")?.value;
+  if (!(await verifySessionCookie(token))) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
   const content = await loadContent();
@@ -20,11 +17,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  if (!(await authed())) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-  if (!assertSameOrigin(req)) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  const gate = await requireCmsMutation(req);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
   let body: unknown;
   try {
@@ -36,9 +31,12 @@ export async function POST(req: Request) {
     body !== null && typeof body === "object" && "content" in body
       ? (body as { content: unknown }).content
       : body;
-  const content = parseContent(payload);
+  const parsed = parseContentForSave(payload);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
   try {
-    await saveContent(content);
+    await saveContent(parsed.content);
   } catch {
     console.error("saveContent failed");
     return NextResponse.json(
@@ -48,7 +46,11 @@ export async function POST(req: Request) {
       { status: 500 },
     );
   }
+  revalidateTag(CMS_CONTENT_TAG, "max");
   revalidatePath("/", "layout");
   revalidatePath("/");
-  return NextResponse.json({ ok: true, content });
+  revalidatePath("/reading");
+  revalidatePath("/memories");
+  revalidatePath("/craft");
+  return NextResponse.json({ ok: true, content: parsed.content });
 }

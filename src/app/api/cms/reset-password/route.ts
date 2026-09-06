@@ -5,7 +5,7 @@ import {
   createSessionCookie,
   setStoredPassword,
   validateNewPassword,
-} from "@/lib/cms-auth";
+} from "@/server/cms-auth";
 
 export const runtime = "nodejs";
 

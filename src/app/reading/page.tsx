@@ -4,15 +4,19 @@ import { ReadingLibrary } from "@/components/ReadingLibrary";
 import { loadContent } from "@/content/store";
 import { toPublicContent } from "@/content/types";
 import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
+import { buildPageMetadata } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+/** Align with Goodreads fetch revalidate (~30m). CMS saves also revalidate this path. */
+export const revalidate = 1800;
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
-  return {
+  return buildPageMetadata({
     title: `Reading | ${content.site.name}`,
     description: `Books ${content.site.name} is reading, has read, and wants to read — with notes from Goodreads.`,
-  };
+    path: "/reading",
+    siteName: content.site.name,
+  });
 }
 
 export default async function ReadingPage() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { cmsChangePassword } from "@/lib/api-client";
+import { cmsChangePassword } from "@/lib/cms-client";
 import { Metabox } from "./components/Metabox";
 import { Field, TextInput } from "./fields";
 

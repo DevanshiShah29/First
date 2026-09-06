@@ -1,11 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
-import { createVisibilityGate } from "@/lib/active-loop";
-import { useReducedMotion } from "@/lib/reduced-motion";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+  type Ref,
+} from "react";
+import { getImageProps } from "next/image";
+import { createVisibilityGate } from "@/hooks/active-loop";
+import { usePianoPlayback } from "@/hooks/use-piano-playback";
+import { useReducedMotion } from "@/hooks/reduced-motion";
 import type { PublicSiteContent, SiteContent } from "@/content/types";
-import { siteHasPiano } from "@/content/types";
-import { goodreadsUserId } from "@/lib/goodreads";
+import { MiniUi, Notes } from "./fx";
 
 type SpotId = "frames" | "jar" | "books" | "piano" | "laptop" | "cook" | "plants" | "yoga";
 
@@ -70,28 +78,6 @@ const paperStars = [
   { l: "28%", t: "78%", d: "0.26s", c: "#f9a8d4", r: -6 },
 ];
 
-function Notes({ looping }: { looping?: boolean }) {
-  return (
-    <div className={`world-fx${looping ? " is-loop" : ""}`} aria-hidden>
-      {["♪", "♫", "♩"].map((n, i) => (
-        <span key={n} className="world-note" style={{ left: `${18 + i * 14}%`, animationDelay: `${i * 0.18}s` }}>
-          {n}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-function MiniUi() {
-  return (
-    <div className="world-ui studio-ui" aria-hidden>
-      <span />
-      <span />
-      <span />
-    </div>
-  );
-}
-
 function PaperStars() {
   return (
     <div className="studio-jar-vessel" aria-hidden>
@@ -147,9 +133,36 @@ function LeafSway() {
   );
 }
 
+function StudioHeroArt({
+  artRef,
+  onLoad,
+}: {
+  artRef: Ref<HTMLImageElement>;
+  onLoad: () => void;
+}) {
+  const alt =
+    "Cozy 3D miniature studio centered on a woman looking at a MacBook, with a photo wall, piano, memory jar of paper stars, books, baking, plants, and a yoga corner.";
+  const common = {
+    alt,
+    width: 1280,
+    height: 720,
+    priority: true,
+    sizes: "(max-width: 720px) 100vw, 1280px",
+  } as const;
+  const { props: desktop } = getImageProps({ ...common, src: "/images/hero-studio.jpg" });
+  const { props: mobile } = getImageProps({ ...common, src: "/images/hero-studio-portrait.jpg" });
+  return (
+    <picture>
+      <source media="(max-width: 720px)" srcSet={mobile.srcSet} sizes={mobile.sizes} />
+      {/* eslint-disable-next-line jsx-a11y/alt-text -- alt comes from getImageProps */}
+      <img {...desktop} ref={artRef} className="world-art" onLoad={onLoad} />
+    </picture>
+  );
+}
+
 function SpotFx({ id, playing }: { id: SpotId; playing?: boolean }) {
   if (id === "piano") return playing ? <Notes looping /> : null;
-  if (id === "laptop") return <MiniUi />;
+  if (id === "laptop") return <MiniUi className="world-ui studio-ui" />;
   if (id === "cook") return <Steam />;
   if (id === "jar") return <PaperStars />;
   if (id === "yoga") return <Breath />;
@@ -162,22 +175,26 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
   const reduce = useReducedMotion();
   const stage = useRef<HTMLDivElement>(null);
   const artRef = useRef<HTMLImageElement>(null);
-  const audioHost = useRef<HTMLDivElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const restTimer = useRef<number | NodeJS.Timeout | undefined>(undefined);
   const target = useRef({ x: 0, y: 0 });
   const current = useRef({ x: 0, y: 0 });
   const interacting = useRef(false);
   const drag = useRef({ x: 0, y: 0, moved: false });
   const idleT = useRef(0);
   const [active, setActive] = useState<SpotId | null>(null);
-  const [pianoPlaying, setPianoPlaying] = useState(false);
-  const [pianoRest, setPianoRest] = useState(false);
-  const [bookRest, setBookRest] = useState(false);
   const [flash, setFlash] = useState(false);
   const [hitmap, setHitmap] = useState<Hitmap | null>(null);
-  const hasPiano = siteHasPiano(site);
-  const goodreadsId = goodreadsUserId(site.goodreadsUrl ?? "");
+  const {
+    audioHost,
+    pianoPlaying,
+    hasPiano,
+    goodreadsId,
+    onPianoToggle,
+    onBooksClick,
+    pianoOn,
+    bookOn,
+    pianoTip,
+    bookTip,
+  } = usePianoPlayback(site);
 
   function syncHitmap() {
     const img = artRef.current;
@@ -188,27 +205,6 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     // Matches .world-hero.is-studio .world-art object-position
     const posY = mobile ? 0.42 : 0.48;
     setHitmap(coverHitmap(img.naturalWidth, img.naturalHeight, box.width, box.height, 0.5, posY));
-  }
-
-  function stopMusic() {
-    iframeRef.current?.remove();
-    iframeRef.current = null;
-    audioHost.current?.replaceChildren();
-  }
-
-  function startMusic() {
-    const host = audioHost.current;
-    if (!host) return;
-    stopMusic();
-    const iframe = document.createElement("iframe");
-    iframe.className = "world-audio";
-    iframe.title = "Piano music";
-    iframe.allow = "autoplay; encrypted-media";
-    iframe.setAttribute("aria-hidden", "true");
-    iframe.tabIndex = -1;
-    iframe.src = `/api/media/piano?t=${Date.now()}`;
-    host.appendChild(iframe);
-    iframeRef.current = iframe;
   }
 
   useEffect(() => {
@@ -264,14 +260,6 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
       release();
     };
   }, [reduce]);
-
-  useEffect(() => {
-    return () => {
-      if (restTimer.current) window.clearTimeout(restTimer.current);
-      iframeRef.current?.remove();
-      iframeRef.current = null;
-    };
-  }, []);
 
   useEffect(() => {
     syncHitmap();
@@ -337,41 +325,13 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
     }
   }
 
-  function onPianoToggle() {
-    window.clearTimeout(restTimer.current);
-    if (!hasPiano) {
-      setPianoPlaying(false);
-      setPianoRest(true);
-      stopMusic();
-      restTimer.current = window.setTimeout(() => setPianoRest(false), 2400);
-      return;
-    }
-    setPianoRest(false);
-    if (pianoPlaying) {
-      stopMusic();
-      setPianoPlaying(false);
-      return;
-    }
-    startMusic();
-    setPianoPlaying(true);
-  }
-
-  function onBooksClick() {
-    if (goodreadsId) return;
-    window.clearTimeout(restTimer.current);
-    setBookRest(true);
-    restTimer.current = window.setTimeout(() => setBookRest(false), 2400);
-  }
-
   function onFramesClick() {
     setFlash(true);
     window.setTimeout(() => setFlash(false), 280);
   }
 
-  const pianoOn = active === "piano" || pianoPlaying || pianoRest;
-  const pianoTip = pianoPlaying ? null : !hasPiano ? "The piano is taking a break 🎹" : "Play something 🎵";
-  const bookOn = active === "books" || bookRest;
-  const bookTip = !goodreadsId ? "The books are taking a break 📚" : "Open my books";
+  const pianoActive = pianoOn(active);
+  const bookActive = bookOn(active, "books");
   const deskTip = site.roles[0] ? `Building · ${site.roles[0]}` : "This is my desk";
 
   function renderSpots(layout: "desktop" | "mobile") {
@@ -384,7 +344,7 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
           const isJar = spot.id === "jar";
           const isFrames = spot.id === "frames";
           const isLaptop = spot.id === "laptop";
-          const on = isPiano ? pianoOn : isBook ? bookOn : active === spot.id;
+          const on = isPiano ? pianoActive : isBook ? bookActive : active === spot.id;
           const href = isBook && goodreadsId ? "/reading" : isJar ? "/memories" : undefined;
           const Spot = href ? "a" : "button";
           const tip = isPiano
@@ -499,20 +459,7 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
         onPointerCancel={onPointerUp}
         onPointerLeave={onPointerLeave}
       >
-        <picture>
-          <source media="(max-width: 720px)" srcSet="/images/hero-studio-portrait.jpg?v=studio2" />
-          <img
-            ref={artRef}
-            src="/images/hero-studio.jpg?v=studio2"
-            alt="Cozy 3D miniature studio centered on a woman looking at a MacBook, with a photo wall, piano, memory jar of paper stars, books, baking, plants, and a yoga corner."
-            className="world-art"
-            width={1280}
-            height={720}
-            decoding="async"
-            fetchPriority="high"
-            onLoad={syncHitmap}
-          />
-        </picture>
+        <StudioHeroArt artRef={artRef} onLoad={syncHitmap} />
         <div className="world-watermark-mask" />
         <div ref={audioHost} className="world-audio-host" aria-hidden />
         <p role="status" aria-live="polite" className="sr-only">

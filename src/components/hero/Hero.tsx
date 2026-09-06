@@ -7,12 +7,12 @@ import { hasMedia, HeroMediaView } from "./HeroMediaView";
 import { ClassicHero, HERO_TEMPLATES_MAP, HeroCopy } from "./templates";
 
 const WorldHero = dynamic(() => import("./WorldHero").then((m) => m.WorldHero), {
-  ssr: false,
+  ssr: true,
   loading: () => <div className="world-hero" aria-hidden />,
 });
 
 const NookHero = dynamic(() => import("./NookHero").then((m) => m.NookHero), {
-  ssr: false,
+  ssr: true,
   loading: () => <div className="world-hero is-nook" aria-hidden />,
 });
 

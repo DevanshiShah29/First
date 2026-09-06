@@ -14,6 +14,7 @@ export type Screen =
   | "projects-edit"
   | "skills"
   | "technologies"
+  | "craft"
   | "memories"
   | "memories-edit";
 

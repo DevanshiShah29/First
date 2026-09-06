@@ -47,8 +47,13 @@ export function isEncryptedValue(value: string) {
 export async function encryptSecret(plaintext: string): Promise<string> {
   const trimmed = plaintext.trim();
   if (!trimmed) return "";
-  if (!encryptionConfigured()) return trimmed;
   if (isEncryptedValue(trimmed)) return trimmed;
+  // Fail closed — never persist sensitive fields as plaintext when the key is missing/short.
+  if (!encryptionConfigured()) {
+    throw new Error(
+      "CONTENT_ENCRYPTION_KEY or CMS_SECRET (at least 16 characters) is required to store sensitive fields.",
+    );
+  }
   const key = await importAesKey();
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const cipher = await crypto.subtle.encrypt(

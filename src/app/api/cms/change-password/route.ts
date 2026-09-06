@@ -1,22 +1,18 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
-  assertSameOrigin,
+  createSessionCookie,
   passwordsMatch,
+  requireCmsMutation,
   setStoredPassword,
   validateNewPassword,
-  verifySessionCookie,
-} from "@/lib/cms-auth";
+} from "@/server/cms-auth";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const token = (await cookies()).get("cms_session")?.value;
-  if (!(await verifySessionCookie(token))) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
-  if (!assertSameOrigin(req)) {
-    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  const gate = await requireCmsMutation(req);
+  if (!gate.ok) {
+    return NextResponse.json({ error: gate.error }, { status: gate.status });
   }
 
   let currentPassword = "";
@@ -65,5 +61,9 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true });
+  // Issue a fresh cookie bound to the new sessionVersion; old cookies are invalid.
+  const session = await createSessionCookie();
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(session.name, session.value, session.options);
+  return res;
 }

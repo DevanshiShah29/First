@@ -1,9 +1,11 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { assertPublicHttpsUrl } from "@/server/safe-fetch";
 
 const FETCH_TIMEOUT_MS = 8_000;
 const MAX_RESUME_BYTES = 4_000_000;
 const MAX_LINKEDIN_TEXT = 5_000;
+const LINKEDIN_HOST = /(^|\.)linkedin\.com$/i;
 
 export type ProfileContext = {
   linkedin: { url: string; text: string; ok: boolean };
@@ -52,18 +54,20 @@ async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respon
   }
 }
 
+/** Normalize to an https linkedin.com URL, or "" if the host is not LinkedIn. */
 function normalizeLinkedInUrl(raw: string): string {
   const value = raw.trim();
   if (!value) return "";
   try {
     const withProto = /^https?:\/\//i.test(value) ? value : `https://${value}`;
     const u = new URL(withProto);
-    if (!/(^|\.)linkedin\.com$/i.test(u.hostname)) return withProto;
+    if (!LINKEDIN_HOST.test(u.hostname)) return "";
+    u.protocol = "https:";
     u.hash = "";
     u.search = "";
     return u.toString().replace(/\/$/, "");
   } catch {
-    return value;
+    return "";
   }
 }
 
@@ -98,7 +102,17 @@ async function gatherLinkedIn(urlRaw: string): Promise<ProfileContext["linkedin"
   if (!url) return { url: "", text: "", ok: false };
 
   try {
-    const res = await fetchWithTimeout(url, {
+    const safe = await assertPublicHttpsUrl(url);
+    if (!LINKEDIN_HOST.test(safe.hostname)) {
+      return {
+        url,
+        ok: false,
+        text: `URL: ${url}\n(Only linkedin.com profiles are allowed.)`,
+      };
+    }
+    // Do not follow redirects — avoids SSRF via redirect to a private host.
+    const res = await fetchWithTimeout(safe.toString(), {
+      redirect: "error",
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
         "Accept-Language": "en-US,en;q=0.9",
@@ -130,23 +144,36 @@ async function gatherLinkedIn(urlRaw: string): Promise<ProfileContext["linkedin"
   }
 }
 
+/**
+ * Resolve a resume URL to a local file only when it points under public/uploads.
+ * Rejects path traversal (`..`, absolute escapes) so CMS-controlled URLs cannot
+ * read files outside the uploads directory.
+ */
 function localResumePath(resumeUrl: string): string | null {
   const clean = resumeUrl.trim().split("?")[0].split("#")[0];
   if (!clean) return null;
 
+  let pathname = "";
   if (clean.startsWith("/")) {
-    return path.join(process.cwd(), "public", clean.replace(/^\//, ""));
+    pathname = clean;
+  } else {
+    try {
+      pathname = new URL(clean).pathname;
+    } catch {
+      return null;
+    }
   }
 
-  try {
-    const u = new URL(clean);
-    if (u.pathname.startsWith("/uploads/")) {
-      return path.join(process.cwd(), "public", u.pathname.replace(/^\//, ""));
-    }
-  } catch {
-    // not a URL
+  if (!pathname.startsWith("/uploads/")) return null;
+  if (pathname.includes("\0") || pathname.split("/").includes("..")) return null;
+
+  const uploadsRoot = path.resolve(process.cwd(), "public", "uploads");
+  const resolved = path.resolve(process.cwd(), "public", pathname.slice(1));
+  const relative = path.relative(uploadsRoot, resolved);
+  if (!relative || relative.startsWith("..") || path.isAbsolute(relative)) {
+    return null;
   }
-  return null;
+  return resolved;
 }
 
 async function gatherResume(resumeUrlRaw: string): Promise<ProfileContext["resume"]> {
@@ -167,11 +194,20 @@ async function gatherResume(resumeUrlRaw: string): Promise<ProfileContext["resum
       };
     }
 
-    const absolute = /^https?:\/\//i.test(url) ? url : "";
-    if (!absolute) {
+    if (!/^https?:\/\//i.test(url)) {
       return { url, note: "Resume path could not be resolved." };
     }
-    const res = await fetchWithTimeout(absolute, {
+
+    let safe: URL;
+    try {
+      safe = await assertPublicHttpsUrl(url);
+    } catch {
+      return { url, note: "Resume URL is not allowed (public HTTPS hosts only)." };
+    }
+
+    // Do not follow redirects — avoids SSRF via redirect to a private host.
+    const res = await fetchWithTimeout(safe.toString(), {
+      redirect: "error",
       headers: { Accept: "application/pdf,*/*" },
     });
     if (!res.ok) {

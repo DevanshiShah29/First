@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Image from "next/image";
 import { JAR_ASSETS, type StarColor } from "@/lib/memory-jar";
 
 interface PaperStarProps {
@@ -15,8 +16,7 @@ export function PaperStar({
   style,
 }: PaperStarProps) {
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
+    <Image
       src={JAR_ASSETS.star(color)}
       alt=""
       width={size}

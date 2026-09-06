@@ -57,12 +57,12 @@ export function SkillItemRow({
         </div>
         <div className="wp-skill-icon-source">
           <label className="wp-skill-file">
-            <span className="wp-btn">{uploading ? "Uploading…" : "Upload SVG"}</span>
+            <span className="wp-btn">{uploading ? "Uploading…" : "Upload icon"}</span>
             <input
               type="file"
-              accept=".svg,image/svg+xml"
+              accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif"
               disabled={uploading}
-              aria-label={`Upload SVG icon for ${item.name || noun}`}
+              aria-label={`Upload icon image for ${item.name || noun}`}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) onUpload(file);
@@ -72,7 +72,7 @@ export function SkillItemRow({
           </label>
           <TextInput
             value={customUrl}
-            placeholder="or paste image URL: https://…"
+            placeholder="or paste PNG/WebP URL: https://…"
             onChange={(iconUrl) => onChange({ ...item, iconUrl: iconUrl || undefined })}
           />
           <button

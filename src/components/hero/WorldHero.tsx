@@ -114,10 +114,11 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
           src="/images/hero-world.jpg"
           alt="Illustrated desk with a piano, a jar of stars, camera, laptop, books, cooking, and travel souvenirs."
           className="world-art"
-          width={1280}
-          height={720}
+          width={3840}
+          height={2160}
+          quality={92}
           priority
-          sizes="(max-width: 1280px) 100vw, 1280px"
+          sizes="100vw"
         />
         <div className="world-watermark-mask" />
         <div ref={audioHost} className="world-audio-host" aria-hidden />

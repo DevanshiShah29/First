@@ -637,6 +637,10 @@ html:not([data-theme="light"]) .theme-icon-moon {
   min-height: 100svh;
   object-fit: cover;
   object-position: 50% 42%;
+  /* Keep full-bleed hero art crisp under perspective tilt on retina. */
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-user-drag: none;
 }
 .world-watermark-mask {
   position: absolute;
@@ -746,9 +750,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   transition: none;
   touch-action: pan-y;
 }
-.world-hero.is-studio .world-stage.is-tilting {
-  will-change: transform;
-}
+/* Avoid permanent will-change: it can rasterize the hero at a soft GPU layer. */
 .world-hero.is-studio .world-stage::before {
   content: "";
   position: absolute;
@@ -761,8 +763,6 @@ html:not([data-theme="light"]) .theme-icon-moon {
 }
 .world-hero.is-studio .world-art {
   object-position: 50% 48%;
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 .world-hero.is-studio .world-watermark-mask {
   background: linear-gradient(to top left, #efe4d4 42%, transparent);

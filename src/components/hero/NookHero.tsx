@@ -61,13 +61,19 @@ function NookHeroArt() {
     "Illustrated cozy nook with a piano, books, a memory jar, plants, a laptop, and art supplies.";
   const common = {
     alt,
-    width: 1280,
-    height: 720,
+    width: 3840,
+    height: 2160,
+    quality: 92,
     priority: true,
-    sizes: "(max-width: 720px) 100vw, 1280px",
+    sizes: "100vw",
   } as const;
   const { props: desktop } = getImageProps({ ...common, src: "/images/hero-nook.jpg" });
-  const { props: mobile } = getImageProps({ ...common, src: "/images/hero-nook-portrait.jpg" });
+  const { props: mobile } = getImageProps({
+    ...common,
+    src: "/images/hero-nook-portrait.jpg",
+    width: 2160,
+    height: 3840,
+  });
   return (
     <picture>
       <source media="(max-width: 720px)" srcSet={mobile.srcSet} sizes={mobile.sizes} />

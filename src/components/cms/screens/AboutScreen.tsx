@@ -5,15 +5,14 @@ import type { ContentData } from "@/content/types";
 import { move } from "../types";
 
 // UI components
-import { Metabox, SectionTools } from "../components/Metabox";
+import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, TextArea, TextInput } from "../fields";
 
 interface AboutScreenProps {
   data: ContentData;
   setData: (data: ContentData) => void;
-  sectionState: Record<string, boolean>;
-  expandAll: (ids: string[]) => void;
-  collapseAll: (ids: string[]) => void;
   save: () => Promise<void>;
   dirty: boolean;
 }
@@ -25,25 +24,20 @@ interface AboutScreenProps {
 export function AboutScreen({
   data,
   setData,
-  sectionState,
-  expandAll,
-  collapseAll,
   save,
   dirty,
 }: AboutScreenProps) {
   const site = data.site;
-  const sectionIds = ["about_copy", "about_stats"];
 
   return (
     <>
       <h1 className="wp-screen-title">About</h1>
       <p className="wp-sub">Bio, philosophy, experience intro, and homepage stats.</p>
-      <SectionTools
-        onExpandAll={() => expandAll(sectionIds)}
-        onCollapseAll={() => collapseAll(sectionIds)}
-      />
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="about" />}
+      >
 
-      <Metabox id="about_copy" title="About" isOpen={sectionState["about_copy"]}>
+      <Metabox id="about_copy" title="About">
         <table className="wp-form-table">
           <tbody>
             <Field label="About" wide>
@@ -93,7 +87,6 @@ export function AboutScreen({
         id="about_stats"
         title="Stats"
         badge={`${site.stats.length} ${site.stats.length === 1 ? "stat" : "stats"}`}
-        isOpen={sectionState["about_stats"]}
       >
         {site.stats.map((stat, i) => (
           <div
@@ -193,6 +186,7 @@ export function AboutScreen({
           Save Changes
         </button>
       </p>
+      </EditorTabs>
     </>
   );
 }

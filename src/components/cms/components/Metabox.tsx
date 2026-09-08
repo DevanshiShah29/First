@@ -102,28 +102,3 @@ export function Metabox({
     </section>
   );
 }
-
-/**
- * Renders expand/collapse-all controls for metaboxes.
- * @example <SectionTools onExpandAll={…} onCollapseAll={…} />
- */
-export function SectionTools({
-  onExpandAll,
-  onCollapseAll,
-}: {
-  onExpandAll: () => void;
-  onCollapseAll: () => void;
-}) {
-  return (
-    <div className="wp-section-tools">
-      <span>Sections:</span>
-      <button type="button" onClick={onExpandAll}>
-        Expand all
-      </button>
-      <span>·</span>
-      <button type="button" onClick={onCollapseAll}>
-        Collapse all
-      </button>
-    </div>
-  );
-}

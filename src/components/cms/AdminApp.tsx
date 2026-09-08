@@ -72,9 +72,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     setError,
     notice,
     setNotice,
-    sectionState,
-    expandAll,
-    collapseAll,
     save,
   } = doc;
 
@@ -193,9 +190,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <SiteScreen
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               go={go}
               save={save}
               dirty={dirty}
@@ -214,9 +208,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <AboutScreen
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               save={save}
               dirty={dirty}
             />
@@ -226,9 +217,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <ContactScreen
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               uploadResume={uploadResume}
               uploading={uploading}
               save={save}
@@ -240,9 +228,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <HeroScreen
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               setHeroMedia={setHeroMedia}
               uploadHeroFile={uploadHeroFile}
               uploading={uploading}
@@ -255,9 +240,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <AppearanceScreen
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               save={save}
               dirty={dirty}
             />
@@ -302,9 +284,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               noun="skill"
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               uploadSkillIcon={uploadSkillIcon}
               uploading={uploading}
               save={save}
@@ -319,9 +298,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               noun="technology"
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               uploadSkillIcon={uploadSkillIcon}
               uploading={uploading}
               save={save}
@@ -333,9 +309,6 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <CraftScreen
               data={data}
               setData={setData}
-              sectionState={sectionState}
-              expandAll={expandAll}
-              collapseAll={collapseAll}
               save={save}
               dirty={dirty}
             />

@@ -9,6 +9,8 @@ import { move, type Screen } from "../types";
 
 // UI components
 import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { DatePicker, Field, HexColorInput, TextArea, TextInput } from "../fields";
 
 /**
@@ -200,6 +202,9 @@ export function MemoriesEditScreen({
       <h1 className="wp-screen-title">
         {memory.title === "New memory" ? "Add New Memory" : `Edit Memory: ${memory.title || "Untitled"}`}
       </h1>
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="memories" />}
+      >
       <div className="wp-edit">
         <div>
           <input
@@ -366,6 +371,7 @@ export function MemoriesEditScreen({
           </div>
         </Metabox>
       </div>
+      </EditorTabs>
     </>
   );
 }

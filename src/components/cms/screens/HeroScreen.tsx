@@ -15,15 +15,14 @@ import {
   MediaLayoutPreview,
   MediaVisual,
 } from "../components/MediaPreview";
-import { Metabox, SectionTools } from "../components/Metabox";
+import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, StringList, TextArea, TextInput } from "../fields";
 
 interface HeroScreenProps {
   data: ContentData;
   setData: (data: ContentData) => void;
-  sectionState: Record<string, boolean>;
-  expandAll: (ids: string[]) => void;
-  collapseAll: (ids: string[]) => void;
   setHeroMedia: (patch: Partial<HeroMedia>) => void;
   uploadHeroFile: (file: File) => Promise<void>;
   uploading: boolean;
@@ -38,9 +37,6 @@ interface HeroScreenProps {
 export function HeroScreen({
   data,
   setData,
-  sectionState,
-  expandAll,
-  collapseAll,
   setHeroMedia,
   uploadHeroFile,
   uploading,
@@ -59,15 +55,13 @@ export function HeroScreen({
           Preview site
         </a>
       </p>
-      <SectionTools
-        onExpandAll={() => expandAll(["hero_templates", "hero_media", "hero_world", "hero_copy"])}
-        onCollapseAll={() => collapseAll(["hero_templates", "hero_media", "hero_world", "hero_copy"])}
-      />
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="hero" />}
+      >
       <Metabox
         id="hero_templates"
         title="Templates"
         badge={HERO_TEMPLATES.find((t) => t.id === site.heroTemplate)?.name}
-        isOpen={sectionState["hero_templates"]}
       >
         <div className="wp-template-grid">
           {HERO_TEMPLATES.map((tpl) => {
@@ -100,7 +94,6 @@ export function HeroScreen({
         id="hero_media"
         title="Media"
         badge={heroMedia.kind !== "none" ? `${heroMedia.kind} (${heroMedia.place})` : "none"}
-        isOpen={sectionState["hero_media"]}
       >
         <MediaLayoutPreview site={site} theme={data.theme} media={heroMedia} />
         {(site.heroTemplate === "world" ||
@@ -230,7 +223,7 @@ export function HeroScreen({
           </tbody>
         </table>
       </Metabox>
-      <Metabox id="hero_world" title="3D World" isOpen={sectionState["hero_world"]}>
+      <Metabox id="hero_world" title="3D World">
         <p style={{ margin: "0 0 12px" }}>
           Used when a 3D hero is live. The piano plays this track in the page — visitors never leave the
           site. Books open the reading page.
@@ -256,7 +249,7 @@ export function HeroScreen({
           </tbody>
         </table>
       </Metabox>
-      <Metabox id="hero_copy" title="Hero copy" isOpen={sectionState["hero_copy"]}>
+      <Metabox id="hero_copy" title="Hero copy">
         <table className="wp-form-table">
           <tbody>
             <Field label="Kicker">
@@ -299,6 +292,7 @@ export function HeroScreen({
           Save Changes
         </button>
       </p>
+      </EditorTabs>
     </>
   );
 }

@@ -6,15 +6,14 @@ import type { ContentData, CraftContent, CraftGroup, CraftItem } from "@/content
 import { move } from "../types";
 
 // UI components
-import { Metabox, SectionTools } from "../components/Metabox";
+import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, TextArea, TextInput } from "../fields";
 
 interface CraftScreenProps {
   data: ContentData;
   setData: (data: ContentData) => void;
-  sectionState: Record<string, boolean>;
-  expandAll: (ids: string[]) => void;
-  collapseAll: (ids: string[]) => void;
   save: () => Promise<void>;
   dirty: boolean;
 }
@@ -42,9 +41,6 @@ function setCraft(data: ContentData, craft: CraftContent): ContentData {
 export function CraftScreen({
   data,
   setData,
-  sectionState,
-  expandAll,
-  collapseAll,
   save,
   dirty,
 }: CraftScreenProps) {
@@ -89,12 +85,11 @@ export function CraftScreen({
         site.
       </p>
 
-      <SectionTools
-        onExpandAll={() => expandAll(allSectionIds)}
-        onCollapseAll={() => collapseAll(allSectionIds)}
-      />
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="craft" />}
+      >
 
-      <Metabox id="craft_page" title="Page copy" isOpen={sectionState["craft_page"]}>
+      <Metabox id="craft_page" title="Page copy">
         <table className="wp-form-table">
           <tbody>
             <Field label="Kicker">
@@ -135,7 +130,6 @@ export function CraftScreen({
           id={`craft_group_${gi}`}
           title={group.title || "Craft group"}
           badge={`${group.items.length} ${group.items.length === 1 ? "item" : "items"}`}
-          isOpen={sectionState[`craft_group_${gi}`]}
           actions={
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
               <button
@@ -308,6 +302,7 @@ export function CraftScreen({
           Save Changes
         </button>
       </p>
+      </EditorTabs>
     </>
   );
 }

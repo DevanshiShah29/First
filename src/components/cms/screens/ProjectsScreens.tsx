@@ -11,6 +11,8 @@ import { move, type Screen } from "../types";
 // UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, StringList, TextArea, TextInput } from "../fields";
 
 /**
@@ -211,6 +213,9 @@ function ProjectsEditForm({
   return (
     <>
       <h1 className="wp-screen-title">{project.name === "New project" ? "Add New Project" : "Edit Project"}</h1>
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="projects" />}
+      >
       <div className="wp-edit">
         <div>
           <input
@@ -336,6 +341,7 @@ function ProjectsEditForm({
           </div>
         </Metabox>
       </div>
+      </EditorTabs>
     </>
   );
 }

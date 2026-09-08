@@ -20,7 +20,6 @@ export function useCmsDocument(initial: ContentData) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [sectionState, setSectionState] = useState<Record<string, boolean>>({});
 
   const dirty = useMemo(() => JSON.stringify(data) !== saved, [data, saved]);
 
@@ -74,44 +73,6 @@ export function useCmsDocument(initial: ContentData) {
     return () => window.removeEventListener("beforeunload", onLeave);
   }, [dirty]);
 
-  /**
-   * Opens named metabox sections and persists open state.
-   * @example expandAll(["about_copy"]) // void
-   */
-  function expandAll(ids: string[]) {
-    setSectionState((prev) => {
-      const next = { ...prev };
-      ids.forEach((id) => {
-        next[id] = true;
-        try {
-          localStorage.setItem(`wp_metabox_${id}`, "true");
-        } catch {
-          // Ignore storage failures
-        }
-      });
-      return next;
-    });
-  }
-
-  /**
-   * Closes named metabox sections and persists closed state.
-   * @example collapseAll(["about_copy"]) // void
-   */
-  function collapseAll(ids: string[]) {
-    setSectionState((prev) => {
-      const next = { ...prev };
-      ids.forEach((id) => {
-        next[id] = false;
-        try {
-          localStorage.setItem(`wp_metabox_${id}`, "false");
-        } catch {
-          // Ignore storage failures
-        }
-      });
-      return next;
-    });
-  }
-
   return {
     data,
     setData,
@@ -121,9 +82,6 @@ export function useCmsDocument(initial: ContentData) {
     setError,
     notice,
     setNotice,
-    sectionState,
-    expandAll,
-    collapseAll,
     save,
   };
 }

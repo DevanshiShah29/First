@@ -10,7 +10,9 @@ import { move } from "../types";
 
 // UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
-import { Metabox, SectionTools } from "../components/Metabox";
+import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, TextInput } from "../fields";
 import { SkillItemRow } from "../SkillItemRow";
 
@@ -20,9 +22,6 @@ interface SkillGroupsScreenProps {
   noun: "skill" | "technology";
   data: ContentData;
   setData: (data: ContentData) => void;
-  sectionState: Record<string, boolean>;
-  expandAll: (ids: string[]) => void;
-  collapseAll: (ids: string[]) => void;
   uploadSkillIcon: (file: File, kind: "skills" | "technologies", gi: number, ii: number) => Promise<void>;
   uploading: boolean;
   save: () => Promise<void>;
@@ -81,9 +80,6 @@ export function SkillGroupsScreen({
   noun,
   data,
   setData,
-  sectionState,
-  expandAll,
-  collapseAll,
   uploadSkillIcon,
   uploading,
   save,
@@ -211,6 +207,15 @@ export function SkillGroupsScreen({
         </button>
       </h1>
 
+      <EditorTabs
+        preview={
+          <LivePreviewShell
+            data={data}
+            dirty={dirty}
+            section={kind === "technologies" ? "technologies" : "skills"}
+          />
+        }
+      >
       {showAiAssist ? (
         <div className="wp-ai-stack" style={{ marginBottom: 18 }}>
           <AiFormSection
@@ -305,18 +310,12 @@ export function SkillGroupsScreen({
           />
         </div>
       ) : null}
-
-      <SectionTools
-        onExpandAll={() => expandAll(groups.map((_, gi) => `${prefix}_${gi}`))}
-        onCollapseAll={() => collapseAll(groups.map((_, gi) => `${prefix}_${gi}`))}
-      />
       {groups.map((group: SkillGroup, gi: number) => (
         <Metabox
           key={`${prefix}_${gi}`}
           id={`${prefix}_${gi}`}
           title={group.title || `${title} group`}
           badge={`${group.items.length} ${group.items.length === 1 ? noun : `${noun}s`}`}
-          isOpen={sectionState[`${prefix}_${gi}`]}
           actions={
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
               <button
@@ -440,6 +439,7 @@ export function SkillGroupsScreen({
           Save Changes
         </button>
       </p>
+      </EditorTabs>
     </>
   );
 }

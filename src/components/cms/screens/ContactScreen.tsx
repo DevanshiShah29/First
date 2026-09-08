@@ -5,15 +5,14 @@ import type { ContentData } from "@/content/types";
 import { resumeFileLabel } from "@/lib/resume";
 
 // UI components
-import { Metabox, SectionTools } from "../components/Metabox";
+import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, TextInput } from "../fields";
 
 interface ContactScreenProps {
   data: ContentData;
   setData: (data: ContentData) => void;
-  sectionState: Record<string, boolean>;
-  expandAll: (ids: string[]) => void;
-  collapseAll: (ids: string[]) => void;
   uploadResume: (file: File) => Promise<void>;
   uploading: boolean;
   save: () => Promise<void>;
@@ -27,27 +26,22 @@ interface ContactScreenProps {
 export function ContactScreen({
   data,
   setData,
-  sectionState,
-  expandAll,
-  collapseAll,
   uploadResume,
   uploading,
   save,
   dirty,
 }: ContactScreenProps) {
   const site = data.site;
-  const sectionIds = ["contact_details"];
 
   return (
     <>
       <h1 className="wp-screen-title">Contact</h1>
       <p className="wp-sub">Email, resume, and social links shown on the public site.</p>
-      <SectionTools
-        onExpandAll={() => expandAll(sectionIds)}
-        onCollapseAll={() => collapseAll(sectionIds)}
-      />
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="contact" />}
+      >
 
-      <Metabox id="contact_details" title="Contact" isOpen={sectionState["contact_details"]}>
+      <Metabox id="contact_details" title="Contact">
         <table className="wp-form-table">
           <tbody>
             <Field label="Contact line">
@@ -126,6 +120,7 @@ export function ContactScreen({
           Save Changes
         </button>
       </p>
+      </EditorTabs>
     </>
   );
 }

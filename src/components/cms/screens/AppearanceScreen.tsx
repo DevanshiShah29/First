@@ -9,16 +9,14 @@ import {
 } from "@/content/types";
 
 // UI components
-import { AppearancePreview } from "../components/AppearancePreview";
-import { Metabox, SectionTools } from "../components/Metabox";
+import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, HexColorInput } from "../fields";
 
 interface AppearanceScreenProps {
   data: ContentData;
   setData: (data: ContentData) => void;
-  sectionState: Record<string, boolean>;
-  expandAll: (ids: string[]) => void;
-  collapseAll: (ids: string[]) => void;
   save: () => Promise<void>;
   dirty: boolean;
 }
@@ -30,34 +28,20 @@ interface AppearanceScreenProps {
 export function AppearanceScreen({
   data,
   setData,
-  sectionState,
-  expandAll,
-  collapseAll,
   save,
   dirty,
 }: AppearanceScreenProps) {
-  const site = data.site;
-
   return (
     <>
       <h1 className="wp-screen-title">Appearance</h1>
       <p className="wp-sub">Colors and light/dark behavior for the public site. Each hex field shows a live preview.</p>
-      <SectionTools
-        onExpandAll={() =>
-          expandAll(["app_preview", "app_options", "app_brand", "app_palette_dark", "app_palette_light"])
-        }
-        onCollapseAll={() =>
-          collapseAll(["app_preview", "app_options", "app_brand", "app_palette_dark", "app_palette_light"])
-        }
-      />
-      <Metabox id="app_preview" title="Live Preview" isOpen={sectionState["app_preview"]}>
-        <AppearancePreview theme={data.theme} site={site} />
-      </Metabox>
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="appearance" />}
+      >
       <Metabox
         id="app_options"
         title="Theme options"
         badge={data.theme.defaultMode}
-        isOpen={sectionState["app_options"]}
       >
         <table className="wp-form-table">
           <tbody>
@@ -97,7 +81,7 @@ export function AppearanceScreen({
           </tbody>
         </table>
       </Metabox>
-      <Metabox id="app_brand" title="Brand colors" isOpen={sectionState["app_brand"]}>
+      <Metabox id="app_brand" title="Brand colors">
         <table className="wp-form-table">
           <tbody>
             <Field label="Brand from" hint="Logo, buttons, timeline start">
@@ -121,7 +105,6 @@ export function AppearanceScreen({
           id={`app_palette_${mode}`}
           title={mode === "dark" ? "Dark palette" : "Light palette"}
           badge={mode}
-          isOpen={sectionState[`app_palette_${mode}`]}
         >
           <table className="wp-form-table">
             <tbody>
@@ -163,6 +146,7 @@ export function AppearanceScreen({
           Reset to defaults
         </button>
       </p>
+      </EditorTabs>
     </>
   );
 }

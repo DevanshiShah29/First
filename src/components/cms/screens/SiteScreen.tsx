@@ -6,15 +6,12 @@ import type { Screen } from "../types";
 
 // UI components
 import { ChangePasswordForm } from "../ChangePasswordForm";
-import { Metabox, SectionTools } from "../components/Metabox";
+import { Metabox } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";
 
 interface SiteScreenProps {
   data: ContentData;
   setData: (data: ContentData) => void;
-  sectionState: Record<string, boolean>;
-  expandAll: (ids: string[]) => void;
-  collapseAll: (ids: string[]) => void;
   go: (screen: Screen) => void;
   save: () => Promise<void>;
   dirty: boolean;
@@ -29,9 +26,6 @@ interface SiteScreenProps {
 export function SiteScreen({
   data,
   setData,
-  sectionState,
-  expandAll,
-  collapseAll,
   go,
   save,
   dirty,
@@ -39,7 +33,6 @@ export function SiteScreen({
   onPasswordError,
 }: SiteScreenProps) {
   const site = data.site;
-  const sectionIds = ["site_identity", "site_password"];
 
   return (
     <>
@@ -58,11 +51,7 @@ export function SiteScreen({
           Edit about
         </button>
       </p>
-      <SectionTools
-        onExpandAll={() => expandAll(sectionIds)}
-        onCollapseAll={() => collapseAll(sectionIds)}
-      />
-      <Metabox id="site_identity" title="Identity" isOpen={sectionState["site_identity"]}>
+      <Metabox id="site_identity" title="Identity">
         <table className="wp-form-table">
           <tbody>
             <Field label="Site title">
@@ -89,7 +78,6 @@ export function SiteScreen({
       </Metabox>
 
       <ChangePasswordForm
-        isOpen={sectionState["site_password"]}
         onSuccess={onPasswordNotice}
         onError={onPasswordError}
       />

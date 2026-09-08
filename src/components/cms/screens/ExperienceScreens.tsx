@@ -11,6 +11,8 @@ import { move, type Screen } from "../types";
 // UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { Metabox } from "../components/Metabox";
+import { EditorTabs } from "../preview/EditorTabs";
+import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { Field, TextArea, TextInput } from "../fields";
 
 /**
@@ -238,6 +240,9 @@ function ExperienceEditForm({
   return (
     <>
       <h1 className="wp-screen-title">{job.role === "New role" ? "Add New Experience" : "Edit Experience"}</h1>
+      <EditorTabs
+        preview={<LivePreviewShell data={data} dirty={dirty} section="experience" />}
+      >
       <div className="wp-edit">
         <div>
           <input
@@ -361,6 +366,7 @@ function ExperienceEditForm({
           </div>
         </Metabox>
       </div>
+      </EditorTabs>
     </>
   );
 }

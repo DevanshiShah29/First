@@ -8,16 +8,16 @@
   --brand-yellow: #ffd400;
   --brand-black: #000;
   --brand-button-bg: #e8f2fc;
-  --paper: #fbf4ea;
-  --paper-warm: #fbf4ea;
-  --background: #fbf4ea;
+  --paper: #f7f7fb;
+  --paper-warm: #f3f1ff;
+  --background: #f7f7fb;
   --app-background:
-    radial-gradient(circle at 20% 15%, #f4d9781f, transparent 28%),
-    radial-gradient(circle at 85% 30%, #cdb8f21f, transparent 30%),
-    radial-gradient(circle at 50% 85%, #e9a7b91a, transparent 35%),
-    #fbf4ea;
+    radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--brand-from, #7c3aed) 14%, transparent), transparent 28%),
+    radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--brand-to, #6366f1) 14%, transparent), transparent 30%),
+    radial-gradient(circle at 50% 85%, color-mix(in srgb, var(--brand-from, #7c3aed) 10%, transparent), transparent 35%),
+    #f7f7fb;
   --foreground: var(--ink);
-  --card: #fff8f4;
+  --card: #ffffff;
   --border: #5c4a5a2e;
   --btn-oval: 38% 62% 52% 48% / 58% 42% 62% 38%;
   --primary-shadow: 0 6px 14px #2c6bb31a;
@@ -34,7 +34,7 @@
   --chip-shadow: 2px 3px #78584424, 0 5px 12px #5a3c280f;
   --mat-opacity: 0.94;
   --mat-filter: drop-shadow(1px 2px #3223191f);
-  --mat-bg: radial-gradient(ellipse at 50% 50%, #e8d8c466 0%, #fbf4ea00 70%);
+  --mat-bg: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--brand-from, #7c3aed) 12%, transparent) 0%, transparent 70%);
   --jar-photo-filter: drop-shadow(1px 2px #3a281a24);
   --jar-interior-shade: transparent;
   --star-filter: drop-shadow(0 1px 1px rgba(60, 40, 20, 0.18));
@@ -97,16 +97,15 @@ html[data-theme="light"] .jar-of-stars {
   --brand-yellow: #ffd400;
   --brand-black: #000;
   --brand-button-bg: #e8f2fc;
-  --paper: #fbf4ea;
-  --paper-warm: #fbf4ea;
-  --background: #fbf4ea;
+  --paper: #f7f7fb;
+  --paper-warm: #f3f1ff;
+  --background: #f7f7fb;
   --app-background:
-    radial-gradient(circle at 20% 15%, #f4d9781f, transparent 28%),
-    radial-gradient(circle at 85% 30%, #cdb8f21f, transparent 30%),
-    radial-gradient(circle at 50% 85%, #e9a7b91a, transparent 35%),
-    #fbf4ea;
+    radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--brand-from, #7c3aed) 14%, transparent), transparent 28%),
+    radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--brand-to, #6366f1) 14%, transparent), transparent 30%),
+    #f7f7fb;
   --foreground: var(--ink);
-  --card: #fff8f4;
+  --card: #ffffff;
   --border: #5c4a5a2e;
   --primary-shadow: 0 6px 14px #2c6bb31a;
   --lavender: #c0a8e0;
@@ -116,7 +115,7 @@ html[data-theme="light"] .jar-of-stars {
   --chip-shadow: 2px 3px #78584424, 0 5px 12px #5a3c280f;
   --mat-opacity: 0.94;
   --mat-filter: drop-shadow(1px 2px #3223191f);
-  --mat-bg: radial-gradient(ellipse at 50% 50%, #e8d8c466 0%, #fbf4ea00 70%);
+  --mat-bg: radial-gradient(ellipse at 50% 50%, color-mix(in srgb, var(--brand-from, #7c3aed) 12%, transparent) 0%, transparent 70%);
   --jar-photo-filter: drop-shadow(1px 2px #3a281a24);
   --jar-interior-shade: transparent;
   --star-filter: drop-shadow(0 1px 1px rgba(60, 40, 20, 0.18));

@@ -45,7 +45,7 @@ export function HeroCtas({
           download={download.download}
           target={download.target}
           rel={download.rel}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-6 py-3 text-sm font-semibold text-foreground transition hover:border-violet-500/40 hover:text-accent-text"
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-6 py-3 text-sm font-semibold text-foreground transition hover:border-brand/40 hover:text-accent-text"
         >
           Download Resume
           <IconDownload />

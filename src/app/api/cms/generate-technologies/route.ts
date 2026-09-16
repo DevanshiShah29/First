@@ -5,8 +5,8 @@ import { generateTechnologies } from "@/server/ai/generate-technologies";
 export const runtime = "nodejs";
 
 /**
- * Handles POST /api/cms/generate-technologies.
- * @example POST body // {groups}
+ * Handles POST /api/cms/generate-technologies (suggest one technology).
+ * @example POST body // {name, groupTitle, icon, color, isNewGroup}
  */
 export async function POST(req: Request) {
   const gate = await requireCmsAi(req);
@@ -26,6 +26,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    groups: result.data.groups,
+    suggestion: result.data,
   });
 }

@@ -5,7 +5,7 @@ import {
   geminiPartsWithProfile,
 } from "@/server/ai-profile-context";
 import { callGeminiJson } from "@/server/ai/gemini";
-import { parseJsonObject, str, strList, strListNested } from "@/server/ai/strings";
+import { normalizeHex, parseJsonObject, str, strList, strListNested } from "@/server/ai/strings";
 
 const SOFT_ICONS = SKILL_ICONS.filter((icon) =>
   ["discovery", "prioritize", "specs", "map", "target", "empty"].includes(icon),
@@ -19,27 +19,23 @@ type GenerateBody = {
   existingGroups?: unknown;
   linkedin?: unknown;
   resume?: unknown;
+  /** Optional prior suggestion names to avoid on retry. */
+  excludeNames?: unknown;
 };
 
-type GeneratedFields = {
-  groups: SkillGroup[];
+export type SkillSuggestion = {
+  name: string;
+  groupTitle: string;
+  icon: SkillIcon;
+  color?: string;
+  isNewGroup: boolean;
 };
 
-/**
- * Normalizes a hex color to #RRGGBB or undefined.
- * @example normalizeHex("#abc") // "#AABBCC"
- */
-function normalizeHex(raw: unknown): string | undefined {
-  if (typeof raw !== "string") return undefined;
-  const value = raw.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toUpperCase();
-  const short = value.match(/^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/);
-  if (short) {
-    const [, a, b, c] = short;
-    return `#${a}${a}${b}${b}${c}${c}`.toUpperCase();
-  }
-  return undefined;
-}
+export type GenerateSkillsInput = GenerateBody;
+
+export type GenerateSkillsOutcome =
+  | { ok: true; data: SkillSuggestion }
+  | { ok: false; error: string; status: number };
 
 /**
  * Maps a raw icon name/alias to a soft SkillIcon.
@@ -89,61 +85,46 @@ function parseExistingGroups(v: unknown): SkillGroup[] {
 }
 
 /**
- * Parses Gemini JSON into skill groups.
- * @example parseGenerated(raw) // { groups } | null
+ * Parses Gemini JSON into a single skill suggestion.
+ * @example parseGenerated(raw, groups) // SkillSuggestion | null
  */
-function parseGenerated(raw: string): GeneratedFields | null {
+function parseGenerated(raw: string, existingGroups: SkillGroup[]): SkillSuggestion | null {
   const obj = parseJsonObject(raw);
   if (!obj) return null;
-  const groupsRaw = Array.isArray(obj.groups) ? obj.groups : Array.isArray(obj.skills) ? obj.skills : null;
-  if (!groupsRaw || groupsRaw.length === 0) return null;
-
-  const groups: SkillGroup[] = [];
-  for (const group of groupsRaw.slice(0, 3)) {
-    if (!group || typeof group !== "object") continue;
-    const g = group as Record<string, unknown>;
-    const title = str(g.title, 80);
-    const itemsRaw = Array.isArray(g.items) ? g.items : [];
-    const items: SkillItem[] = [];
-    for (const item of itemsRaw.slice(0, 12)) {
-      if (!item || typeof item !== "object") continue;
-      const row = item as Record<string, unknown>;
-      const name = str(row.name, 60);
-      if (!name) continue;
-      items.push({
-        name,
-        icon: mapIcon(row.icon),
-        color: normalizeHex(row.color),
-      });
-    }
-    if (!title || items.length === 0) continue;
-    groups.push({ title, items });
-  }
-
-  if (groups.length === 0) return null;
-  return { groups };
+  const name = str(obj.name, 60);
+  if (!name) return null;
+  let groupTitle = str(obj.groupTitle ?? obj.group, 80) || "Skills";
+  const existingMatch = existingGroups.find(
+    (g) => g.title.trim().toLowerCase() === groupTitle.trim().toLowerCase(),
+  );
+  if (existingMatch) groupTitle = existingMatch.title;
+  const isNewGroup = !existingMatch;
+  return {
+    name,
+    groupTitle,
+    icon: mapIcon(obj.icon),
+    color: normalizeHex(obj.color),
+    isNewGroup,
+  };
 }
 
-export type GenerateSkillsInput = GenerateBody;
-
-export type GenerateSkillsOutcome =
-  | { ok: true; data: GeneratedFields }
-  | { ok: false; error: string; status: number };
-
 /**
- * Generates soft-skill groups via Gemini + profile.
+ * Suggests one new skill to append (never replaces the list).
  * @example await generateSkills(key, body) // { ok: true, data } | { ok: false, … }
  */
 export async function generateSkills(
   apiKey: string,
   body: GenerateSkillsInput,
 ): Promise<GenerateSkillsOutcome> {
-    const siteTitle = str(body.siteTitle, 120);
+  const siteTitle = str(body.siteTitle, 120);
   const siteRoles = strList(body.siteRoles, 8, 80);
   const experienceStacks = strListNested(body.experienceStacks);
   const experienceSummaries = strList(body.experienceSummaries, 12, 280);
   const existingGroups = parseExistingGroups(body.existingGroups);
   const existingNames = existingGroups.flatMap((g) => g.items.map((i) => i.name));
+  const excludeNames = [
+    ...new Set([...existingNames, ...strList(body.excludeNames, 40, 60)].map((n) => n.toLowerCase())),
+  ];
   const linkedin = str(body.linkedin, 400);
   const resume = str(body.resume, 500);
 
@@ -165,22 +146,20 @@ export async function generateSkills(
   }
 
   const prompt = [
-    "You curate the Skills section of a personal portfolio CMS for a product-minded engineer / PM.",
-    "Return craft/product skills (not programming languages). Sharp, concrete labels — not buzzword salad. No emojis.",
-    "Match this sample tone of skill names:",
-    '"Discovery", "Prioritization", "Writing specs", "Opportunity mapping", "Outcomes over output", "Empty states"',
+    "You suggest ONE new soft/product skill for a personal portfolio Skills section.",
+    "Not programming languages. Sharp, concrete labels — not buzzword salad. No emojis.",
+    "Sample skill names: Discovery, Prioritization, Writing specs, Opportunity mapping, Outcomes over output, Empty states.",
     "",
     "Return ONLY valid JSON with this shape:",
-    '{"groups":[{"title":"Skills","items":[{"name":"Discovery","icon":"discovery","color":"#BF70FF"}]}]}',
+    '{"name":"Discovery","groupTitle":"Skills","icon":"discovery","color":"#BF70FF"}',
     "",
     "Rules:",
-    "- Prefer a single group titled Skills (or 1–2 groups max).",
-    "- 5–8 total items. Deduplicate. Prefer quality over quantity.",
-    "- Each item needs name, icon, and color (#RRGGBB).",
+    "- Suggest exactly one skill that is NOT in the exclusion list (case-insensitive).",
+    "- Prefer an existing group title when one fits; only invent a new groupTitle when needed.",
     `- icon MUST be one of: ${SOFT_ICONS.join(", ")}. Use "empty" when nothing fits.`,
-    "- Infer skills from resume, LinkedIn, and experience summaries/tags — product judgment, discovery, specs, prioritization, systems thinking, etc.",
-    "- Do NOT list technologies like React/Node here; those belong in Technologies.",
-    "- If an existing draft is provided, improve/reorganize it — keep truth, drop weak entries.",
+    "- color: #RRGGBB.",
+    "- Infer from resume, LinkedIn, and experience summaries/tags.",
+    "- Do NOT list technologies like React/Node here.",
     "",
     `Site title / name: ${siteTitle || "(not set)"}`,
     siteRoles.length ? `Roles: ${siteRoles.join(", ")}` : "Roles: (not set)",
@@ -191,13 +170,16 @@ export async function generateSkills(
       ? `Experience summaries:\n- ${experienceSummaries.join("\n- ")}`
       : "Experience summaries: (empty)",
     existingGroups.length
-      ? `Existing skills draft:\n${existingGroups
+      ? `Existing skills:\n${existingGroups
           .map(
             (g) =>
-              `- ${g.title}: ${g.items.map((i) => `${i.name}${i.icon ? ` [${i.icon}]` : ""}`).join(", ") || "(empty)"}`,
+              `- ${g.title}: ${g.items.map((i) => i.name).join(", ") || "(empty)"}`,
           )
           .join("\n")}`
-      : "Existing skills draft: (empty)",
+      : "Existing skills: (empty)",
+    excludeNames.length
+      ? `Do NOT suggest these names: ${excludeNames.join(", ")}`
+      : "No exclusions yet.",
     "",
     "Profile context (LinkedIn + Resume):",
     formatProfileContextForPrompt(profile),
@@ -206,14 +188,22 @@ export async function generateSkills(
   const gemini = await callGeminiJson(
     apiKey,
     geminiPartsWithProfile(prompt, profile),
-    0.55,
+    0.7,
   );
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
-  const generated = parseGenerated(gemini.text);
+  const generated = parseGenerated(gemini.text, existingGroups);
   if (!generated) {
     console.error("Could not parse Gemini JSON", gemini.text.slice(0, 500));
     return { ok: false, error: "Could not parse AI response. Try again.", status: 502 };
+  }
+
+  if (excludeNames.includes(generated.name.toLowerCase())) {
+    return {
+      ok: false,
+      error: "AI suggested a duplicate. Generate with AI again for another skill.",
+      status: 502,
+    };
   }
 
   return { ok: true, data: generated };

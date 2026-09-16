@@ -109,6 +109,18 @@ const paletteSchema = z.object({
   badge: hexColor,
 });
 
+const savedThemeSchema = z.object({
+  id: nonEmpty("Saved theme id"),
+  name: nonEmpty("Saved theme name"),
+  description: z.string().optional(),
+  brandFrom: hexColor,
+  brandTo: hexColor,
+  dark: paletteSchema,
+  light: paletteSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 const themeSchema = z.object({
   defaultMode: z.enum(["light", "dark", "system"]),
   allowToggle: z.boolean(),
@@ -116,6 +128,8 @@ const themeSchema = z.object({
   brandTo: hexColor,
   dark: paletteSchema,
   light: paletteSchema,
+  activeThemeId: z.string().nullable().optional(),
+  savedThemes: z.array(savedThemeSchema).optional().default([]),
 });
 
 const memorySchema = z.object({

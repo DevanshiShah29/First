@@ -85,7 +85,7 @@ export function HeroCopy({
           </h1>
         </Fade>
         <Fade className="mt-6" delay={0.12}>
-          <span className="inline-flex rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-1.5">
+          <span className="inline-flex rounded-lg border border-brand/25 bg-brand/10 px-3 py-1.5">
             <Typewriter words={site.roles} />
           </span>
         </Fade>
@@ -294,7 +294,7 @@ export function SpotlightHero({ site, onProjects }: HeroProps) {
           </h1>
         </Fade>
         <Fade className="mt-6" delay={0.12}>
-          <span className="inline-flex rounded-lg border border-violet-500/25 bg-violet-500/10 px-3 py-1.5">
+          <span className="inline-flex rounded-lg border border-brand/25 bg-brand/10 px-3 py-1.5">
             <Typewriter words={site.roles} />
           </span>
         </Fade>

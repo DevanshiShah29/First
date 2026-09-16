@@ -10,6 +10,7 @@ import { move, type Screen } from "../types";
 
 // UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
+import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -132,6 +133,7 @@ export function ExperienceEditScreen({
   go,
   save,
   dirty,
+  status,
 }: {
   data: ContentData;
   setData: (data: ContentData) => void;
@@ -140,6 +142,7 @@ export function ExperienceEditScreen({
   go: (screen: Screen) => void;
   save: () => Promise<void>;
   dirty: boolean;
+  status: CmsSaveStatus;
 }) {
   return (
     <ExperienceEditForm
@@ -151,6 +154,7 @@ export function ExperienceEditScreen({
       go={go}
       save={save}
       dirty={dirty}
+      status={status}
     />
   );
 }
@@ -167,6 +171,7 @@ function ExperienceEditForm({
   go,
   save,
   dirty,
+  status,
 }: {
   data: ContentData;
   setData: (data: ContentData) => void;
@@ -175,6 +180,7 @@ function ExperienceEditForm({
   go: (screen: Screen) => void;
   save: () => Promise<void>;
   dirty: boolean;
+  status: CmsSaveStatus;
 }) {
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -360,9 +366,13 @@ function ExperienceEditForm({
             >
               Move to Trash
             </button>
-            <button type="button" className="wp-btn wp-btn-primary" onClick={() => void save()} disabled={!dirty}>
-              Update
-            </button>
+            <CmsSaveButton
+              save={save}
+              dirty={dirty}
+              status={status}
+              label="Update"
+              className="wp-btn wp-btn-primary"
+            />
           </div>
         </Metabox>
       </div>

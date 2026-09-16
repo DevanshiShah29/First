@@ -2,12 +2,17 @@
 
 // External dependencies
 import Link from "next/link";
+import { useState } from "react";
 
 // Application services & types
 import type { ContentData, MemoryItem } from "@/content/types";
+import { generateMemoryCopy, type MemoryCopyVariant } from "@/lib/cms-client";
 import { move, type Screen } from "../types";
 
 // UI components
+import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
+import { AiVariantPicker } from "../components/AiVariantPicker";
+import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -185,6 +190,7 @@ export function MemoriesEditScreen({
   uploading,
   save,
   dirty,
+  status,
 }: {
   data: ContentData;
   setData: (data: ContentData) => void;
@@ -196,7 +202,77 @@ export function MemoriesEditScreen({
   uploading: boolean;
   save: () => Promise<void>;
   dirty: boolean;
+  status: CmsSaveStatus;
 }) {
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [variants, setVariants] = useState<MemoryCopyVariant[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const hasTitle = Boolean(memory.title?.trim()) && memory.title !== "New memory";
+  const hasNote = Boolean(memory.note?.trim());
+  const hasCategory = Boolean(memory.category?.trim());
+  const hasDraft = hasTitle || hasNote || hasCategory;
+
+  /**
+   * Patches the active memory in document state.
+   * @example patchMemory({ note: "…" }) // void
+   */
+  function patchMemory(patch: Partial<MemoryItem>) {
+    const memories = [...memoriesList];
+    memories[memIndex] = { ...memory, ...patch };
+    setData({ ...data, memories });
+  }
+
+  /**
+   * Requests 2–3 polished memory packages.
+   * @example void onGenerate() // Promise
+   */
+  async function onGenerate() {
+    if (generating) return;
+    setGenerateError(null);
+    if (!hasDraft) {
+      setGenerateError("Add a title, note, or category first, then generate.");
+      return;
+    }
+    setGenerating(true);
+    const result = await generateMemoryCopy({
+      title: memory.title ?? "",
+      note: memory.note,
+      category: memory.category ?? "",
+      date: memory.date ?? "",
+      color: memory.color ?? "#A78BFA",
+    });
+    setGenerating(false);
+    if (!result.ok) {
+      setGenerateError(result.error);
+      return;
+    }
+    setVariants(result.data.variants);
+    setSelectedIndex(0);
+  }
+
+  /**
+   * Applies mixed memory fields from chosen option indexes.
+   * @example applySelected({ title: 0, note: 1 }) // void
+   */
+  function applySelected(fieldSources: Record<string, number>) {
+    const pick = (key: string) => variants[fieldSources[key] ?? selectedIndex];
+    const title = pick("title");
+    const note = pick("note");
+    const category = pick("category");
+    const color = pick("color");
+    if (!title && !note && !category && !color) return;
+    patchMemory({
+      title: title?.title ?? memory.title,
+      note: note?.note ?? memory.note,
+      category: category?.category ?? memory.category,
+      color: color?.color ?? memory.color,
+    });
+    setVariants([]);
+    setSelectedIndex(0);
+  }
+
   return (
     <>
       <h1 className="wp-screen-title">
@@ -211,13 +287,96 @@ export function MemoriesEditScreen({
             className="wp-title-input"
             value={memory.title ?? ""}
             placeholder="Enter memory title (optional)"
-            onChange={(e) => {
-              const memories = [...memoriesList];
-              memories[memIndex] = { ...memory, title: e.target.value };
-              setData({ ...data, memories });
-            }}
+            onChange={(e) => patchMemory({ title: e.target.value })}
           />
           <Metabox id="mem_details" title="Memory Content" badge={memory.category || undefined}>
+            <div className="wp-ai-stack">
+              <AiFormSection
+                step={1}
+                title="Sources for AI"
+                description="Uses your current title, note, category, and date. Date stays yours; color is suggested."
+              >
+                <ul className="wp-ai-source-summary">
+                  <li>
+                    <strong>Title</strong>
+                    <span>{hasTitle ? memory.title : "Empty"}</span>
+                  </li>
+                  <li>
+                    <strong>Note</strong>
+                    <span>{hasNote ? "Present" : "Empty"}</span>
+                  </li>
+                  <li>
+                    <strong>Category</strong>
+                    <span>{hasCategory ? memory.category : "Empty"}</span>
+                  </li>
+                  <li>
+                    <strong>Date</strong>
+                    <span>{memory.date?.trim() || "Empty"}</span>
+                  </li>
+                </ul>
+              </AiFormSection>
+
+              <AiGeneratePanel
+                basisItems={[
+                  { label: "Title", ready: hasTitle, optional: true },
+                  { label: "Note", ready: hasNote, optional: hasTitle || hasCategory },
+                  { label: "Category", ready: hasCategory, optional: true },
+                  { label: "Date", ready: Boolean(memory.date?.trim()), optional: true },
+                ]}
+                fills="Title, Note, Category, and Color"
+                generating={generating}
+                error={generateError}
+                onGenerate={() => void onGenerate()}
+                disabled={!hasDraft}
+              />
+
+              {variants.length > 0 ? (
+                <AiFormSection step={2} title="Pick a version" tone="output">
+                  <AiVariantPicker
+                    variants={variants}
+                    selectedIndex={selectedIndex}
+                    onSelect={setSelectedIndex}
+                    busy={generating}
+                    onUse={applySelected}
+                    onDismiss={() => {
+                      setVariants([]);
+                      setSelectedIndex(0);
+                    }}
+                    fields={[
+                      {
+                        key: "title",
+                        label: "Title",
+                        render: (variant) => variant.title,
+                      },
+                      {
+                        key: "note",
+                        label: "Note",
+                        render: (variant) => variant.note,
+                      },
+                      {
+                        key: "category",
+                        label: "Category",
+                        render: (variant) => variant.category,
+                      },
+                      {
+                        key: "color",
+                        label: "Color",
+                        render: (variant) => (
+                          <>
+                            <span
+                              className="wp-ai-color-swatch"
+                              style={{ background: variant.color }}
+                              aria-hidden="true"
+                            />
+                            {variant.color}
+                          </>
+                        ),
+                      },
+                    ]}
+                  />
+                </AiFormSection>
+              ) : null}
+
             <table className="wp-form-table">
               <tbody>
                 <Field label="Memory Note" wide hint="The story, feeling, or moment that will appear when this memory is revealed.">
@@ -225,22 +384,14 @@ export function MemoriesEditScreen({
                     value={memory.note}
                     rows={6}
                     placeholder="Describe this moment, what made it special, or what you learned..."
-                    onChange={(note) => {
-                      const memories = [...memoriesList];
-                      memories[memIndex] = { ...memory, note };
-                      setData({ ...data, memories });
-                    }}
+                    onChange={(note) => patchMemory({ note })}
                   />
                 </Field>
                 <Field label="Date" hint="Pick a date using the calendar picker, or enter custom text.">
                   <DatePicker
                     value={memory.date ?? ""}
                     placeholder="e.g. 15 Aug 2026 or Summer 2024"
-                    onChange={(date) => {
-                      const memories = [...memoriesList];
-                      memories[memIndex] = { ...memory, date };
-                      setData({ ...data, memories });
-                    }}
+                    onChange={(date) => patchMemory({ date })}
                   />
                 </Field>
                 <Field label="Category">
@@ -248,11 +399,7 @@ export function MemoriesEditScreen({
                     <TextInput
                       value={memory.category ?? ""}
                       placeholder="e.g. Milestone, Tiny Joy, Craft, Life"
-                      onChange={(category) => {
-                        const memories = [...memoriesList];
-                        memories[memIndex] = { ...memory, category };
-                        setData({ ...data, memories });
-                      }}
+                      onChange={(category) => patchMemory({ category })}
                     />
                     <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
                       {["Milestone", "Tiny Joy", "Craft", "Discovery", "Learning", "Life"].map((cat) => (
@@ -261,11 +408,7 @@ export function MemoriesEditScreen({
                           type="button"
                           className="wp-btn"
                           style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                          onClick={() => {
-                            const memories = [...memoriesList];
-                            memories[memIndex] = { ...memory, category: cat };
-                            setData({ ...data, memories });
-                          }}
+                          onClick={() => patchMemory({ category: cat })}
                         >
                           {cat}
                         </button>
@@ -276,11 +419,7 @@ export function MemoriesEditScreen({
                 <Field label="Glow Accent Color" hint="Custom glow/highlight color for this memory card">
                   <HexColorInput
                     value={memory.color ?? "#A78BFA"}
-                    onChange={(color) => {
-                      const memories = [...memoriesList];
-                      memories[memIndex] = { ...memory, color };
-                      setData({ ...data, memories });
-                    }}
+                    onChange={(color) => patchMemory({ color })}
                   />
                 </Field>
                 <Field label="Photo Attachment" hint="Upload a photo (JPG, PNG, WebP, GIF, SVG) or paste an image URL.">
@@ -351,6 +490,7 @@ export function MemoriesEditScreen({
                 </Field>
               </tbody>
             </table>
+            </div>
           </Metabox>
         </div>
         <Metabox id="mem_publish" title="Publish">
@@ -365,9 +505,13 @@ export function MemoriesEditScreen({
             >
               Move to Trash
             </button>
-            <button type="button" className="wp-btn wp-btn-primary" onClick={() => void save()} disabled={!dirty}>
-              Update
-            </button>
+            <CmsSaveButton
+              save={save}
+              dirty={dirty}
+              status={status}
+              label="Update"
+              className="wp-btn wp-btn-primary"
+            />
           </div>
         </Metabox>
       </div>

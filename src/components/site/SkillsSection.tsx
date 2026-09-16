@@ -31,15 +31,17 @@ export function SkillsSection({
                   {group.items.map((item) => (
                     <div
                       key={item.name}
-                      className="skill-tile flex flex-col items-center gap-2 rounded-xl border border-line bg-chip p-4 text-muted"
+                      className="skill-tile group flex cursor-default flex-col items-center gap-2 rounded-xl border border-line bg-transparent p-4 text-muted transition-all hover:text-foreground"
                     >
                       <SkillMark
                         icon={item.icon}
                         color={item.color}
                         src={item.iconUrl}
-                        className="skill-mark"
+                        className="skill-mark opacity-75 transition-all group-hover:opacity-100 group-hover:brightness-125"
                       />
-                      <span className="text-center text-xs font-medium text-foreground">{item.name}</span>
+                      <span className="text-center text-xs font-medium transition-colors group-hover:text-foreground">
+                        {item.name}
+                      </span>
                     </div>
                   ))}
                 </div>

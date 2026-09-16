@@ -45,8 +45,8 @@ export async function POST(req: Request) {
   }
   try {
     await saveContent(parsed.content);
-  } catch {
-    console.error("saveContent failed");
+  } catch (err) {
+    console.error("saveContent failed", err);
     return NextResponse.json(
       {
         error: "Could not save content to the database. Check DATABASE_URL and try again.",
@@ -55,10 +55,7 @@ export async function POST(req: Request) {
     );
   }
   revalidateTag(CMS_CONTENT_TAG, "max");
+  // Layout revalidation covers nested public routes; avoid stacking redundant path work.
   revalidatePath("/", "layout");
-  revalidatePath("/");
-  revalidatePath("/reading");
-  revalidatePath("/memories");
-  revalidatePath("/craft");
   return NextResponse.json({ ok: true, content: parsed.content });
 }

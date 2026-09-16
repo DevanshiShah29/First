@@ -1,7 +1,7 @@
 "use client";
 
 // External dependencies
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 // Application services & types
@@ -20,6 +20,7 @@ export function useCmsDocument(initial: ContentData) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const savingRef = useRef(false);
 
   const dirty = useMemo(() => JSON.stringify(data) !== saved, [data, saved]);
 
@@ -28,20 +29,29 @@ export function useCmsDocument(initial: ContentData) {
    * @example save() // void
    */
   const save = useCallback(async () => {
+    if (savingRef.current) return;
+    savingRef.current = true;
     setStatus("saving");
     setError("");
-    const res = await saveCmsContent(data);
-    if (!res.ok || !res.data?.content) {
-      setStatus("error");
-      setError(res.error || "Save failed.");
-      return;
+    try {
+      const snapshot = clone(data);
+      const res = await saveCmsContent(snapshot);
+      if (!res.ok) {
+        setStatus("error");
+        setError(res.error || "Save failed.");
+        return;
+      }
+      // Trust the payload we just saved — avoids waiting on a full content round-trip reshape.
+      const next = clone(res.data?.content ?? snapshot);
+      setData(next);
+      setSaved(JSON.stringify(next));
+      setStatus("saved");
+      setNotice("Content updated.");
+      // Refresh public RSC tree in the background; don't block the save UI on it.
+      void router.refresh();
+    } finally {
+      savingRef.current = false;
     }
-    const next = clone(res.data.content);
-    setData(next);
-    setSaved(JSON.stringify(next));
-    setStatus("saved");
-    setNotice("Content updated.");
-    router.refresh();
   }, [data, router]);
 
   useEffect(() => {
@@ -52,7 +62,7 @@ export function useCmsDocument(initial: ContentData) {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        if (dirty) void save();
+        if (dirty && !savingRef.current) void save();
       }
     }
     window.addEventListener("keydown", onKey);

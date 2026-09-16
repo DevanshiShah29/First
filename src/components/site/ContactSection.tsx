@@ -17,7 +17,7 @@ import { SocialRound } from "./SocialRound";
 import { IconDownload, IconGitHub, IconLinkedIn, IconMail } from "@/components/icons";
 
 const fieldClass =
-  "mt-1.5 w-full rounded-lg border border-line bg-inset px-4 py-3 text-sm text-foreground transition focus-visible:border-violet-500/60";
+  "mt-1.5 w-full rounded-lg border border-line bg-inset px-4 py-3 text-sm text-foreground transition focus-visible:border-brand/60";
 
 /**
  * Renders the contact form, scene, and social links.
@@ -167,7 +167,7 @@ export function ContactSection({ site }: { site: PublicSiteContent }) {
                     download={resume.download}
                     target={resume.target}
                     rel={resume.rel}
-                    className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-line bg-chip px-5 py-3 text-sm font-semibold text-foreground transition hover:border-violet-500/40 hover:text-accent-text"
+                    className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-line bg-chip px-5 py-3 text-sm font-semibold text-foreground transition hover:border-brand/40 hover:text-accent-text"
                   >
                     Resume
                     <IconDownload />

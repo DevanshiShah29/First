@@ -9,11 +9,11 @@ import type { Screen } from "../types";
 
 // UI components
 import { LogoMark } from "@/components/Logo";
+import { CmsSaveButton } from "./CmsSaveButton";
 
 // Icons
 import {
   IconHome,
-  IconJar,
   IconMenu,
   IconPlus,
 } from "../wp-icons";
@@ -128,14 +128,7 @@ export function AdminBar({
         </div>
       </div>
       <div className="wp-bar-right">
-        <button
-          type="button"
-          className="wp-bar-item"
-          onClick={() => void save()}
-          disabled={!dirty || status === "saving"}
-        >
-          {status === "saving" ? "Updating…" : dirty ? "Update" : "Updated"}
-        </button>
+        <CmsSaveButton save={save} dirty={dirty} status={status} variant="bar" />
         <span className="wp-bar-item">Howdy, {firstName}</span>
         <button type="button" className="wp-bar-item" onClick={() => void logout()}>
           Log Out
@@ -176,20 +169,6 @@ export function AdminMenu({
             </button>
           </li>
         ))}
-        <li className="wp-menu-sep" />
-        <li>
-          <Link href="/memories" target="_blank" rel="noopener noreferrer">
-            <IconJar />
-            Memory Jar
-            <span className="sr-only"> (opens in a new tab)</span>
-          </Link>
-        </li>
-        <li>
-          <Link href="/">
-            <IconHome />
-            View Site
-          </Link>
-        </li>
       </ul>
     </nav>
   );

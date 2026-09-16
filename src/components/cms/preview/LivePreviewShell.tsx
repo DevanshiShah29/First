@@ -57,7 +57,7 @@ export function LivePreviewShell({
                 aria-pressed={theme === "light"}
                 onClick={() => setTheme("light")}
               >
-                <span aria-hidden>☀️</span> Light
+                <span aria-hidden>☀️</span> Light Mode
               </button>
               <button
                 type="button"
@@ -65,7 +65,7 @@ export function LivePreviewShell({
                 aria-pressed={theme === "dark"}
                 onClick={() => setTheme("dark")}
               >
-                <span aria-hidden>🌙</span> Dark
+                <span aria-hidden>🌙</span> Dark Mode
               </button>
               <button
                 type="button"

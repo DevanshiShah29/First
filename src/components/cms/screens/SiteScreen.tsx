@@ -6,6 +6,7 @@ import type { Screen } from "../types";
 
 // UI components
 import { ChangePasswordForm } from "../ChangePasswordForm";
+import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { Field, TextArea, TextInput } from "../fields";
 
@@ -15,6 +16,7 @@ interface SiteScreenProps {
   go: (screen: Screen) => void;
   save: () => Promise<void>;
   dirty: boolean;
+  status: CmsSaveStatus;
   onPasswordNotice?: (message: string) => void;
   onPasswordError?: (message: string) => void;
 }
@@ -29,6 +31,7 @@ export function SiteScreen({
   go,
   save,
   dirty,
+  status,
   onPasswordNotice,
   onPasswordError,
 }: SiteScreenProps) {
@@ -83,9 +86,7 @@ export function SiteScreen({
       />
 
       <p>
-        <button type="button" className="wp-btn wp-btn-primary wp-btn-large" onClick={() => void save()} disabled={!dirty}>
-          Save Changes
-        </button>
+        <CmsSaveButton save={save} dirty={dirty} status={status} />
       </p>
     </>
   );

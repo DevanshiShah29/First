@@ -5,6 +5,7 @@ import type { ContentData } from "@/content/types";
 import { resumeFileLabel } from "@/lib/resume";
 
 // UI components
+import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -17,6 +18,7 @@ interface ContactScreenProps {
   uploading: boolean;
   save: () => Promise<void>;
   dirty: boolean;
+  status: CmsSaveStatus;
 }
 
 /**
@@ -30,6 +32,7 @@ export function ContactScreen({
   uploading,
   save,
   dirty,
+  status,
 }: ContactScreenProps) {
   const site = data.site;
 
@@ -111,14 +114,7 @@ export function ContactScreen({
       </Metabox>
 
       <p>
-        <button
-          type="button"
-          className="wp-btn wp-btn-primary wp-btn-large"
-          onClick={() => void save()}
-          disabled={!dirty}
-        >
-          Save Changes
-        </button>
+        <CmsSaveButton save={save} dirty={dirty} status={status} />
       </p>
       </EditorTabs>
     </>

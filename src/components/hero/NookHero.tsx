@@ -106,7 +106,7 @@ function JarNotes() {
 function PaintDots() {
   return (
     <div className="world-bits" aria-hidden>
-      <i style={{ left: "18%", background: "#7c3aed", animationDelay: "0s" }} />
+      <i style={{ left: "18%", background: "var(--brand-from)", animationDelay: "0s" }} />
       <i style={{ left: "46%", background: "#f59e0b", animationDelay: "0.15s" }} />
       <i style={{ left: "72%", background: "#10b981", animationDelay: "0.3s" }} />
     </div>

@@ -5,7 +5,7 @@ import {
   geminiPartsWithProfile,
 } from "@/server/ai-profile-context";
 import { callGeminiJson } from "@/server/ai/gemini";
-import { parseJsonObject, str, strList, strListNested } from "@/server/ai/strings";
+import { normalizeHex, parseJsonObject, str, strList, strListNested } from "@/server/ai/strings";
 
 const TECH_ICONS = SKILL_ICONS.filter(
   (icon) =>
@@ -20,27 +20,23 @@ type GenerateBody = {
   existingGroups?: unknown;
   linkedin?: unknown;
   resume?: unknown;
+  /** Optional prior suggestion names to avoid on retry. */
+  excludeNames?: unknown;
 };
 
-type GeneratedFields = {
-  groups: SkillGroup[];
+export type TechnologySuggestion = {
+  name: string;
+  groupTitle: string;
+  icon: SkillIcon;
+  color?: string;
+  isNewGroup: boolean;
 };
 
-/**
- * Normalizes a hex color to #RRGGBB or undefined.
- * @example normalizeHex("#abc") // "#AABBCC"
- */
-function normalizeHex(raw: unknown): string | undefined {
-  if (typeof raw !== "string") return undefined;
-  const value = raw.trim();
-  if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toUpperCase();
-  const short = value.match(/^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/);
-  if (short) {
-    const [, a, b, c] = short;
-    return `#${a}${a}${b}${b}${c}${c}`.toUpperCase();
-  }
-  return undefined;
-}
+export type GenerateTechnologiesInput = GenerateBody;
+
+export type GenerateTechnologiesOutcome =
+  | { ok: true; data: TechnologySuggestion }
+  | { ok: false; error: string; status: number };
 
 /**
  * Maps a raw icon name/alias to a tech SkillIcon.
@@ -96,61 +92,45 @@ function parseExistingGroups(v: unknown): SkillGroup[] {
 }
 
 /**
- * Parses Gemini JSON into technology groups.
- * @example parseGenerated(raw) // { groups } | null
+ * Parses Gemini JSON into a single technology suggestion.
+ * @example parseGenerated(raw, groups) // TechnologySuggestion | null
  */
-function parseGenerated(raw: string): GeneratedFields | null {
+function parseGenerated(raw: string, existingGroups: SkillGroup[]): TechnologySuggestion | null {
   const obj = parseJsonObject(raw);
   if (!obj) return null;
-  const groupsRaw = Array.isArray(obj.groups) ? obj.groups : Array.isArray(obj.technologies) ? obj.technologies : null;
-  if (!groupsRaw || groupsRaw.length === 0) return null;
-
-  const groups: SkillGroup[] = [];
-  for (const group of groupsRaw.slice(0, 4)) {
-    if (!group || typeof group !== "object") continue;
-    const g = group as Record<string, unknown>;
-    const title = str(g.title, 80);
-    const itemsRaw = Array.isArray(g.items) ? g.items : [];
-    const items: SkillItem[] = [];
-    for (const item of itemsRaw.slice(0, 16)) {
-      if (!item || typeof item !== "object") continue;
-      const row = item as Record<string, unknown>;
-      const name = str(row.name, 60);
-      if (!name) continue;
-      items.push({
-        name,
-        icon: mapIcon(row.icon),
-        color: normalizeHex(row.color),
-      });
-    }
-    if (!title || items.length === 0) continue;
-    groups.push({ title, items });
-  }
-
-  if (groups.length === 0) return null;
-  return { groups };
+  const name = str(obj.name, 60);
+  if (!name) return null;
+  let groupTitle = str(obj.groupTitle ?? obj.group, 80) || "Technologies";
+  const existingMatch = existingGroups.find(
+    (g) => g.title.trim().toLowerCase() === groupTitle.trim().toLowerCase(),
+  );
+  if (existingMatch) groupTitle = existingMatch.title;
+  return {
+    name,
+    groupTitle,
+    icon: mapIcon(obj.icon),
+    color: normalizeHex(obj.color),
+    isNewGroup: !existingMatch,
+  };
 }
 
-export type GenerateTechnologiesInput = GenerateBody;
-
-export type GenerateTechnologiesOutcome =
-  | { ok: true; data: GeneratedFields }
-  | { ok: false; error: string; status: number };
-
 /**
- * Generates technology groups via Gemini + profile.
- * @example await generateTechnologies(key, body) // { ok: true, data } | { ok: false, … }
+ * Suggests one new technology to append (never replaces the list).
+ * @example await generateTechnologies(key, body) // { ok: true, data } | …
  */
 export async function generateTechnologies(
   apiKey: string,
   body: GenerateTechnologiesInput,
 ): Promise<GenerateTechnologiesOutcome> {
-    const siteTitle = str(body.siteTitle, 120);
+  const siteTitle = str(body.siteTitle, 120);
   const siteRoles = strList(body.siteRoles, 8, 80);
   const experienceStacks = strListNested(body.experienceStacks);
   const projectTags = strListNested(body.projectTags);
   const existingGroups = parseExistingGroups(body.existingGroups);
   const existingNames = existingGroups.flatMap((g) => g.items.map((i) => i.name));
+  const excludeNames = [
+    ...new Set([...existingNames, ...strList(body.excludeNames, 40, 60)].map((n) => n.toLowerCase())),
+  ];
   const linkedin = str(body.linkedin, 400);
   const resume = str(body.resume, 500);
 
@@ -172,21 +152,17 @@ export async function generateTechnologies(
   }
 
   const prompt = [
-    "You curate the Technologies section of a personal portfolio CMS.",
-    "Return realistic tools/frameworks the person actually uses, inferred from resume, LinkedIn, experience stacks, and project tags.",
-    "Prefer concrete tech names over soft skills. No buzzword fluff. No emojis.",
+    "You suggest ONE new technology/tool for a personal portfolio Technologies section.",
+    "Prefer concrete tools/frameworks evidenced by the sources. No soft skills. No emojis.",
     "",
     "Return ONLY valid JSON with this shape:",
-    '{"groups":[{"title":"Frontend","items":[{"name":"React","icon":"react","color":"#61DAFB"}]}]}',
+    '{"name":"Vue.js","groupTitle":"Frontend","icon":"empty","color":"#42B883"}',
     "",
     "Rules:",
-    "- 1–3 groups max (e.g. Frontend, Backend, Tools) OR a single group titled Technologies.",
-    "- 6–14 total items across all groups. Deduplicate. Prefer quality over quantity.",
-    "- Each item needs name, icon, and color (#RRGGBB brand-ish hex).",
+    "- Suggest exactly one technology that is NOT in the exclusion list (case-insensitive).",
+    "- Prefer an existing group title (Frontend/Backend/Tools/…) when one fits; invent a new groupTitle only when needed.",
     `- icon MUST be one of: ${TECH_ICONS.join(", ")}. Use "empty" when nothing fits.`,
-    "- Prefer technologies evidenced by the resume PDF, LinkedIn profile, experience stacks, and project tags.",
-    "- You may include closely related staples (e.g. TypeScript with React) sparingly.",
-    "- If an existing draft is provided, improve/reorganize it — keep truth, drop weak entries, sharpen grouping.",
+    "- color: brand-ish #RRGGBB.",
     "- Do not invent exotic stacks with no signal in the sources.",
     "",
     `Site title / name: ${siteTitle || "(not set)"}`,
@@ -196,13 +172,16 @@ export async function generateTechnologies(
       : "Experience stacks/tags: (empty)",
     projectTags.length ? `Project tags: ${projectTags.join(", ")}` : "Project tags: (empty)",
     existingGroups.length
-      ? `Existing technologies draft:\n${existingGroups
+      ? `Existing technologies:\n${existingGroups
           .map(
             (g) =>
-              `- ${g.title}: ${g.items.map((i) => `${i.name}${i.icon ? ` [${i.icon}]` : ""}`).join(", ") || "(empty)"}`,
+              `- ${g.title}: ${g.items.map((i) => i.name).join(", ") || "(empty)"}`,
           )
           .join("\n")}`
-      : "Existing technologies draft: (empty)",
+      : "Existing technologies: (empty)",
+    excludeNames.length
+      ? `Do NOT suggest these names: ${excludeNames.join(", ")}`
+      : "No exclusions yet.",
     "",
     "Profile context (LinkedIn + Resume):",
     formatProfileContextForPrompt(profile),
@@ -211,14 +190,22 @@ export async function generateTechnologies(
   const gemini = await callGeminiJson(
     apiKey,
     geminiPartsWithProfile(prompt, profile),
-    0.5,
+    0.65,
   );
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
-  const generated = parseGenerated(gemini.text);
+  const generated = parseGenerated(gemini.text, existingGroups);
   if (!generated) {
     console.error("Could not parse Gemini JSON", gemini.text.slice(0, 500));
     return { ok: false, error: "Could not parse AI response. Try again.", status: 502 };
+  }
+
+  if (excludeNames.includes(generated.name.toLowerCase())) {
+    return {
+      ok: false,
+      error: "AI suggested a duplicate. Generate with AI again for another technology.",
+      status: 502,
+    };
   }
 
   return { ok: true, data: generated };

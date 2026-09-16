@@ -170,6 +170,18 @@ export type ThemePalette = {
   badge: string;
 };
 
+export type SavedTheme = {
+  id: string;
+  name: string;
+  description?: string;
+  brandFrom: string;
+  brandTo: string;
+  dark: ThemePalette;
+  light: ThemePalette;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ThemeContent = {
   defaultMode: ThemeMode;
   allowToggle: boolean;
@@ -177,6 +189,9 @@ export type ThemeContent = {
   brandTo: string;
   dark: ThemePalette;
   light: ThemePalette;
+  /** Built-in preset id or saved theme id currently applied. */
+  activeThemeId?: string | null;
+  savedThemes?: SavedTheme[];
 };
 
 export const DEFAULT_THEME: ThemeContent = {
@@ -204,6 +219,8 @@ export const DEFAULT_THEME: ThemeContent = {
     accentHover: "#5B21B6",
     badge: "#6D28D9",
   },
+  activeThemeId: null,
+  savedThemes: [],
 };
 
 export const THEME_PALETTE_FIELDS: { key: keyof ThemePalette; label: string }[] = [

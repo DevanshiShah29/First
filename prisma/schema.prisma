@@ -78,6 +78,10 @@ model ThemeSettings {
   dark        Json
   /// ThemePalette JSON
   light       Json
+  /// Built-in preset id or saved theme id currently applied.
+  activeThemeId String?
+  /// SavedTheme[] JSON — user-saved palettes from Appearance.
+  savedThemes Json @default("[]")
 
   site SiteSettings @relation(fields: [siteId], references: [id], onDelete: Cascade)
 }

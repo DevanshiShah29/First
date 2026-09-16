@@ -1,15 +1,22 @@
 "use client";
 
+// External dependencies
+import { useState } from "react";
+
 // Application services & types
 import {
   HERO_TEMPLATES,
   type ContentData,
   type HeroMedia,
 } from "@/content/types";
+import { generateHeroCopy, type HeroCopyVariant } from "@/lib/cms-client";
 import { mediaHint } from "@/lib/media-url";
 import { goodreadsHint, pianoMusicHint } from "../types";
 
 // UI components
+import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
+import { AiVariantPicker } from "../components/AiVariantPicker";
+import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import {
   HeroThumb,
   MediaLayoutPreview,
@@ -28,6 +35,7 @@ interface HeroScreenProps {
   uploading: boolean;
   save: () => Promise<void>;
   dirty: boolean;
+  status: CmsSaveStatus;
 }
 
 /**
@@ -42,9 +50,73 @@ export function HeroScreen({
   uploading,
   save,
   dirty,
+  status,
 }: HeroScreenProps) {
   const site = data.site;
   const heroMedia = site.heroMedia;
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [variants, setVariants] = useState<HeroCopyVariant[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const hasKicker = Boolean(site.kicker.trim());
+  const hasGreeting = Boolean(site.greeting.trim());
+  const hasRoles = site.roles.some((r) => r.trim());
+  const hasLine = Boolean(site.line.trim());
+  const hasDraft = hasKicker || hasGreeting || hasRoles || hasLine;
+
+  /**
+   * Requests 2–3 polished hero copy variants.
+   * @example void onGenerate() // Promise
+   */
+  async function onGenerate() {
+    if (generating) return;
+    setGenerateError(null);
+    if (!hasDraft) {
+      setGenerateError("Add some hero copy first, then generate polished versions.");
+      return;
+    }
+    setGenerating(true);
+    const result = await generateHeroCopy({
+      kicker: site.kicker,
+      greeting: site.greeting,
+      roles: site.roles,
+      line: site.line,
+    });
+    setGenerating(false);
+    if (!result.ok) {
+      setGenerateError(result.error);
+      return;
+    }
+    setVariants(result.data.variants);
+    setSelectedIndex(0);
+  }
+
+  /**
+   * Applies mixed hero fields from chosen option indexes.
+   * @example applySelected({ kicker: 0, line: 2 }) // void
+   */
+  function applySelected(fieldSources: Record<string, number>) {
+    const pick = (key: string): HeroCopyVariant | undefined =>
+      variants[fieldSources[key] ?? selectedIndex];
+    const kicker = pick("kicker");
+    const greeting = pick("greeting");
+    const roles = pick("roles");
+    const line = pick("line");
+    if (!kicker && !greeting && !roles && !line) return;
+    setData({
+      ...data,
+      site: {
+        ...site,
+        kicker: kicker?.kicker ?? site.kicker,
+        greeting: greeting?.greeting ?? site.greeting,
+        roles: roles?.roles ?? site.roles,
+        line: line?.line ?? site.line,
+      },
+    });
+    setVariants([]);
+    setSelectedIndex(0);
+  }
 
   return (
     <>
@@ -250,47 +322,131 @@ export function HeroScreen({
         </table>
       </Metabox>
       <Metabox id="hero_copy" title="Hero copy">
-        <table className="wp-form-table">
-          <tbody>
-            <Field label="Kicker">
-              <TextInput
-                value={site.kicker}
-                onChange={(kicker) => setData({ ...data, site: { ...site, kicker } })}
+        <div className="wp-ai-stack">
+          <AiFormSection
+            step={1}
+            title="Sources for AI"
+            description="Uses your current hero draft only. Generate 2–3 polished versions, then pick one or retry."
+          >
+            <ul className="wp-ai-source-summary">
+              <li>
+                <strong>Kicker</strong>
+                <span>{hasKicker ? site.kicker : "Empty"}</span>
+              </li>
+              <li>
+                <strong>Greeting</strong>
+                <span>{hasGreeting ? site.greeting : "Empty"}</span>
+              </li>
+              <li>
+                <strong>Roles</strong>
+                <span>{hasRoles ? site.roles.filter(Boolean).join(", ") : "Empty"}</span>
+              </li>
+              <li>
+                <strong>One-liner</strong>
+                <span>{hasLine ? site.line : "Empty"}</span>
+              </li>
+            </ul>
+          </AiFormSection>
+
+          <AiGeneratePanel
+            basisItems={[
+              { label: "Kicker", ready: hasKicker, optional: true },
+              { label: "Greeting", ready: hasGreeting, optional: hasLine || hasRoles },
+              { label: "Roles", ready: hasRoles, optional: true },
+              { label: "One-liner", ready: hasLine, optional: hasGreeting || hasRoles },
+            ]}
+            fills="Kicker, Greeting, Roles, and One-liner"
+            generating={generating}
+            error={generateError}
+            onGenerate={() => void onGenerate()}
+            disabled={!hasDraft}
+          />
+
+          {variants.length > 0 ? (
+            <AiFormSection
+              step={2}
+              title="Pick a version"
+              description="Mix fields across options, then apply. Generate with AI again for a fresh set."
+              tone="output"
+            >
+              <AiVariantPicker
+                variants={variants}
+                selectedIndex={selectedIndex}
+                onSelect={setSelectedIndex}
+                busy={generating}
+                onUse={applySelected}
+                onDismiss={() => {
+                  setVariants([]);
+                  setSelectedIndex(0);
+                }}
+                fields={[
+                  {
+                    key: "kicker",
+                    label: "Kicker",
+                    render: (variant) => variant.kicker,
+                  },
+                  {
+                    key: "greeting",
+                    label: "Greeting",
+                    render: (variant) => variant.greeting,
+                  },
+                  {
+                    key: "roles",
+                    label: "Roles",
+                    render: (variant) => variant.roles.join(" · "),
+                  },
+                  {
+                    key: "line",
+                    label: "One-liner",
+                    render: (variant) => variant.line,
+                  },
+                ]}
               />
-            </Field>
-            <Field label="Greeting">
-              <TextInput
-                value={site.greeting}
-                onChange={(greeting) => setData({ ...data, site: { ...site, greeting } })}
-              />
-            </Field>
-            <Field label="Typed roles" wide>
-              <StringList
-                values={site.roles}
-                onChange={(roles) => setData({ ...data, site: { ...site, roles } })}
-                addLabel="Add role"
-                placeholder="Product Manager"
-              />
-            </Field>
-            <Field label="One-liner" wide>
-              <TextArea
-                value={site.line}
-                onChange={(line) => setData({ ...data, site: { ...site, line } })}
-                rows={3}
-              />
-            </Field>
-          </tbody>
-        </table>
+            </AiFormSection>
+          ) : null}
+
+          <AiFormSection
+            step={variants.length > 0 ? 3 : 2}
+            title="Hero fields"
+            description="Edit freely after applying a version."
+            tone="output"
+          >
+            <table className="wp-form-table">
+              <tbody>
+                <Field label="Kicker">
+                  <TextInput
+                    value={site.kicker}
+                    onChange={(kicker) => setData({ ...data, site: { ...site, kicker } })}
+                  />
+                </Field>
+                <Field label="Greeting">
+                  <TextInput
+                    value={site.greeting}
+                    onChange={(greeting) => setData({ ...data, site: { ...site, greeting } })}
+                  />
+                </Field>
+                <Field label="Typed roles" wide>
+                  <StringList
+                    values={site.roles}
+                    onChange={(roles) => setData({ ...data, site: { ...site, roles } })}
+                    addLabel="Add role"
+                    placeholder="Product Manager"
+                  />
+                </Field>
+                <Field label="One-liner" wide>
+                  <TextArea
+                    value={site.line}
+                    onChange={(line) => setData({ ...data, site: { ...site, line } })}
+                    rows={3}
+                  />
+                </Field>
+              </tbody>
+            </table>
+          </AiFormSection>
+        </div>
       </Metabox>
       <p>
-        <button
-          type="button"
-          className="wp-btn wp-btn-primary wp-btn-large"
-          onClick={() => void save()}
-          disabled={!dirty}
-        >
-          Save Changes
-        </button>
+        <CmsSaveButton save={save} dirty={dirty} status={status} />
       </p>
       </EditorTabs>
     </>

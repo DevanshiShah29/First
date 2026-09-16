@@ -1,4 +1,4 @@
-import type { ContentData } from "@/content/types";
+import type { ContentData, SkillIcon } from "@/content/types";
 import type { ApiResponse } from "@/lib/api-response";
 
 export interface UploadFileResponse {
@@ -302,6 +302,7 @@ export interface GenerateTechnologiesInput {
   existingGroups: ContentData["technologies"];
   linkedin?: string;
   resume?: string;
+  excludeNames?: string[];
 }
 
 export interface GenerateSkillsInput {
@@ -312,19 +313,28 @@ export interface GenerateSkillsInput {
   existingGroups: ContentData["skills"];
   linkedin?: string;
   resume?: string;
+  excludeNames?: string[];
 }
 
+export type SkillOrTechSuggestion = {
+  name: string;
+  groupTitle: string;
+  icon: SkillIcon;
+  color?: string;
+  isNewGroup: boolean;
+};
+
 export interface GenerateSkillsResult {
-  groups: ContentData["skills"];
+  suggestion: SkillOrTechSuggestion;
 }
 
 export interface GenerateTechnologiesResult {
-  groups: NonNullable<ContentData["technologies"]>;
+  suggestion: SkillOrTechSuggestion;
 }
 
 /**
- * Generate technology groups from portfolio signals.
- * @example await generateTechnologiesCopy(input) // { ok: true, data: { groups } }
+ * Suggest one technology to append from portfolio signals.
+ * @example await generateTechnologiesCopy(input) // { ok: true, data: { suggestion } }
  */
 export async function generateTechnologiesCopy(
   input: GenerateTechnologiesInput,
@@ -338,10 +348,10 @@ export async function generateTechnologiesCopy(
 
     const body = (await res.json().catch(() => ({}))) as {
       error?: string;
-      groups?: NonNullable<ContentData["technologies"]>;
+      suggestion?: SkillOrTechSuggestion;
     };
 
-    if (!res.ok || !Array.isArray(body.groups) || body.groups.length === 0) {
+    if (!res.ok || !body.suggestion?.name || !body.suggestion.groupTitle) {
       return {
         ok: false,
         error: body.error || "Could not generate technologies.",
@@ -350,7 +360,7 @@ export async function generateTechnologiesCopy(
 
     return {
       ok: true,
-      data: { groups: body.groups },
+      data: { suggestion: body.suggestion },
     };
   } catch {
     return {
@@ -361,8 +371,8 @@ export async function generateTechnologiesCopy(
 }
 
 /**
- * Generate skill groups from resume, LinkedIn, and experience.
- * @example await generateSkillsCopy(input) // { ok: true, data: { groups } }
+ * Suggest one skill to append from resume, LinkedIn, and experience.
+ * @example await generateSkillsCopy(input) // { ok: true, data: { suggestion } }
  */
 export async function generateSkillsCopy(
   input: GenerateSkillsInput,
@@ -376,10 +386,10 @@ export async function generateSkillsCopy(
 
     const body = (await res.json().catch(() => ({}))) as {
       error?: string;
-      groups?: ContentData["skills"];
+      suggestion?: SkillOrTechSuggestion;
     };
 
-    if (!res.ok || !Array.isArray(body.groups) || body.groups.length === 0) {
+    if (!res.ok || !body.suggestion?.name || !body.suggestion.groupTitle) {
       return {
         ok: false,
         error: body.error || "Could not generate skills.",
@@ -388,12 +398,308 @@ export async function generateSkillsCopy(
 
     return {
       ok: true,
-      data: { groups: body.groups },
+      data: { suggestion: body.suggestion },
     };
   } catch {
     return {
       ok: false,
       error: "Could not generate skills. Network error.",
+    };
+  }
+}
+
+export type HeroCopyVariant = {
+  kicker: string;
+  greeting: string;
+  roles: string[];
+  line: string;
+};
+
+/**
+ * Generate 2–3 polished hero copy variants.
+ * @example await generateHeroCopy({ greeting, line, roles, kicker })
+ */
+export async function generateHeroCopy(input: {
+  kicker: string;
+  greeting: string;
+  roles: string[];
+  line: string;
+}): Promise<ApiResponse<{ variants: HeroCopyVariant[] }>> {
+  try {
+    const res = await fetch("/api/cms/generate-hero", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      variants?: HeroCopyVariant[];
+    };
+    if (!res.ok || !Array.isArray(body.variants) || body.variants.length < 2) {
+      return { ok: false, error: body.error || "Could not generate hero copy." };
+    }
+    return { ok: true, data: { variants: body.variants } };
+  } catch {
+    return { ok: false, error: "Could not generate hero copy. Network error." };
+  }
+}
+
+export type AboutCopyVariant = {
+  about: string;
+  philosophyKicker: string;
+  philosophyTitle: string;
+  philosophy: string;
+  experienceIntro: string;
+};
+
+/**
+ * Generate 2–3 About section packages.
+ * @example await generateAboutCopy({ about, linkedin, resume, experienceSummaries })
+ */
+export async function generateAboutCopy(input: {
+  about: string;
+  philosophyKicker: string;
+  philosophyTitle: string;
+  philosophy: string;
+  experienceIntro: string;
+  experienceSummaries: string[];
+  linkedin?: string;
+  resume?: string;
+}): Promise<ApiResponse<{ variants: AboutCopyVariant[] }>> {
+  try {
+    const res = await fetch("/api/cms/generate-about", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      variants?: AboutCopyVariant[];
+    };
+    if (!res.ok || !Array.isArray(body.variants) || body.variants.length < 2) {
+      return { ok: false, error: body.error || "Could not generate about copy." };
+    }
+    return { ok: true, data: { variants: body.variants } };
+  } catch {
+    return { ok: false, error: "Could not generate about copy. Network error." };
+  }
+}
+
+export type CraftPageVariant = {
+  kicker: string;
+  title: string;
+  intro: string;
+  footnote: string;
+};
+
+/**
+ * Generate 2–3 Craft page copy packages.
+ * @example await generateCraftPageCopy({ kicker, title, intro, footnote, siteName })
+ */
+export async function generateCraftPageCopy(input: {
+  kicker: string;
+  title: string;
+  intro: string;
+  footnote: string;
+  siteName: string;
+  siteRoles: string[];
+  about: string;
+}): Promise<ApiResponse<{ variants: CraftPageVariant[] }>> {
+  try {
+    const res = await fetch("/api/cms/generate-craft-page", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      variants?: CraftPageVariant[];
+    };
+    if (!res.ok || !Array.isArray(body.variants) || body.variants.length < 2) {
+      return { ok: false, error: body.error || "Could not generate craft page copy." };
+    }
+    return { ok: true, data: { variants: body.variants } };
+  } catch {
+    return { ok: false, error: "Could not generate craft page copy. Network error." };
+  }
+}
+
+export type CraftGroupVariant = {
+  intro: string;
+  items: { title: string; why: string }[];
+};
+
+/**
+ * Generate 2–3 Craft group packages (intro + items).
+ * @example await generateCraftGroupCopy({ groupTitle, groupIntro, items })
+ */
+export async function generateCraftGroupCopy(input: {
+  groupTitle: string;
+  groupIntro: string;
+  items: { title: string; why: string }[];
+  siteName: string;
+  siteRoles: string[];
+  about: string;
+}): Promise<ApiResponse<{ variants: CraftGroupVariant[] }>> {
+  try {
+    const res = await fetch("/api/cms/generate-craft-group", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      variants?: CraftGroupVariant[];
+    };
+    if (!res.ok || !Array.isArray(body.variants) || body.variants.length < 2) {
+      return { ok: false, error: body.error || "Could not generate craft group copy." };
+    }
+    return { ok: true, data: { variants: body.variants } };
+  } catch {
+    return { ok: false, error: "Could not generate craft group copy. Network error." };
+  }
+}
+
+export type MemoryCopyVariant = {
+  title: string;
+  note: string;
+  category: string;
+  color: string;
+};
+
+/**
+ * Generate 2–3 Memory Jar entry packages.
+ * @example await generateMemoryCopy({ title, note, category, date, color })
+ */
+export async function generateMemoryCopy(input: {
+  title: string;
+  note: string;
+  category: string;
+  date: string;
+  color: string;
+}): Promise<ApiResponse<{ variants: MemoryCopyVariant[] }>> {
+  try {
+    const res = await fetch("/api/cms/generate-memory", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      variants?: MemoryCopyVariant[];
+    };
+    if (!res.ok || !Array.isArray(body.variants) || body.variants.length < 2) {
+      return { ok: false, error: body.error || "Could not generate memory copy." };
+    }
+    return { ok: true, data: { variants: body.variants } };
+  } catch {
+    return { ok: false, error: "Could not generate memory copy. Network error." };
+  }
+}
+
+export type GeneratedThemeResult = {
+  name: string;
+  description: string;
+  brandFrom: string;
+  brandTo: string;
+  light: ContentData["theme"]["light"];
+  dark: ContentData["theme"]["dark"];
+};
+
+/**
+ * Generate a full light+dark theme palette from a mood prompt.
+ * @example await generateThemePalette({ prompt: "warm vintage" })
+ */
+export async function generateThemePalette(input: {
+  prompt: string;
+  seedLight?: ContentData["theme"]["light"];
+  seedDark?: ContentData["theme"]["dark"];
+}): Promise<ApiResponse<GeneratedThemeResult>> {
+  try {
+    const res = await fetch("/api/cms/generate-theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      theme?: GeneratedThemeResult;
+    };
+
+    if (!res.ok || !body.theme) {
+      return {
+        ok: false,
+        error: body.error || "Could not generate theme.",
+      };
+    }
+
+    return { ok: true, data: body.theme };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not generate theme. Network error.",
+    };
+  }
+}
+
+export type ImproveThemeResult = {
+  issues: {
+    id: string;
+    field: keyof ContentData["theme"]["light"];
+    message: string;
+    current: string;
+    suggested: string;
+  }[];
+  light: ContentData["theme"]["light"];
+  dark: ContentData["theme"]["dark"];
+  summary: string;
+};
+
+/**
+ * Check/improve a theme palette via AI (+ local contrast fallback).
+ * @example await improveThemePalette({ light, dark, mode: "light" })
+ */
+export async function improveThemePalette(input: {
+  light: ContentData["theme"]["light"];
+  dark: ContentData["theme"]["dark"];
+  mode: "light" | "dark";
+}): Promise<ApiResponse<ImproveThemeResult>> {
+  try {
+    const res = await fetch("/api/cms/improve-theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+
+    const body = (await res.json().catch(() => ({}))) as {
+      error?: string;
+      issues?: ImproveThemeResult["issues"];
+      light?: ContentData["theme"]["light"];
+      dark?: ContentData["theme"]["dark"];
+      summary?: string;
+    };
+
+    if (!res.ok || !body.light || !body.dark) {
+      return {
+        ok: false,
+        error: body.error || "Could not check palette.",
+      };
+    }
+
+    return {
+      ok: true,
+      data: {
+        issues: Array.isArray(body.issues) ? body.issues : [],
+        light: body.light,
+        dark: body.dark,
+        summary: body.summary || "Palette checked.",
+      },
+    };
+  } catch {
+    return {
+      ok: false,
+      error: "Could not check palette. Network error.",
     };
   }
 }

@@ -5,11 +5,17 @@ import { useMemo, useState } from "react";
 
 // Application services & types
 import type { ContentData, SkillGroup, SkillItem } from "@/content/types";
-import { generateSkillsCopy, generateTechnologiesCopy } from "@/lib/cms-client";
+import {
+  generateSkillsCopy,
+  generateTechnologiesCopy,
+  type SkillOrTechSuggestion,
+} from "@/lib/cms-client";
 import { move } from "../types";
 
 // UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
+import { AiSuggestPreview } from "../components/AiVariantPicker";
+import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -26,6 +32,7 @@ interface SkillGroupsScreenProps {
   uploading: boolean;
   save: () => Promise<void>;
   dirty: boolean;
+  status: CmsSaveStatus;
 }
 
 /**
@@ -47,30 +54,6 @@ function collectUnique(values: string[]): string[] {
 }
 
 /**
- * Keeps existing custom iconUrl values on AI-generated skills.
- * @example preserveCustomIcons(gen, cur) // SkillGroup[]
- */
-function preserveCustomIcons(generated: SkillGroup[], existing: SkillGroup[]): SkillGroup[] {
-  const iconByName = new Map<string, string>();
-  for (const group of existing) {
-    for (const item of group.items) {
-      const url = item.iconUrl?.trim();
-      if (!url) continue;
-      iconByName.set(item.name.trim().toLowerCase(), url);
-    }
-  }
-
-  return generated.map((group) => ({
-    ...group,
-    items: group.items.map((item) => {
-      const kept = iconByName.get(item.name.trim().toLowerCase());
-      if (!kept) return item;
-      return { ...item, iconUrl: kept };
-    }),
-  }));
-}
-
-/**
  * Renders Skills or Technologies group editors.
  * @example <SkillGroupsScreen kind="skills" title="Skills" … />
  */
@@ -84,6 +67,7 @@ export function SkillGroupsScreen({
   uploading,
   save,
   dirty,
+  status,
 }: SkillGroupsScreenProps) {
   const groups = data[kind] ?? [];
   const prefix = kind === "skills" ? "skill_group" : "tech_group";
@@ -91,6 +75,8 @@ export function SkillGroupsScreen({
 
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [suggestion, setSuggestion] = useState<SkillOrTechSuggestion | null>(null);
+  const [rejectedNames, setRejectedNames] = useState<string[]>([]);
 
   const experienceStacks = useMemo(
     () => collectUnique(data.experience.flatMap((job) => job.stack)),
@@ -118,12 +104,18 @@ export function SkillGroupsScreen({
   const hasProfile = hasLinkedIn || hasResume;
 
   /**
-   * Generates skill/technology groups via AI.
-   * @example onGenerate() // void
+   * Suggests one new skill/technology for approve / dismiss.
+   * @example void onGenerate() // Promise
    */
   async function onGenerate() {
     if (generating) return;
     setGenerateError(null);
+
+    const excludeNames = [
+      ...groups.flatMap((g) => g.items.map((i) => i.name)),
+      ...rejectedNames,
+      ...(suggestion ? [suggestion.name] : []),
+    ];
 
     if (kind === "technologies") {
       if (
@@ -146,16 +138,14 @@ export function SkillGroupsScreen({
         existingGroups: data.technologies ?? [],
         linkedin: data.site.linkedin,
         resume: data.site.resume,
+        excludeNames,
       });
       setGenerating(false);
       if (!result.ok) {
         setGenerateError(result.error);
         return;
       }
-      setData({
-        ...data,
-        technologies: preserveCustomIcons(result.data.groups, data.technologies ?? []),
-      });
+      setSuggestion(result.data.suggestion);
       return;
     }
 
@@ -177,16 +167,52 @@ export function SkillGroupsScreen({
       existingGroups: data.skills ?? [],
       linkedin: data.site.linkedin,
       resume: data.site.resume,
+      excludeNames,
     });
     setGenerating(false);
     if (!result.ok) {
       setGenerateError(result.error);
       return;
     }
-    setData({
-      ...data,
-      skills: preserveCustomIcons(result.data.groups, data.skills ?? []),
-    });
+    setSuggestion(result.data.suggestion);
+  }
+
+  /**
+   * Appends the approved suggestion into the matching group (or creates one).
+   * @example approveSuggestion() // void
+   */
+  function approveSuggestion() {
+    if (!suggestion) return;
+    const item: SkillItem = {
+      name: suggestion.name,
+      icon: suggestion.icon,
+      color: suggestion.color,
+    };
+    const existingIndex = groups.findIndex(
+      (g) => g.title.trim().toLowerCase() === suggestion.groupTitle.trim().toLowerCase(),
+    );
+    let nextGroups: SkillGroup[];
+    if (existingIndex >= 0) {
+      nextGroups = groups.map((group, index) =>
+        index === existingIndex ? { ...group, items: [...group.items, item] } : group,
+      );
+    } else {
+      nextGroups = [...groups, { title: suggestion.groupTitle, items: [item] }];
+    }
+    setData({ ...data, [kind]: nextGroups });
+    setSuggestion(null);
+    setGenerateError(null);
+  }
+
+  /**
+   * Dismisses the current suggestion and remembers it so Generate skips it.
+   * @example dismissSuggestion() // void
+   */
+  function dismissSuggestion() {
+    if (suggestion?.name) {
+      setRejectedNames((prev) => [...prev, suggestion.name]);
+    }
+    setSuggestion(null);
   }
 
   return (
@@ -303,11 +329,40 @@ export function SkillGroupsScreen({
                     { label: "Existing draft", ready: existingItemCount > 0, optional: true },
                   ]
             }
-            fills={kind === "technologies" ? "Technology groups and items" : "Skill groups and items"}
+            fills={
+              kind === "technologies"
+                ? "one new technology (approve to append)"
+                : "one new skill (approve to append)"
+            }
             generating={generating}
             error={generateError}
             onGenerate={() => void onGenerate()}
           />
+
+          {suggestion ? (
+            <AiSuggestPreview
+              title={suggestion.name}
+              meta={`${suggestion.groupTitle}${suggestion.isNewGroup ? " (new group)" : ""}`}
+              detail={
+                suggestion.color ? (
+                  <span className="wp-ai-suggest-swatch-row">
+                    <span
+                      className="wp-ai-color-swatch"
+                      style={{ background: suggestion.color }}
+                      aria-hidden="true"
+                    />
+                    {suggestion.color}
+                    {suggestion.icon && suggestion.icon !== "empty" ? ` · ${suggestion.icon}` : ""}
+                  </span>
+                ) : suggestion.icon && suggestion.icon !== "empty" ? (
+                  <span>Icon: {suggestion.icon}</span>
+                ) : null
+              }
+              busy={generating}
+              onApprove={approveSuggestion}
+              onDismiss={dismissSuggestion}
+            />
+          ) : null}
         </div>
       ) : null}
       {groups.map((group: SkillGroup, gi: number) => (
@@ -430,14 +485,7 @@ export function SkillGroupsScreen({
         </Metabox>
       ))}
       <p>
-        <button
-          type="button"
-          className="wp-btn wp-btn-primary wp-btn-large"
-          onClick={() => void save()}
-          disabled={!dirty}
-        >
-          Save Changes
-        </button>
+        <CmsSaveButton save={save} dirty={dirty} status={status} />
       </p>
       </EditorTabs>
     </>

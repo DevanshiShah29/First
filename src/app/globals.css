@@ -61,6 +61,8 @@
   --color-accent-text: var(--accent-text);
   --color-accent-hover: var(--accent-hover);
   --color-badge: var(--badge);
+  /* Maps Tailwind `brand` utilities to the CMS brand-from token. */
+  --color-brand: var(--brand-from);
   --font-sans: var(--font-outfit);
   --text-2xs: 0.7rem;
   --tracking-kicker: 0.2em;
@@ -207,54 +209,45 @@ html.jar-stars-active.has-custom-cursor * {
   border: 1px solid var(--border);
   transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
 }
+
+/* Match akanxa.dev: theme border + soft glow, no background shift */
 .card-surface:hover {
   border-color: color-mix(in srgb, var(--brand-from, #8b5cf6) 40%, transparent);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand-from, #8b5cf6) 18%, transparent);
-  background: var(--card-hover);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--brand-from, #8b5cf6) 10%, transparent);
 }
 
-.skill-group-card.card-surface:hover {
-  border-color: var(--border);
-  box-shadow: none;
-  background: var(--card);
+/* Lift used by Experience / Projects cards */
+.card-lift {
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s,
+    background-color 0.3s,
+    transform 0.3s;
+}
+
+.card-lift:hover {
+  transform: translateY(-0.25rem);
 }
 
 .skill-tile {
-  transition: transform 0.2s ease, border-color 0.25s ease;
-}
-
-.skill-tile .skill-mark {
-  opacity: 0.9;
-  transition: filter 0.25s ease, opacity 0.25s ease;
+  background: transparent;
+  transition: transform 0.2s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 .skill-tile:hover {
-  transform: scale(1.04);
-}
-
-[data-theme="dark"] .skill-tile:hover,
-:root:not([data-theme="light"]) .skill-tile:hover {
-  border-color: color-mix(in srgb, #8b5cf6 40%, transparent);
-}
-
-[data-theme="dark"] .skill-tile:hover .skill-mark,
-:root:not([data-theme="light"]) .skill-tile:hover .skill-mark {
-  opacity: 1;
-  filter: brightness(1.25);
-}
-
-[data-theme="light"] .skill-tile:hover {
+  transform: scale(1.05);
   border-color: var(--border);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skill-tile,
-  .skill-tile .skill-mark {
-    transition: none;
+  .card-lift:hover,
+  .skill-tile:hover {
+    transform: none !important;
   }
 
-  .skill-tile:hover {
-    transform: none;
+  .skill-tile,
+  .skill-tile .skill-mark {
+    transition: none !important;
   }
 }
 
@@ -440,7 +433,8 @@ html:not([data-theme="light"]) .theme-icon-moon {
   background: linear-gradient(
     to bottom right,
     color-mix(in srgb, var(--brand-from, #7c3aed) 15%, transparent),
-    color-mix(in srgb, var(--brand-to, #6366f1) 12%, transparent)
+    color-mix(in srgb, var(--brand-from, #a855f7) 5%, transparent),
+    color-mix(in srgb, var(--brand-to, #6366f1) 15%, transparent)
   );
 }
 .timeline-line {
@@ -453,8 +447,8 @@ html:not([data-theme="light"]) .theme-icon-moon {
   height: 1rem;
   width: 1rem;
   border-radius: 9999px;
-  background-color: #7c3aed;
-  box-shadow: 0 0 0 4px rgb(139 92 246 / 0.3);
+  background-color: var(--brand-from);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-from) 30%, transparent);
 }
 @media (min-width: 40rem) {
   .timeline-dot {
@@ -667,7 +661,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   z-index: 4;
 }
 .world-spot:focus-visible {
-  outline: 2px solid #7c3aed;
+  outline: 2px solid var(--brand-from);
   outline-offset: 3px;
 }
 .world-spot.is-playing {
@@ -679,7 +673,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   position: absolute;
   inset: 18% 8% 8%;
   border-radius: 42%;
-  background: radial-gradient(circle, rgb(124 58 237 / 0.2), transparent 72%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--brand-from) 20%, transparent), transparent 72%);
   pointer-events: none;
 }
 .world-hero:not(.is-nook) .world-spot[data-spot="jar"].is-on::after {
@@ -696,7 +690,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  background: radial-gradient(ellipse at 18% 58%, rgb(124 58 237 / 0.14), transparent 46%);
+  background: radial-gradient(ellipse at 18% 58%, color-mix(in srgb, var(--brand-from) 14%, transparent), transparent 46%);
   animation: world-listen 3.2s ease-in-out infinite;
 }
 .world-tag,
@@ -802,12 +796,12 @@ html:not([data-theme="light"]) .theme-icon-moon {
 .world-hero.is-studio .world-spot[data-spot="frames"].is-on::after {
   inset: 6% 8% 10%;
   border-radius: 14px;
-  background: radial-gradient(circle, rgb(251 191 36 / 0.16), rgb(124 58 237 / 0.1) 52%, transparent 76%);
+  background: radial-gradient(circle, rgb(251 191 36 / 0.16), color-mix(in srgb, var(--brand-from) 10%, transparent) 52%, transparent 76%);
 }
 .world-hero.is-studio .world-spot[data-spot="laptop"].is-on::after {
   inset: 6% 12% 4%;
   border-radius: 32% 32% 24% 24%;
-  background: radial-gradient(circle at 50% 38%, rgb(167 139 250 / 0.3), transparent 72%);
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--accent-text) 30%, transparent), transparent 72%);
 }
 .world-hero.is-studio .world-spot[data-spot="jar"].is-on::after {
   inset: 12% 14% 8%;
@@ -1053,7 +1047,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   }
 }
 .world-playing:focus-visible {
-  outline: 2px solid #7c3aed;
+  outline: 2px solid var(--brand-from);
   outline-offset: 3px;
 }
 .world-audio-host {

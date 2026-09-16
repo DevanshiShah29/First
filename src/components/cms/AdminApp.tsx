@@ -193,6 +193,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               go={go}
               save={save}
               dirty={dirty}
+              status={status}
               onPasswordNotice={(message) => {
                 setError("");
                 setNotice(message);
@@ -210,6 +211,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               setData={setData}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -221,6 +223,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               uploading={uploading}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -233,6 +236,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               uploading={uploading}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -242,6 +246,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               setData={setData}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -258,6 +263,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               go={go}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -274,6 +280,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               go={go}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -288,6 +295,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               uploading={uploading}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -302,6 +310,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               uploading={uploading}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -311,6 +320,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               setData={setData}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 
@@ -338,6 +348,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               uploading={uploading}
               save={save}
               dirty={dirty}
+              status={status}
             />
           )}
 

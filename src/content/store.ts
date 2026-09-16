@@ -23,6 +23,7 @@ import {
   type SiteContent,
   type SkillGroup,
   type SkillItem,
+  type SavedTheme,
   type ThemeContent,
   type ThemeMode,
   type ThemePalette,
@@ -234,11 +235,41 @@ function parsePalette(value: unknown, fallback: ThemePalette): ThemePalette {
 }
 
 /**
+ * Parses saved theme library entries.
+ * @example parseSavedThemes([{name:"Warm"}]) // SavedTheme[]
+ */
+function parseSavedThemes(value: unknown): SavedTheme[] {
+  if (!Array.isArray(value)) return [];
+  const themes: SavedTheme[] = [];
+  for (let i = 0; i < value.length && themes.length < 40; i++) {
+    const row = asRecord(value[i]);
+    const name = str(row.name).trim();
+    if (!name) continue;
+    const now = new Date().toISOString();
+    const description = str(row.description).slice(0, 200);
+    const theme: SavedTheme = {
+      id: str(row.id, `saved-${i + 1}`),
+      name: name.slice(0, 80),
+      brandFrom: normalizeHex(row.brandFrom, DEFAULT_THEME.brandFrom),
+      brandTo: normalizeHex(row.brandTo, DEFAULT_THEME.brandTo),
+      dark: parsePalette(row.dark, DEFAULT_THEME.dark),
+      light: parsePalette(row.light, DEFAULT_THEME.light),
+      createdAt: str(row.createdAt, now),
+      updatedAt: str(row.updatedAt, now),
+    };
+    if (description) theme.description = description;
+    themes.push(theme);
+  }
+  return themes;
+}
+
+/**
  * Parses theme settings JSON.
  * @example parseTheme({defaultMode:"system"}) // ThemeContent
  */
 function parseTheme(value: unknown): ThemeContent {
   const row = asRecord(value);
+  const activeRaw = row.activeThemeId;
   return {
     defaultMode: parseMode(row.defaultMode),
     allowToggle: bool(row.allowToggle, DEFAULT_THEME.allowToggle),
@@ -246,6 +277,11 @@ function parseTheme(value: unknown): ThemeContent {
     brandTo: normalizeHex(row.brandTo, DEFAULT_THEME.brandTo),
     dark: parsePalette(row.dark, DEFAULT_THEME.dark),
     light: parsePalette(row.light, DEFAULT_THEME.light),
+    activeThemeId:
+      activeRaw === null || activeRaw === undefined || activeRaw === ""
+        ? null
+        : str(activeRaw),
+    savedThemes: parseSavedThemes(row.savedThemes),
   };
 }
 
@@ -373,6 +409,8 @@ function themeSettingsData(theme: ThemeContent) {
     brandTo: theme.brandTo,
     dark: theme.dark,
     light: theme.light,
+    activeThemeId: theme.activeThemeId ?? null,
+    savedThemes: theme.savedThemes ?? [],
   };
 }
 
@@ -385,103 +423,208 @@ function asThemePalette(value: unknown, fallback: ThemePalette): ThemePalette {
 }
 
 /**
- * Writes validated ContentData into normalized Prisma tables.
- * @example await persistContent(tx, data) // void
+ * Stable JSON fingerprint for dirty-section checks during save.
+ * @example fingerprint({a:1}) // '{"a":1}'
  */
-export async function persistContent(db: DbClient, data: ContentData): Promise<void> {
+function fingerprint(value: unknown): string {
+  return JSON.stringify(value);
+}
+
+/**
+ * Writes validated ContentData into normalized Prisma tables.
+ * Skips wipe+rewrite for collections that match `previous` (same fingerprint).
+ * @example await persistContent(tx, data, previous) // void
+ */
+export async function persistContent(
+  db: DbClient,
+  data: ContentData,
+  previous?: ContentData | null,
+): Promise<void> {
   const siteFields = await siteCoreData(data.site);
   const heroFields = heroSettingsData(data.site);
   const themeFields = themeSettingsData(data.theme);
-
-  await db.siteSettings.upsert({
-    where: { id: SITE_ID },
-    create: { id: SITE_ID, ...siteFields },
-    update: siteFields,
-  });
-
-  await Promise.all([
-    db.heroSettings.upsert({
-      where: { siteId: SITE_ID },
-      create: { siteId: SITE_ID, ...heroFields },
-      update: heroFields,
-    }),
-    db.themeSettings.upsert({
-      where: { siteId: SITE_ID },
-      create: { siteId: SITE_ID, ...themeFields },
-      update: themeFields,
-    }),
-  ]);
-
   const craft = data.craft ?? EMPTY_CRAFT;
+  const prevCraft = previous?.craft ?? EMPTY_CRAFT;
 
-  // Clear collections first (SkillGroup / CraftGroup cascade removes items).
+  const siteCoreChanged =
+    !previous ||
+    fingerprint({
+      name: data.site.name,
+      initials: data.site.initials,
+      title: data.site.title,
+      description: data.site.description,
+      pianoYoutubeUrl: data.site.pianoYoutubeUrl,
+      goodreadsUrl: data.site.goodreadsUrl,
+      kicker: data.site.kicker,
+      greeting: data.site.greeting,
+      roles: data.site.roles,
+      line: data.site.line,
+      about: data.site.about,
+      philosophyKicker: data.site.philosophyKicker,
+      philosophyTitle: data.site.philosophyTitle,
+      philosophy: data.site.philosophy,
+      experienceIntro: data.site.experienceIntro,
+      contactLine: data.site.contactLine,
+      email: data.site.email,
+      linkedin: data.site.linkedin,
+      github: data.site.github,
+      resume: data.site.resume,
+    }) !==
+      fingerprint({
+        name: previous.site.name,
+        initials: previous.site.initials,
+        title: previous.site.title,
+        description: previous.site.description,
+        pianoYoutubeUrl: previous.site.pianoYoutubeUrl,
+        goodreadsUrl: previous.site.goodreadsUrl,
+        kicker: previous.site.kicker,
+        greeting: previous.site.greeting,
+        roles: previous.site.roles,
+        line: previous.site.line,
+        about: previous.site.about,
+        philosophyKicker: previous.site.philosophyKicker,
+        philosophyTitle: previous.site.philosophyTitle,
+        philosophy: previous.site.philosophy,
+        experienceIntro: previous.site.experienceIntro,
+        contactLine: previous.site.contactLine,
+        email: previous.site.email,
+        linkedin: previous.site.linkedin,
+        github: previous.site.github,
+        resume: previous.site.resume,
+      });
+
+  const heroChanged =
+    !previous ||
+    fingerprint(heroSettingsData(data.site)) !== fingerprint(heroSettingsData(previous.site));
+  const themeChanged =
+    !previous || fingerprint(themeSettingsData(data.theme)) !== fingerprint(themeSettingsData(previous.theme));
+  const statsChanged =
+    !previous || fingerprint(data.site.stats) !== fingerprint(previous.site.stats);
+  const experienceChanged =
+    !previous || fingerprint(data.experience) !== fingerprint(previous.experience);
+  const projectsChanged =
+    !previous || fingerprint(data.projects) !== fingerprint(previous.projects);
+  const memoriesChanged =
+    !previous || fingerprint(data.memories ?? []) !== fingerprint(previous.memories ?? []);
+  const skillsChanged =
+    !previous ||
+    fingerprint(data.skills) !== fingerprint(previous.skills) ||
+    fingerprint(data.technologies ?? []) !== fingerprint(previous.technologies ?? []);
+  const craftPageChanged =
+    !previous ||
+    fingerprint({
+      kicker: craft.kicker,
+      title: craft.title,
+      intro: craft.intro,
+      footnote: craft.footnote,
+    }) !==
+      fingerprint({
+        kicker: prevCraft.kicker,
+        title: prevCraft.title,
+        intro: prevCraft.intro,
+        footnote: prevCraft.footnote,
+      });
+  const craftGroupsChanged =
+    !previous || fingerprint(craft.groups) !== fingerprint(prevCraft.groups);
+
+  if (siteCoreChanged) {
+    await db.siteSettings.upsert({
+      where: { id: SITE_ID },
+      create: { id: SITE_ID, ...siteFields },
+      update: siteFields,
+    });
+  }
+
   await Promise.all([
-    db.siteStat.deleteMany({ where: { siteId: SITE_ID } }),
-    db.experience.deleteMany(),
-    db.project.deleteMany(),
-    db.memory.deleteMany(),
-    db.skillGroup.deleteMany(),
-    db.craftGroup.deleteMany(),
+    heroChanged
+      ? db.heroSettings.upsert({
+          where: { siteId: SITE_ID },
+          create: { site: { connect: { id: SITE_ID } }, ...heroFields },
+          update: heroFields,
+        })
+      : Promise.resolve(),
+    themeChanged
+      ? db.themeSettings.upsert({
+          where: { siteId: SITE_ID },
+          create: { site: { connect: { id: SITE_ID } }, ...themeFields },
+          update: themeFields,
+        })
+      : Promise.resolve(),
+    craftPageChanged || craftGroupsChanged
+      ? db.craftSettings.upsert({
+          where: { id: SITE_ID },
+          create: {
+            id: SITE_ID,
+            kicker: craft.kicker,
+            title: craft.title,
+            intro: craft.intro,
+            footnote: craft.footnote,
+          },
+          update: {
+            kicker: craft.kicker,
+            title: craft.title,
+            intro: craft.intro,
+            footnote: craft.footnote,
+          },
+        })
+      : Promise.resolve(),
   ]);
 
-  await db.craftSettings.upsert({
-    where: { id: SITE_ID },
-    create: {
-      id: SITE_ID,
-      kicker: craft.kicker,
-      title: craft.title,
-      intro: craft.intro,
-      footnote: craft.footnote,
-    },
-    update: {
-      kicker: craft.kicker,
-      title: craft.title,
-      intro: craft.intro,
-      footnote: craft.footnote,
-    },
-  });
+  // Only wipe+rewrite collections that actually changed (biggest save win).
+  const clears: Promise<unknown>[] = [];
+  if (statsChanged) clears.push(db.siteStat.deleteMany({ where: { siteId: SITE_ID } }));
+  if (experienceChanged) clears.push(db.experience.deleteMany());
+  if (projectsChanged) clears.push(db.project.deleteMany());
+  if (memoriesChanged) clears.push(db.memory.deleteMany());
+  if (skillsChanged) clears.push(db.skillGroup.deleteMany());
+  if (craftGroupsChanged) clears.push(db.craftGroup.deleteMany());
+  if (clears.length > 0) await Promise.all(clears);
 
   const skillCreates: Prisma.SkillGroupCreateInput[] = [];
-  const skillBundles: { kind: "skills" | "technologies"; groups: SkillGroup[] }[] = [
-    { kind: "skills", groups: data.skills },
-    { kind: "technologies", groups: data.technologies ?? [] },
-  ];
-  for (const bundle of skillBundles) {
-    for (let g = 0; g < bundle.groups.length; g++) {
-      const group = bundle.groups[g];
-      skillCreates.push({
-        kind: bundle.kind,
+  if (skillsChanged) {
+    const skillBundles: { kind: "skills" | "technologies"; groups: SkillGroup[] }[] = [
+      { kind: "skills", groups: data.skills },
+      { kind: "technologies", groups: data.technologies ?? [] },
+    ];
+    for (const bundle of skillBundles) {
+      for (let g = 0; g < bundle.groups.length; g++) {
+        const group = bundle.groups[g];
+        skillCreates.push({
+          kind: bundle.kind,
+          title: group.title,
+          sortOrder: g,
+          items: {
+            create: group.items.map((item, i) => ({
+              sortOrder: i,
+              name: item.name,
+              icon: item.icon,
+              color: item.color ?? null,
+              iconUrl: item.iconUrl ?? null,
+            })),
+          },
+        });
+      }
+    }
+  }
+
+  const craftCreates: Prisma.CraftGroupCreateInput[] = craftGroupsChanged
+    ? craft.groups.map((group, g) => ({
+        craft: { connect: { id: SITE_ID } },
         title: group.title,
+        intro: group.intro,
         sortOrder: g,
         items: {
           create: group.items.map((item, i) => ({
             sortOrder: i,
-            name: item.name,
-            icon: item.icon,
-            color: item.color ?? null,
-            iconUrl: item.iconUrl ?? null,
+            title: item.title,
+            why: item.why,
           })),
         },
-      });
-    }
-  }
-
-  const craftCreates: Prisma.CraftGroupCreateInput[] = craft.groups.map((group, g) => ({
-    craft: { connect: { id: SITE_ID } },
-    title: group.title,
-    intro: group.intro,
-    sortOrder: g,
-    items: {
-      create: group.items.map((item, i) => ({
-        sortOrder: i,
-        title: item.title,
-        why: item.why,
-      })),
-    },
-  }));
+      }))
+    : [];
 
   await Promise.all([
-    data.site.stats.length > 0
+    statsChanged && data.site.stats.length > 0
       ? db.siteStat.createMany({
           data: data.site.stats.map((stat, i) => ({
             siteId: SITE_ID,
@@ -492,7 +635,7 @@ export async function persistContent(db: DbClient, data: ContentData): Promise<v
           })),
         })
       : Promise.resolve(),
-    data.experience.length > 0
+    experienceChanged && data.experience.length > 0
       ? db.experience.createMany({
           data: data.experience.map((item, i) => ({
             id: item.id,
@@ -507,7 +650,7 @@ export async function persistContent(db: DbClient, data: ContentData): Promise<v
           })),
         })
       : Promise.resolve(),
-    data.projects.length > 0
+    projectsChanged && data.projects.length > 0
       ? db.project.createMany({
           data: data.projects.map((item, i) => ({
             id: item.id,
@@ -520,7 +663,7 @@ export async function persistContent(db: DbClient, data: ContentData): Promise<v
           })),
         })
       : Promise.resolve(),
-    (data.memories ?? []).length > 0
+    memoriesChanged && (data.memories ?? []).length > 0
       ? db.memory.createMany({
           data: (data.memories ?? []).map((item, i) => ({
             id: item.id,
@@ -535,15 +678,9 @@ export async function persistContent(db: DbClient, data: ContentData): Promise<v
           })),
         })
       : Promise.resolve(),
+    ...skillCreates.map((create) => db.skillGroup.create({ data: create })),
+    ...craftCreates.map((create) => db.craftGroup.create({ data: create })),
   ]);
-
-  // Nested creates can't use createMany; run sequentially but few groups.
-  for (const create of skillCreates) {
-    await db.skillGroup.create({ data: create });
-  }
-  for (const create of craftCreates) {
-    await db.craftGroup.create({ data: create });
-  }
 }
 
 /**
@@ -678,6 +815,8 @@ async function fetchContentFromDb(): Promise<ContentData> {
       brandTo: site.theme.brandTo,
       dark: asThemePalette(site.theme.dark, DEFAULT_THEME.dark),
       light: asThemePalette(site.theme.light, DEFAULT_THEME.light),
+      activeThemeId: site.theme.activeThemeId ?? null,
+      savedThemes: parseSavedThemes(site.theme.savedThemes),
     },
     memories: memories.map((item) => ({
       id: item.id,
@@ -717,10 +856,13 @@ const TX_OPTIONS = { maxWait: 15_000, timeout: 60_000 } as const;
 
 /**
  * Persists ContentData in a Prisma transaction.
+ * Diffs against the live DB document so unchanged collections are not wiped.
  * @example await saveContent(data) // void
  */
 export async function saveContent(data: ContentData): Promise<void> {
+  // Read outside the write txn so we can skip unchanged collections.
+  const previous = await fetchContentFromDb();
   await prisma.$transaction(async (tx) => {
-    await persistContent(tx, data);
+    await persistContent(tx, data, previous);
   }, TX_OPTIONS);
 }

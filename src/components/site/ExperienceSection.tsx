@@ -32,12 +32,12 @@ export function ExperienceSection({
           <div className="flex flex-col gap-6 sm:gap-8">
             {experience.map((job, i) => (
               <Fade key={job.id} y={24} delay={0.08 * Math.min(i, 3)} className="w-full">
-                <article className="card-surface relative rounded-2xl p-6 transition duration-300 hover:-translate-y-1">
+                <article className="card-surface card-lift relative rounded-2xl p-6">
                   <span className="timeline-dot" />
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-xs uppercase tracking-kicker-tight text-accent-text">{job.when}</p>
                     {job.current ? (
-                      <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-badge">
+                      <span className="rounded-full border border-brand/20 bg-brand/10 px-2.5 py-0.5 text-xs font-medium text-badge">
                         Current
                       </span>
                     ) : null}

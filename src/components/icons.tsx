@@ -1,6 +1,7 @@
 import type { ReactNode, SVGProps } from "react";
 import type { SkillIcon } from "@/content/types";
 import { MediaImage } from "@/components/MediaImage";
+import { hexToRgb, relativeLuminance } from "@/lib/theme-contrast";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
@@ -100,12 +101,19 @@ const brand = {
 } as const;
 
 /**
- * Resolves skill icon color, mapping white to mono token.
- * @example resolvedSkillColor("#fff") // "var(--skill-mono)"
+ * Resolves skill icon color, mapping near-black/near-white to the theme mono token
+ * so logos like Next.js and Express stay visible in both themes.
+ * @example resolvedSkillColor("#000") // "var(--skill-mono)"
  */
 function resolvedSkillColor(color?: string) {
   if (!color) return "var(--accent-text)";
-  if (color.toLowerCase() === "#ffffff") return "var(--skill-mono)";
+  const raw = color.trim().toLowerCase();
+  if (raw === "black" || raw === "white") return "var(--skill-mono)";
+  const rgb = hexToRgb(raw);
+  if (!rgb) return color;
+  const lum = relativeLuminance(rgb);
+  // Near-black (dark logos on dark UI) or near-white (light logos on light UI)
+  if (lum <= 0.05 || lum >= 0.92) return "var(--skill-mono)";
   return color;
 }
 

@@ -46,7 +46,7 @@ export function SiteFooter({
                   href={site.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
+                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-brand/10 hover:text-accent-hover"
                   aria-label="LinkedIn profile"
                 >
                   <IconLinkedIn size={20} />
@@ -58,7 +58,7 @@ export function SiteFooter({
                   href={site.github}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
+                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-brand/10 hover:text-accent-hover"
                   aria-label="GitHub profile"
                 >
                   <IconGitHub size={20} />
@@ -68,7 +68,7 @@ export function SiteFooter({
               {site.email ? (
                 <a
                   href={`mailto:${site.email}`}
-                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-violet-500/10 hover:text-accent-hover"
+                  className="icon-btn rounded-lg p-2 text-muted transition hover:bg-brand/10 hover:text-accent-hover"
                   aria-label={`Email ${site.email}`}
                 >
                   <IconMail size={20} />

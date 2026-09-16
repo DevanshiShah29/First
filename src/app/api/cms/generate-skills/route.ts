@@ -5,8 +5,8 @@ import { generateSkills } from "@/server/ai/generate-skills";
 export const runtime = "nodejs";
 
 /**
- * Handles POST /api/cms/generate-skills.
- * @example POST body // {groups}
+ * Handles POST /api/cms/generate-skills (suggest one skill).
+ * @example POST body // {name, groupTitle, icon, color, isNewGroup}
  */
 export async function POST(req: Request) {
   const gate = await requireCmsAi(req);
@@ -26,6 +26,6 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    groups: result.data.groups,
+    suggestion: result.data,
   });
 }

@@ -71,3 +71,19 @@ export function parseJsonObject(raw: string): Record<string, unknown> | null {
     return null;
   }
 }
+
+/**
+ * Normalizes a hex color to #RRGGBB or undefined.
+ * @example normalizeHex("#abc") // "#AABBCC"
+ */
+export function normalizeHex(raw: unknown): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const value = raw.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(value)) return value.toUpperCase();
+  const short = value.match(/^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/);
+  if (short) {
+    const [, a, b, c] = short;
+    return `#${a}${a}${b}${b}${c}${c}`.toUpperCase();
+  }
+  return undefined;
+}

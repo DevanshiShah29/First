@@ -190,6 +190,18 @@ export function IconJar({ className }: IconProps) {
 }
 
 /**
+ * Renders the shelf decor menu icon.
+ * @example <IconShelf />
+ */
+export function IconShelf({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M3 5h14v1.5H3V5zm1 3h2.2v7H4V8zm3.2 1.5h2.2V15H7.2V9.5zm3.2-.8h2.2V15h-2.2V8.7zm3.2 1.2H16V15h-2.4v-5.1zM3 16h14v1.5H3V16z" />
+    </Svg>
+  );
+}
+
+/**
  * Renders the Technologies/code menu icon.
  * @example <IconCode />
  */

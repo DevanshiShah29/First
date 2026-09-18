@@ -130,13 +130,13 @@ export function AppearanceScreen({
 
   /**
    * Updates one mode of the draft palette, syncs live preview, clears check results.
-   * @example updateDraftPalette(nextLight) // void
+   * @example updateDraftPalette("light", nextLight) // void
    */
   const updateDraftPalette = useCallback(
-    (next: ThemePalette) => {
+    (mode: "light" | "dark", next: ThemePalette) => {
       const updated: DraftTheme = {
         ...draft,
-        [paletteMode]: next,
+        [mode]: next,
       };
       setDraft(updated);
       setData({
@@ -154,7 +154,7 @@ export function AppearanceScreen({
       setCheckSummary(null);
       setCheckError(null);
     },
-    [data, draft, paletteMode, setData],
+    [data, draft, setData],
   );
 
   /**
@@ -402,8 +402,6 @@ export function AppearanceScreen({
     applyDraft(next, activeThemeId);
   };
 
-  const currentPalette = draft[paletteMode];
-
   return (
     <>
       <h1 className="wp-screen-title">Appearance</h1>
@@ -488,16 +486,11 @@ export function AppearanceScreen({
           </div>
         </Metabox>
 
-        <Metabox
-          id="app_palette_edit"
-          title="Edit palette"
-          badge={paletteMode}
-        >
+        <Metabox id="app_palette_edit" title="Edit palette" badge="light + dark">
           <EditablePalette
-            palette={currentPalette}
+            light={draft.light}
+            dark={draft.dark}
             onChange={updateDraftPalette}
-            mode={paletteMode}
-            onModeChange={setPaletteMode}
           />
 
           <div className="wp-theme-edit-actions">
@@ -540,11 +533,29 @@ export function AppearanceScreen({
 
         <Metabox id="app_palette_check" title="AI Palette Check" badge="optional">
           <p className="wp-theme-section-lede">
-            Check the current {paletteMode} palette for contrast, similarity, weak hovers, and hierarchy.
+            Check a palette for contrast, similarity, weak hovers, and hierarchy.
           </p>
+          <div className="wp-palette-mode-toggle" role="group" aria-label="Palette to check">
+            <button
+              type="button"
+              className={`wp-preview-mode-btn${paletteMode === "light" ? " is-active" : ""}`}
+              aria-pressed={paletteMode === "light"}
+              onClick={() => setPaletteMode("light")}
+            >
+              Light
+            </button>
+            <button
+              type="button"
+              className={`wp-preview-mode-btn${paletteMode === "dark" ? " is-active" : ""}`}
+              aria-pressed={paletteMode === "dark"}
+              onClick={() => setPaletteMode("dark")}
+            >
+              Dark
+            </button>
+          </div>
           <div className="wp-theme-check-actions">
             <button type="button" className="wp-btn" onClick={runLocalCheck}>
-              Check palette
+              Check {paletteMode} palette
             </button>
             <button
               type="button"
@@ -555,7 +566,7 @@ export function AppearanceScreen({
               <span className={`wp-btn-ai-icon${checking ? " is-spin" : ""}`} aria-hidden="true">
                 ✦
               </span>
-              {checking ? "Improving…" : "Improve palette"}
+              {checking ? "Improving…" : `Improve ${paletteMode} palette`}
             </button>
             {issues.length > 0 ? (
               <button
@@ -563,7 +574,7 @@ export function AppearanceScreen({
                 className="wp-btn"
                 onClick={() => {
                   const fixed = applyAllSuggestions(draft[paletteMode], issues);
-                  updateDraftPalette(fixed);
+                  updateDraftPalette(paletteMode, fixed);
                   setIssues([]);
                   setCheckSummary("Applied all suggestions.");
                 }}
@@ -595,7 +606,10 @@ export function AppearanceScreen({
                     type="button"
                     className="wp-btn wp-btn-small"
                     onClick={() => {
-                      updateDraftPalette(applyPaletteSuggestion(draft[paletteMode], issue));
+                      updateDraftPalette(
+                        paletteMode,
+                        applyPaletteSuggestion(draft[paletteMode], issue),
+                      );
                       setIssues((prev) => prev.filter((i) => i.id !== issue.id));
                     }}
                   >

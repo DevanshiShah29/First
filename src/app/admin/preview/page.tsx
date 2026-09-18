@@ -38,6 +38,7 @@ const sunrise = Waiting_for_the_Sunrise({
   weight: ["400"],
   variable: "--font-sunrise",
   display: "swap",
+  adjustFontFallback: false,
 });
 
 type PreviewState = {

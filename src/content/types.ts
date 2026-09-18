@@ -245,6 +245,35 @@ export type MemoryItem = {
   color?: string;
 };
 
+/** CMS-managed shelf ornament for the /reading bookshelf. */
+export type ShelfArtifactItem = {
+  id: string;
+  name: string;
+  imageUrl: string;
+  widthRem: number;
+  heightRem: number;
+  enabled: boolean;
+  /** Left edge as % of bookshelf room width; null = unplaced. */
+  xPercent: number | null;
+  /** Top edge as % of bookshelf room height; null = unplaced. */
+  yPercent: number | null;
+};
+
+/**
+ * True when an ornament should render on the live shelf.
+ * @example isShelfArtifactPlaced(item) // true
+ */
+export function isShelfArtifactPlaced(item: ShelfArtifactItem) {
+  return (
+    item.enabled &&
+    Boolean(item.imageUrl.trim()) &&
+    item.xPercent != null &&
+    item.yPercent != null &&
+    Number.isFinite(item.xPercent) &&
+    Number.isFinite(item.yPercent)
+  );
+}
+
 export type CraftItem = {
   title: string;
   why: string;
@@ -281,6 +310,7 @@ export type ContentData = {
   theme: ThemeContent;
   memories?: MemoryItem[];
   craft?: CraftContent;
+  shelfArtifacts?: ShelfArtifactItem[];
 };
 
 /** Public site props: sensitive media URLs stripped; playback via server proxy. */

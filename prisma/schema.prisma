@@ -148,6 +148,26 @@ model Memory {
   @@index([sortOrder])
 }
 
+/// Shelf ornaments for the /reading bookshelf (CMS-managed catalog).
+model ShelfArtifact {
+  id        String  @id
+  sortOrder Int
+  name      String  @default("")
+  imageUrl  String  @default("")
+  widthRem  Float   @default(1.85)
+  heightRem Float   @default(5.4)
+  enabled   Boolean @default(true)
+  /// Left edge as % of bookshelf room width; null = unplaced.
+  xPercent  Float?
+  /// Top edge as % of bookshelf room height; null = unplaced.
+  yPercent  Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
 /// kind: "skills" | "technologies"
 model SkillGroup {
   id        String @id @default(cuid())

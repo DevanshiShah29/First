@@ -761,7 +761,7 @@ export async function fetchCmsAnalytics(
  */
 export async function uploadCmsFile(
   file: File,
-  folder?: "hero" | "skills" | "memories" | "resume",
+  folder?: "hero" | "skills" | "memories" | "resume" | "artifacts",
 ): Promise<ApiResponse<UploadFileResponse>> {
   try {
     const form = new FormData();

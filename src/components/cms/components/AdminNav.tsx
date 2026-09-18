@@ -39,6 +39,7 @@ interface AdminBarProps {
   addExperience: () => void;
   addProject: () => void;
   addMemory: () => void;
+  addArtifact: () => void;
 }
 
 /**
@@ -59,6 +60,7 @@ export function AdminBar({
   addExperience,
   addProject,
   addMemory,
+  addArtifact,
 }: AdminBarProps) {
   return (
     <header className="wp-bar">
@@ -123,6 +125,16 @@ export function AdminBar({
               }}
             >
               Memory
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setNewOpen(() => false);
+                addArtifact();
+              }}
+            >
+              Shelf decor
             </button>
           </div>
         </div>

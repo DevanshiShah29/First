@@ -17,7 +17,9 @@ export type Screen =
   | "technologies"
   | "craft"
   | "memories"
-  | "memories-edit";
+  | "memories-edit"
+  | "artifacts"
+  | "artifacts-edit";
 
 export interface BreadcrumbItem {
   label: string;

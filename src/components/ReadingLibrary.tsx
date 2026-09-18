@@ -1,7 +1,10 @@
+import type { ShelfArtifactItem } from "@/content/types";
 import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
 import { MediaImage } from "./MediaImage";
 import { NewTabHint } from "./a11y";
 import { Fade } from "./Fade";
+import { Bookshelf } from "./reading/Bookshelf";
+import { shelfSections } from "./reading/shelfSections";
 
 /**
  * Formats a Goodreads date string for display.
@@ -75,7 +78,7 @@ function Meta({ book }: { book: GoodreadsBook }) {
  */
 function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: boolean }) {
   return (
-    <article className={`reading-card${featured ? " is-featured" : ""}`}>
+    <article id={`book-${book.id}`} className={`reading-card${featured ? " is-featured" : ""}`}>
       <Cover book={book} />
       <div>
         <h3>
@@ -94,10 +97,16 @@ function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: 
 }
 
 /**
- * Renders Goodreads shelves (reading / read / want-to-read).
- * @example <ReadingLibrary library={data} />
+ * Renders Goodreads shelves: visual bookshelf on top, original lists below.
+ * @example <ReadingLibrary library={data} artifacts={items} />
  */
-export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
+export function ReadingLibrary({
+  library,
+  artifacts = [],
+}: {
+  library: GoodreadsLibrary;
+  artifacts?: ShelfArtifactItem[];
+}) {
   const total = library.currentlyReading.length + library.read.length + library.toRead.length;
 
   if (!library.configured) {
@@ -105,7 +114,9 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
       <section id="library" className="section-shell py-20 sm:py-28">
         <p className="kicker">From the desk</p>
         <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Reading</h1>
-        <p className="mt-5 max-w-xl text-muted">The bookshelf is taking a break. Add a Goodreads profile in the CMS to fill this page.</p>
+        <p className="mt-5 max-w-xl text-muted">
+          The bookshelf is taking a break. Add a Goodreads profile in the CMS to fill this page.
+        </p>
       </section>
     );
   }
@@ -131,7 +142,9 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
       <section className="section-shell pt-16 sm:pt-24">
         <Fade y={24}>
           <p className="kicker">From the desk</p>
-          <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">Reading</h1>
+          <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
+            Reading
+          </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
             Everything on my Goodreads shelves — what I’m in the middle of, what I’ve finished, and what I want next,
             including the notes I left on the books.
@@ -152,6 +165,10 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
           </nav>
         </Fade>
       </section>
+
+      <div className="section-shell mt-10">
+        <Bookshelf sections={shelfSections(library)} artifacts={artifacts} />
+      </div>
 
       {library.currentlyReading.length ? (
         <section id="currently-reading" className="section-shell pt-16">
@@ -183,7 +200,14 @@ export function ReadingLibrary({ library }: { library: GoodreadsLibrary }) {
         </Fade>
         <div className="reading-want mt-8">
           {library.toRead.map((book) => (
-            <a key={book.id} href={book.url} target="_blank" rel="noopener noreferrer" className="reading-want-card">
+            <a
+              key={book.id}
+              id={`book-${book.id}`}
+              href={book.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="reading-want-card"
+            >
               <Cover book={book} decorative />
               <strong>{book.title}</strong>
               <span>{book.author}</span>

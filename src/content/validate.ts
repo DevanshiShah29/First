@@ -143,6 +143,26 @@ const memorySchema = z.object({
   color: z.string().optional(),
 });
 
+const percentOrNull = z
+  .number()
+  .finite()
+  .min(0)
+  .max(100)
+  .nullable()
+  .optional()
+  .transform((value) => (value === undefined ? null : value));
+
+const shelfArtifactSchema = z.object({
+  id: nonEmpty("Shelf artifact id"),
+  name: nonEmpty("Shelf artifact name"),
+  imageUrl: z.string(),
+  widthRem: z.number().finite().positive(),
+  heightRem: z.number().finite().positive(),
+  enabled: z.boolean(),
+  xPercent: percentOrNull,
+  yPercent: percentOrNull,
+});
+
 const craftItemSchema = z.object({
   title: nonEmpty("Craft item title"),
   why: z.string(),
@@ -177,6 +197,7 @@ const contentSaveSchema = z.object({
     footnote: "",
     groups: [],
   }),
+  shelfArtifacts: z.array(shelfArtifactSchema).optional().default([]),
 });
 
 export type ParseContentSaveResult =

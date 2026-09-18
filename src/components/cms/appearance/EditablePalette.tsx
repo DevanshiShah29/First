@@ -4,41 +4,51 @@ import { THEME_PALETTE_FIELDS, type ThemePalette } from "@/content/types";
 import { HexColorInput } from "../fields";
 
 /**
- * Editable 8-color palette rows with swatch + hex + picker.
- * @example <EditablePalette palette={draft} onChange={setDraft} />
+ * Editable light + dark palettes shown side by side.
+ * @example <EditablePalette light={draft.light} dark={draft.dark} onChange={update} />
  */
 export function EditablePalette({
-  palette,
+  light,
+  dark,
   onChange,
-  mode,
-  onModeChange,
 }: {
-  palette: ThemePalette;
-  onChange: (next: ThemePalette) => void;
-  mode: "light" | "dark";
-  onModeChange: (mode: "light" | "dark") => void;
+  light: ThemePalette;
+  dark: ThemePalette;
+  onChange: (mode: "light" | "dark", next: ThemePalette) => void;
 }) {
   return (
     <div className="wp-palette-editor">
-      <div className="wp-palette-mode-toggle" role="group" aria-label="Palette mode">
-        <button
-          type="button"
-          className={`wp-preview-mode-btn${mode === "light" ? " is-active" : ""}`}
-          aria-pressed={mode === "light"}
-          onClick={() => onModeChange("light")}
-        >
-          Light palette
-        </button>
-        <button
-          type="button"
-          className={`wp-preview-mode-btn${mode === "dark" ? " is-active" : ""}`}
-          aria-pressed={mode === "dark"}
-          onClick={() => onModeChange("dark")}
-        >
-          Dark palette
-        </button>
+      <div className="wp-palette-columns">
+        <PaletteColumn
+          title="Light palette"
+          palette={light}
+          onChange={(next) => onChange("light", next)}
+        />
+        <PaletteColumn
+          title="Dark palette"
+          palette={dark}
+          onChange={(next) => onChange("dark", next)}
+        />
       </div>
+    </div>
+  );
+}
 
+/**
+ * One mode's 8-color palette rows with swatch + hex + picker.
+ */
+function PaletteColumn({
+  title,
+  palette,
+  onChange,
+}: {
+  title: string;
+  palette: ThemePalette;
+  onChange: (next: ThemePalette) => void;
+}) {
+  return (
+    <section className="wp-palette-column" aria-label={title}>
+      <h3 className="wp-palette-column-title">{title}</h3>
       <div className="wp-palette-rows">
         {THEME_PALETTE_FIELDS.map((field) => (
           <div key={field.key} className="wp-palette-row">
@@ -61,6 +71,6 @@ export function EditablePalette({
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

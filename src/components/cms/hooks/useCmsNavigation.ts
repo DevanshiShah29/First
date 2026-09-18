@@ -29,6 +29,9 @@ export function useCmsNavigation(
   const memoriesList = data.memories ?? [];
   const memIndex = memoriesList.findIndex((m) => m.id === editId);
   const memory = memIndex >= 0 ? memoriesList[memIndex] : null;
+  const artifactsList = data.shelfArtifacts ?? [];
+  const artIndex = artifactsList.findIndex((a) => a.id === editId);
+  const artifact = artIndex >= 0 ? artifactsList[artIndex] : null;
 
   /**
    * Navigates to a CMS screen and optional edit id.
@@ -105,6 +108,32 @@ export function useCmsNavigation(
       ],
     });
     go("memories-edit", id);
+  }
+
+  /**
+   * Appends a blank shelf ornament and opens its editor.
+   * @example addArtifact() // void
+   */
+  function addArtifact() {
+    const id = newId();
+    const shelfArtifacts = data.shelfArtifacts ?? [];
+    setData({
+      ...data,
+      shelfArtifacts: [
+        ...shelfArtifacts,
+        {
+          id,
+          name: "New ornament",
+          imageUrl: "",
+          widthRem: 1.85,
+          heightRem: 5.4,
+          enabled: true,
+          xPercent: null,
+          yPercent: null,
+        },
+      ],
+    });
+    go("artifacts-edit", id);
   }
 
   const breadcrumbs = useMemo<BreadcrumbItem[]>(() => {
@@ -210,12 +239,30 @@ export function useCmsNavigation(
             current: true,
           },
         ];
+      case "artifacts":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Shelf decor", current: true },
+        ];
+      case "artifacts-edit":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Shelf decor", onClick: () => go("artifacts") },
+          {
+            label: artifact
+              ? artifact.name === "New ornament"
+                ? "Add New Ornament"
+                : artifact.name || "Untitled Ornament"
+              : "Edit Ornament",
+            current: true,
+          },
+        ];
       default:
         return [{ label: "Dashboard", current: true }];
     }
     // go is stable enough for breadcrumb onClick closures recreated each render
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [screen, job, project, memory]);
+  }, [screen, job, project, memory, artifact]);
 
   return {
     screen,
@@ -228,6 +275,7 @@ export function useCmsNavigation(
     addExperience,
     addProject,
     addMemory,
+    addArtifact,
     breadcrumbs,
     expIndex,
     job,
@@ -236,5 +284,8 @@ export function useCmsNavigation(
     memoriesList,
     memIndex,
     memory,
+    artifactsList,
+    artIndex,
+    artifact,
   };
 }

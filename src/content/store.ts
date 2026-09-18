@@ -20,6 +20,7 @@ import {
   type HeroMediaSide,
   type MemoryItem,
   type ProjectItem,
+  type ShelfArtifactItem,
   type SiteContent,
   type SkillGroup,
   type SkillItem,
@@ -107,8 +108,8 @@ function parseSite(value: unknown): SiteContent {
   const s = asRecord(value);
   const statsRaw = Array.isArray(s.stats) ? s.stats : [];
   return {
-    name: str(s.name, "Devanshi Shah"),
-    initials: str(s.initials, "DS").slice(0, 4),
+    name: str(s.name),
+    initials: str(s.initials).slice(0, 4),
     title: str(s.title),
     description: str(s.description),
     heroTemplate: (() => {
@@ -307,6 +308,48 @@ function parseMemories(value: unknown): MemoryItem[] {
 }
 
 /**
+ * Parses a positive rem size (no max — CMS may scale ornaments freely).
+ * @example parsePositiveRem(9, 1.85) // 9
+ */
+function parsePositiveRem(value: unknown, fallback: number) {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n) || n <= 0) return fallback;
+  return n;
+}
+
+/**
+ * Parses an optional 0–100 placement percent (null = unplaced).
+ * @example parsePercent(12.5) // 12.5
+ */
+function parsePercent(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(100, Math.max(0, n));
+}
+
+/**
+ * Parses shelf artifact catalog JSON.
+ * @example parseShelfArtifacts([{name:"Plant"}]) // ShelfArtifactItem[]
+ */
+function parseShelfArtifacts(value: unknown): ShelfArtifactItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item, i) => {
+    const row = asRecord(item);
+    return {
+      id: str(row.id, `artifact-${i + 1}`),
+      name: str(row.name, "Ornament"),
+      imageUrl: str(row.imageUrl),
+      widthRem: parsePositiveRem(row.widthRem, 1.85),
+      heightRem: parsePositiveRem(row.heightRem, 5.4),
+      enabled: row.enabled !== false,
+      xPercent: parsePercent(row.xPercent),
+      yPercent: parsePercent(row.yPercent),
+    };
+  });
+}
+
+/**
  * Parses craft page JSON into CraftContent.
  * @example parseCraft({title:"Craft"}) // CraftContent
  */
@@ -351,6 +394,7 @@ export function parseContent(value: unknown): ContentData {
     theme: parseTheme(root.theme),
     memories: parseMemories(root.memories),
     craft: parseCraft(root.craft),
+    shelfArtifacts: parseShelfArtifacts(root.shelfArtifacts),
   };
 }
 
@@ -506,6 +550,9 @@ export async function persistContent(
     !previous || fingerprint(data.projects) !== fingerprint(previous.projects);
   const memoriesChanged =
     !previous || fingerprint(data.memories ?? []) !== fingerprint(previous.memories ?? []);
+  const shelfArtifactsChanged =
+    !previous ||
+    fingerprint(data.shelfArtifacts ?? []) !== fingerprint(previous.shelfArtifacts ?? []);
   const skillsChanged =
     !previous ||
     fingerprint(data.skills) !== fingerprint(previous.skills) ||
@@ -576,6 +623,7 @@ export async function persistContent(
   if (experienceChanged) clears.push(db.experience.deleteMany());
   if (projectsChanged) clears.push(db.project.deleteMany());
   if (memoriesChanged) clears.push(db.memory.deleteMany());
+  if (shelfArtifactsChanged) clears.push(db.shelfArtifact.deleteMany());
   if (skillsChanged) clears.push(db.skillGroup.deleteMany());
   if (craftGroupsChanged) clears.push(db.craftGroup.deleteMany());
   if (clears.length > 0) await Promise.all(clears);
@@ -678,6 +726,21 @@ export async function persistContent(
           })),
         })
       : Promise.resolve(),
+    shelfArtifactsChanged && (data.shelfArtifacts ?? []).length > 0
+      ? db.shelfArtifact.createMany({
+          data: (data.shelfArtifacts ?? []).map((item, i) => ({
+            id: item.id,
+            sortOrder: i,
+            name: item.name,
+            imageUrl: item.imageUrl,
+            widthRem: item.widthRem,
+            heightRem: item.heightRem,
+            enabled: item.enabled,
+            xPercent: item.xPercent,
+            yPercent: item.yPercent,
+          })),
+        })
+      : Promise.resolve(),
     ...skillCreates.map((create) => db.skillGroup.create({ data: create })),
     ...craftCreates.map((create) => db.craftGroup.create({ data: create })),
   ]);
@@ -688,7 +751,8 @@ export async function persistContent(
  * @example await fetchContentFromDb() // ContentData
  */
 async function fetchContentFromDb(): Promise<ContentData> {
-  const [site, experience, projects, memories, skillGroups, craftSettings] = await Promise.all([
+  const [site, experience, projects, memories, shelfArtifacts, skillGroups, craftSettings] =
+    await Promise.all([
     prisma.siteSettings.findUnique({
       where: { id: SITE_ID },
       include: {
@@ -700,6 +764,9 @@ async function fetchContentFromDb(): Promise<ContentData> {
     prisma.experience.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.project.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.memory.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.shelfArtifact
+      ? prisma.shelfArtifact.findMany({ orderBy: { sortOrder: "asc" } })
+      : Promise.resolve([]),
     prisma.skillGroup.findMany({
       orderBy: [{ kind: "asc" }, { sortOrder: "asc" }],
       include: { items: { orderBy: { sortOrder: "asc" } } },
@@ -837,10 +904,20 @@ async function fetchContentFromDb(): Promise<ContentData> {
           groups: craftGroups,
         }
       : EMPTY_CRAFT,
+    shelfArtifacts: shelfArtifacts.map((item) => ({
+      id: item.id,
+      name: item.name,
+      imageUrl: item.imageUrl,
+      widthRem: item.widthRem,
+      heightRem: item.heightRem,
+      enabled: item.enabled,
+      xPercent: item.xPercent,
+      yPercent: item.yPercent,
+    })),
   });
 }
 
-const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v3"], {
+const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v5"], {
   tags: [CMS_CONTENT_TAG],
   // Safety net if on-demand revalidation is missed; CMS save also revalidates the tag.
   revalidate: 3600,

@@ -8,7 +8,8 @@ const prisma = new PrismaClient();
 const SITE_ID = "main";
 
 /**
- * Seeds CMS tables from src/content/data.json (refuses prod/overwrite unless forced).
+ * Seeds empty CMS shell from src/content/data.json (site/theme rows only; no sample copy).
+ * Refuses prod/overwrite unless forced. Fill content via the CMS after seeding.
  * @example await main() // void
  */
 async function main() {
@@ -19,7 +20,7 @@ async function main() {
   if (isProd && !allowProdSeed) {
     console.error(
       "Refusing to seed: NODE_ENV=production.\n" +
-        "This replaces all CMS content from data.json.\n" +
+        "This replaces all CMS content from data.json (empty shell).\n" +
         "Set ALLOW_PROD_SEED=1 (and FORCE_SEED=1 if the DB is not empty) to override.",
     );
     process.exit(1);
@@ -38,7 +39,7 @@ async function main() {
   }
 
   if (existing && forceSeed) {
-    console.warn("FORCE_SEED=1 — replacing existing CMS content from data.json…");
+    console.warn("FORCE_SEED=1 — replacing existing CMS content with empty shell from data.json…");
   }
 
   const dataPath = path.join(process.cwd(), "src/content/data.json");
@@ -52,16 +53,18 @@ async function main() {
     { maxWait: 15_000, timeout: 60_000 },
   );
 
-  const [projects, experience, memories, skillGroups, craftGroups] = await Promise.all([
-    prisma.project.count(),
-    prisma.experience.count(),
-    prisma.memory.count(),
-    prisma.skillGroup.count(),
-    prisma.craftGroup.count(),
-  ]);
+  const [projects, experience, memories, shelfArtifacts, skillGroups, craftGroups] =
+    await Promise.all([
+      prisma.project.count(),
+      prisma.experience.count(),
+      prisma.memory.count(),
+      prisma.shelfArtifact.count(),
+      prisma.skillGroup.count(),
+      prisma.craftGroup.count(),
+    ]);
 
   console.log(
-    `Seeded normalized tables from src/content/data.json → projects=${projects}, experience=${experience}, memories=${memories}, skillGroups=${skillGroups}, craftGroups=${craftGroups}`,
+    `Seeded normalized tables from src/content/data.json → projects=${projects}, experience=${experience}, memories=${memories}, shelfArtifacts=${shelfArtifacts}, skillGroups=${skillGroups}, craftGroups=${craftGroups}`,
   );
 }
 

@@ -39,7 +39,7 @@ export default async function ReadingPage() {
   }
   return (
     <PageShell content={content}>
-      <ReadingLibrary library={library} />
+      <ReadingLibrary library={library} artifacts={full.shelfArtifacts ?? []} />
     </PageShell>
   );
 }

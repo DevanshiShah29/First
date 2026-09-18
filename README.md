@@ -86,6 +86,7 @@ CMS content lives in Neon Postgres as normal tables (not one JSON blob).
 | `Experience` | Work chapters |
 | `Project` | Portfolio projects |
 | `Memory` | Memory jar entries |
+| `ShelfArtifact` | Reading-page shelf ornaments / decor |
 | `SkillGroup` / `SkillItem` | Skills & technologies |
 
 If you still have a legacy single-table `SiteSettings`, run:
@@ -109,7 +110,7 @@ npm run db:studio   # browse/edit rows
 - Skips if `SiteSettings` already exists unless `FORCE_SEED=1`
 - Refuses `NODE_ENV=production` unless `ALLOW_PROD_SEED=1`
 
-`src/content/data.json` remains as the seed source only. Do not commit real secrets or private media URLs there. 
+`src/content/data.json` is an **empty CMS shell** (no sample copy, projects, memories, or artifacts). Seed creates site/theme rows; fill everything in the CMS. Do not commit real secrets or private media URLs there. 
 
 ## CMS uploads (Vercel Blob)
 

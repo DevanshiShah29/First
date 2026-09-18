@@ -513,6 +513,13 @@ html:not([data-theme="light"]) .theme-icon-moon {
   border: 1px solid var(--border);
   background: var(--card);
   border-radius: 1rem;
+  scroll-margin-top: var(--header-offset);
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.reading-card.is-shelf-focus,
+.reading-want-card.is-shelf-focus {
+  border-color: color-mix(in srgb, var(--accent-text) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-text) 28%, transparent);
 }
 @media (min-width: 40rem) {
   .reading-card {
@@ -522,13 +529,6 @@ html:not([data-theme="light"]) .theme-icon-moon {
   .reading-card.is-featured {
     grid-template-columns: 9rem 1fr;
   }
-}
-.reading-cover-link {
-  display: block;
-  width: 7rem;
-}
-.reading-card.is-featured .reading-cover-link {
-  width: 9rem;
 }
 .reading-cover {
   display: block;
@@ -601,6 +601,9 @@ html:not([data-theme="light"]) .theme-icon-moon {
   gap: 0.5rem;
   color: inherit;
   text-decoration: none;
+  border-radius: 0.6rem;
+  scroll-margin-top: var(--header-offset);
+  transition: box-shadow 0.35s ease;
 }
 .reading-want-card strong {
   font-size: 0.85rem;
@@ -618,6 +621,367 @@ html:not([data-theme="light"]) .theme-icon-moon {
 .reading-want-card:hover strong {
   color: var(--accent-text);
 }
+
+/* Bookology cool-grey shelf (light) / charcoal shelf (dark) */
+.bookshelf-hint {
+  margin: 0 0 0.85rem;
+  color: #a3a3a3;
+  font-size: 0.8rem;
+}
+[data-theme="dark"] .bookshelf-hint {
+  color: #737373;
+}
+
+/* Room + case tokens sampled from Bookology light/dark shelf screenshots */
+.bookshelf-room {
+  --shelf-wood: url("/images/bookshelf/wood-light-cool.jpg");
+  --wall: #f4f4f4;
+  --case-back: #ffffff;
+  --case-shadow: rgba(0, 0, 0, 0.09);
+  --plank-contact: rgba(90, 90, 90, 0.28);
+  --plank-drop: rgba(0, 0, 0, 0.1);
+  --shelf-title: #171717;
+  --shelf-muted: #737373;
+  position: relative;
+  padding: 1.35rem 0.85rem 1.55rem;
+  border-radius: 0.85rem;
+  overflow: hidden;
+  background: var(--wall);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.035),
+    0 16px 36px rgba(0, 0, 0, 0.055);
+}
+[data-theme="dark"] .bookshelf-room {
+  --shelf-wood: url("/images/bookshelf/wood-dark-cool.jpg");
+  --wall: #070707;
+  --case-back: #0e0e0e;
+  --case-shadow: rgba(0, 0, 0, 0.75);
+  --plank-contact: rgba(0, 0, 0, 0.65);
+  --plank-drop: rgba(0, 0, 0, 0.6);
+  --shelf-title: #f5f5f5;
+  --shelf-muted: #a3a3a3;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.035),
+    0 18px 40px rgba(0, 0, 0, 0.5);
+}
+@media (min-width: 40rem) {
+  .bookshelf-room {
+    padding: 1.65rem 1.2rem 1.9rem;
+  }
+}
+.bookshelf-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  position: relative;
+  z-index: 1;
+}
+.bookshelf-section {
+  margin: 0;
+}
+.bookshelf-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.65rem;
+  padding: 0 0.15rem;
+}
+.bookshelf-section-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--shelf-title);
+}
+@media (min-width: 40rem) {
+  .bookshelf-section-title {
+    font-size: 1.2rem;
+  }
+}
+.bookshelf-count {
+  margin: 0;
+  color: var(--shelf-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Furniture box — crown / sides / back (Bookology cabinet) */
+.bookshelf-case {
+  position: relative;
+  filter: drop-shadow(0 14px 26px var(--case-shadow));
+}
+.bookshelf-case-crown {
+  height: 0.72rem;
+  border-radius: 0.18rem 0.18rem 0 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, transparent 42%, rgba(0, 0, 0, 0.12) 100%),
+    var(--shelf-wood) center / cover;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset;
+}
+[data-theme="dark"] .bookshelf-case-crown {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 40%, rgba(0, 0, 0, 0.45) 100%),
+    var(--shelf-wood) center / cover;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.5) inset;
+}
+.bookshelf-case-body {
+  display: grid;
+  grid-template-columns: 0.78rem minmax(0, 1fr) 0.78rem;
+  min-height: 8rem;
+}
+@media (min-width: 40rem) {
+  .bookshelf-case-body {
+    grid-template-columns: 1rem minmax(0, 1fr) 1rem;
+  }
+}
+.bookshelf-case-side {
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+.bookshelf-case-side.is-left {
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.16) 0%, transparent 45%, rgba(255, 255, 255, 0.28) 100%),
+    var(--shelf-wood) left center / cover;
+}
+.bookshelf-case-side.is-right {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.28) 0%, transparent 55%, rgba(0, 0, 0, 0.16) 100%),
+    var(--shelf-wood) right center / cover;
+}
+[data-theme="dark"] .bookshelf-case-side.is-left {
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.55) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%),
+    var(--shelf-wood) left center / cover;
+}
+[data-theme="dark"] .bookshelf-case-side.is-right {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%, rgba(0, 0, 0, 0.55) 100%),
+    var(--shelf-wood) right center / cover;
+}
+.bookshelf-case-back {
+  position: relative;
+  background: var(--case-back);
+  box-shadow:
+    inset 0 10px 22px rgba(0, 0, 0, 0.035),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.025);
+  padding: 0.45rem 0.35rem 0.1rem;
+  overflow: hidden;
+}
+[data-theme="dark"] .bookshelf-case-back {
+  box-shadow:
+    inset 0 14px 28px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+@media (min-width: 40rem) {
+  .bookshelf-case-back {
+    padding: 0.55rem 0.5rem 0.15rem;
+  }
+}
+.bookshelf-bay {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.bookshelf-row {
+  position: relative;
+}
+.bookshelf-books {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  justify-content: flex-start;
+  /* Bookology packs spines nearly flush */
+  gap: 0.06rem;
+  min-height: 9.5rem;
+  padding: 0 0.12rem;
+  overflow: hidden;
+}
+/* Shelf board — whitewashed grain + Bookology contact shadow + soft drop */
+.bookshelf-plank {
+  position: relative;
+  z-index: 2;
+  height: 0.88rem;
+  margin: 0 -0.35rem;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.15) 40%, rgba(0, 0, 0, 0.1) 100%),
+    var(--shelf-wood) center / cover;
+  box-shadow:
+    0 6px 12px var(--plank-drop),
+    0 14px 22px rgba(0, 0, 0, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.08) inset;
+}
+.bookshelf-plank::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  right: 0.15rem;
+  top: -0.65rem;
+  height: 0.65rem;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, var(--plank-contact) 100%);
+  filter: blur(0.5px);
+}
+[data-theme="dark"] .bookshelf-plank {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 42%, rgba(0, 0, 0, 0.5) 100%),
+    var(--shelf-wood) center / cover;
+  box-shadow:
+    0 8px 16px var(--plank-drop),
+    0 16px 28px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.6) inset;
+}
+@media (min-width: 40rem) {
+  .bookshelf-plank {
+    margin: 0 -0.5rem;
+    height: 0.98rem;
+  }
+}
+
+/* Flat spines — tight Bookology packing, soft contact shadow */
+.bookshelf-spine {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: var(--spine-width, 2rem);
+  height: var(--spine-height, 10rem);
+  padding: 0.55rem 0.08rem;
+  border: 0;
+  border-radius: 0.08rem 0.08rem 0 0;
+  overflow: hidden;
+  background: var(--spine-color, #4a3728);
+  color: var(--spine-text, #f6f0e6);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.16),
+    inset -1px 0 0 rgba(0, 0, 0, 0.26),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+[data-theme="dark"] .bookshelf-spine {
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.1),
+    inset -1px 0 0 rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.bookshelf-spine.is-leather {
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent 0 0.32rem,
+    rgba(0, 0, 0, 0.04) 0.32rem 0.38rem
+  );
+}
+.bookshelf-spine.is-banded::before,
+.bookshelf-spine.is-banded::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0.14rem;
+  background: linear-gradient(180deg, rgba(245, 245, 245, 0.55), rgba(160, 160, 160, 0.75));
+  z-index: 2;
+  pointer-events: none;
+}
+.bookshelf-spine.is-banded::before { top: 22%; }
+.bookshelf-spine.is-banded::after { top: 72%; }
+.bookshelf-spine-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 45% center;
+  opacity: 0.85;
+  filter: saturate(0.95) contrast(1.08) brightness(0.9);
+  z-index: 0;
+  pointer-events: none;
+}
+.bookshelf-spine-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0%, transparent 18%, transparent 75%, rgba(0, 0, 0, 0.4) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.22));
+}
+.bookshelf-spine-title {
+  position: relative;
+  z-index: 2;
+  max-height: 78%;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+}
+.bookshelf-spine:hover,
+.bookshelf-spine:focus-visible {
+  transform: translateY(-0.3rem);
+  z-index: 1;
+}
+.bookshelf-spine:focus-visible {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+/* Free-placed ornaments overlay the whole shelf room */
+.bookshelf-decor-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+/* Shelf ornaments — sized/placed from CMS CSS vars */
+.bookshelf-artifact {
+  position: absolute;
+  left: var(--artifact-x, 0%);
+  top: var(--artifact-y, 0%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: var(--artifact-w, 1.85rem);
+  height: var(--artifact-h, 5.4rem);
+  pointer-events: none;
+  z-index: 2;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.16));
+}
+[data-theme="dark"] .bookshelf-artifact {
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55));
+}
+.bookshelf-artifact-img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: var(--artifact-h, 5.4rem);
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.bookshelf.is-placement-canvas .bookshelf-spine {
+  pointer-events: none;
+}
+
+@media (max-width: 40rem) {
+  .bookshelf-spine-title {
+    font-size: 0.52rem;
+  }
+}
+
 .world-stage {
   position: relative;
   width: 100%;

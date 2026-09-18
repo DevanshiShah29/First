@@ -29,6 +29,10 @@ import {
 } from "./screens/ExperienceScreens";
 import { HeroScreen } from "./screens/HeroScreen";
 import {
+  ArtifactsEditScreen,
+  ArtifactsListScreen,
+} from "./screens/ArtifactsScreens";
+import {
   MemoriesEditScreen,
   MemoriesListScreen,
 } from "./screens/MemoriesScreens";
@@ -53,6 +57,7 @@ import {
   IconPages,
   IconPin,
   IconSettings,
+  IconShelf,
   IconStar,
 } from "./wp-icons";
 
@@ -86,6 +91,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     addExperience,
     addProject,
     addMemory,
+    addArtifact,
     breadcrumbs,
     expIndex,
     job,
@@ -94,6 +100,9 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     memoriesList,
     memIndex,
     memory,
+    artifactsList,
+    artIndex,
+    artifact,
   } = nav;
 
   const uploads = useCmsUploads(data, setData, setError, setNotice);
@@ -104,6 +113,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     uploadMemoryPhoto,
     uploadResume,
     uploadSkillIcon,
+    uploadArtifactImage,
   } = uploads;
 
   const site = data.site;
@@ -133,6 +143,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "contact", label: "Contact", icon: <IconContact />, match: screen === "contact" },
     { id: "craft", label: "Craft", icon: <IconCraft />, match: screen === "craft" },
     { id: "memories", label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
+    { id: "artifacts", label: "Shelf decor", icon: <IconShelf />, match: screen.startsWith("artifacts") },
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
     { id: "site", label: "Settings", icon: <IconSettings />, match: screen === "site" },
   ];
@@ -156,6 +167,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
         addExperience={addExperience}
         addProject={addProject}
         addMemory={addMemory}
+        addArtifact={addArtifact}
       />
 
       <div className="wp-layout">
@@ -345,6 +357,34 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               memoriesList={memoriesList}
               go={go}
               uploadMemoryPhoto={uploadMemoryPhoto}
+              uploading={uploading}
+              save={save}
+              dirty={dirty}
+              status={status}
+            />
+          )}
+
+          {screen === "artifacts" && (
+            <ArtifactsListScreen
+              data={data}
+              setData={setData}
+              artifactsList={artifactsList}
+              go={go}
+              addArtifact={addArtifact}
+              uploadArtifactImage={uploadArtifactImage}
+              uploading={uploading}
+            />
+          )}
+
+          {screen === "artifacts-edit" && artifact && (
+            <ArtifactsEditScreen
+              data={data}
+              setData={setData}
+              artifact={artifact}
+              artIndex={artIndex}
+              artifactsList={artifactsList}
+              go={go}
+              uploadArtifactImage={uploadArtifactImage}
               uploading={uploading}
               save={save}
               dirty={dirty}

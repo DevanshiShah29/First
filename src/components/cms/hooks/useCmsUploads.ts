@@ -120,6 +120,28 @@ export function useCmsUploads(
     });
   }
 
+  /**
+   * Uploads a shelf ornament image and attaches it by id.
+   * @example uploadArtifactImage(file, id) // void
+   */
+  async function uploadArtifactImage(file: File, id: string) {
+    setUploading(true);
+    setError("");
+    setNotice("");
+    const res = await uploadCmsFile(file, "artifacts");
+    setUploading(false);
+    if (!res.ok || !res.data?.url) {
+      setError(res.error || "Ornament upload failed.");
+      return;
+    }
+    const imageUrl = res.data.url;
+    const shelfArtifacts = (data.shelfArtifacts ?? []).map((item) =>
+      item.id === id ? { ...item, imageUrl } : item,
+    );
+    setData({ ...data, shelfArtifacts });
+    setNotice("Shelf ornament uploaded. Save changes to update.");
+  }
+
   return {
     uploading,
     setHeroMedia,
@@ -127,5 +149,6 @@ export function useCmsUploads(
     uploadMemoryPhoto,
     uploadResume,
     uploadSkillIcon,
+    uploadArtifactImage,
   };
 }

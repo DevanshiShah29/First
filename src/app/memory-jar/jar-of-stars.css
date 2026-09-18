@@ -23,8 +23,8 @@
   --primary-shadow: 0 6px 14px #2c6bb31a;
   --font-display: var(--font-cormorant), "Cormorant Garamond", serif;
   --font-body: var(--font-space-mono), "Space Mono", ui-monospace, monospace;
-  --font-sunrise: var(--font-sunrise), "Waiting for the Sunrise", cursive;
-  --font-button: var(--font-sunrise);
+  --font-handwriting: var(--font-sunrise), "Waiting for the Sunrise", cursive;
+  --font-button: var(--font-handwriting);
   --cursor-star: url(/memory-jar/cursor-star.png) 16 16;
   --parchment-mask: url(/memory-jar/parchment.png);
   --lavender: #c0a8e0;
@@ -146,7 +146,7 @@ html[data-theme="light"] .jar-of-stars {
 }
 
 .jar-of-stars .font-sunrise {
-  font-family: var(--font-sunrise);
+  font-family: var(--font-handwriting);
   font-weight: 400;
 }
 
@@ -306,6 +306,7 @@ html:not([data-theme="light"]) .jar-of-stars .jar-photo--dark {
 
 .jar-of-stars .paper-star {
   display: block;
+  max-width: none;
   user-select: none;
   pointer-events: none;
   filter: drop-shadow(0 1px 1px rgba(60, 40, 20, 0.18));

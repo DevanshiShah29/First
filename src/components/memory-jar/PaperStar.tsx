@@ -9,6 +9,9 @@ interface PaperStarProps {
   style?: CSSProperties;
 }
 
+/** Intrinsic star PNG ratio (512×341). */
+const STAR_ASPECT = 341 / 512;
+
 /**
  * Renders a colored paper-star image.
  * @example <PaperStar color="yellow" size={32} />
@@ -19,14 +22,15 @@ export function PaperStar({
   className = "",
   style,
 }: PaperStarProps) {
+  const height = Math.round(size * STAR_ASPECT);
   return (
     <Image
       src={JAR_ASSETS.star(color)}
       alt=""
       width={size}
-      height={Math.round(size * 0.67)}
+      height={height}
       className={`paper-star ${className}`}
-      style={style}
+      style={{ width: size, height, ...style }}
       draggable={false}
     />
   );

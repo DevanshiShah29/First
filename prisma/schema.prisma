@@ -148,7 +148,7 @@ model Memory {
   @@index([sortOrder])
 }
 
-/// Shelf ornaments for the /reading bookshelf (CMS-managed catalog).
+/// Shelf ornaments catalog for /reading (placement lives in ShelfLayout JSON).
 model ShelfArtifact {
   id        String  @id
   sortOrder Int
@@ -157,15 +157,32 @@ model ShelfArtifact {
   widthRem  Float   @default(1.85)
   heightRem Float   @default(5.4)
   enabled   Boolean @default(true)
-  /// Left edge as % of bookshelf room width; null = unplaced.
+  /// Legacy free-% placement columns (unused; cleared on save).
   xPercent  Float?
-  /// Top edge as % of bookshelf room height; null = unplaced.
   yPercent  Float?
+  mobileXPercent  Float?
+  mobileYPercent  Float?
+  mobileWidthRem  Float?
+  mobileHeightRem Float?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([sortOrder])
+}
+
+/// Plank-ordered shelf layouts for /reading (singleton id = "main").
+model ShelfLayout {
+  id       String @id @default("main")
+  /// Legacy mirror of max(desktop,mobile) plank count; source of truth is JSON.
+  rowCount Int    @default(2)
+  /// ShelfViewportLayout JSON for desktop ({ planks: […] }).
+  desktop  Json
+  /// ShelfViewportLayout JSON for mobile ({ planks: […] }).
+  mobile   Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 /// kind: "skills" | "technologies"

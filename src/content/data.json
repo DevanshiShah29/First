@@ -42,5 +42,33 @@
     "footnote": "",
     "groups": []
   },
-  "shelfArtifacts": []
+  "shelfArtifacts": [],
+  "shelfLayout": {
+    "desktop": {
+      "planks": [
+        {
+          "id": "plank-1",
+          "items": []
+        },
+        {
+          "id": "plank-2",
+          "items": []
+        }
+      ],
+      "decor": []
+    },
+    "mobile": {
+      "planks": [
+        {
+          "id": "plank-1",
+          "items": []
+        },
+        {
+          "id": "plank-2",
+          "items": []
+        }
+      ],
+      "decor": []
+    }
+  }
 }

@@ -143,11 +143,10 @@ const memorySchema = z.object({
   color: z.string().optional(),
 });
 
-const percentOrNull = z
+const remOrNull = z
   .number()
   .finite()
-  .min(0)
-  .max(100)
+  .positive()
   .nullable()
   .optional()
   .transform((value) => (value === undefined ? null : value));
@@ -159,9 +158,102 @@ const shelfArtifactSchema = z.object({
   widthRem: z.number().finite().positive(),
   heightRem: z.number().finite().positive(),
   enabled: z.boolean(),
-  xPercent: percentOrNull,
-  yPercent: percentOrNull,
 });
+
+const shelfBookStackSchema = z.object({
+  id: nonEmpty("Shelf stack id"),
+  type: z.literal("book-stack"),
+  orientation: z
+    .enum(["vertical", "horizontal", "tilt-left", "tilt-right"])
+    .default("vertical"),
+  bookIds: z.array(nonEmpty("Shelf book id")).min(1).max(8),
+});
+
+const shelfSpacerSchema = z.object({
+  id: nonEmpty("Shelf spacer id"),
+  type: z.literal("spacer"),
+  widthRem: z.number().finite().positive().max(24),
+});
+
+const shelfPlankItemSchema = z.discriminatedUnion("type", [
+  shelfBookStackSchema,
+  shelfSpacerSchema,
+]);
+
+const shelfDecorSchema = z.object({
+  id: nonEmpty("Shelf decor id"),
+  artifactId: nonEmpty("Shelf artifact id"),
+  xPercent: z.number().finite().min(0).max(100),
+  xRem: z.number().finite().min(0).max(120).nullable().optional(),
+  yPercent: z.number().finite().min(0).max(100),
+  widthRem: remOrNull,
+  heightRem: remOrNull,
+});
+
+const shelfPlankSchema = z.object({
+  id: nonEmpty("Shelf plank id"),
+  items: z.array(shelfPlankItemSchema).default([]),
+});
+
+const shelfViewportLayoutSchema = z.object({
+  planks: z.array(shelfPlankSchema).min(1).max(6),
+  decor: z.array(shelfDecorSchema).default([]),
+});
+
+/**
+ * Ensures each Goodreads bookId and artifactId appears at most once in a viewport.
+ * @example uniqueIdsPerViewport({planks,decor}, ctx, "desktop")
+ */
+function uniqueIdsPerViewport(
+  view: z.infer<typeof shelfViewportLayoutSchema>,
+  ctx: z.RefinementCtx,
+  viewport: "desktop" | "mobile",
+) {
+  const seenBooks = new Set<string>();
+  for (let p = 0; p < view.planks.length; p += 1) {
+    const plank = view.planks[p];
+    if (!plank) continue;
+    for (let i = 0; i < plank.items.length; i += 1) {
+      const item = plank.items[i];
+      if (!item || item.type !== "book-stack") continue;
+      for (let b = 0; b < item.bookIds.length; b += 1) {
+        const bookId = item.bookIds[b];
+        if (!bookId) continue;
+        if (seenBooks.has(bookId)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Book ${bookId} appears more than once in ${viewport}`,
+            path: [viewport, "planks", p, "items", i, "bookIds", b],
+          });
+        }
+        seenBooks.add(bookId);
+      }
+    }
+  }
+
+  const seenArtifacts = new Set<string>();
+  for (let d = 0; d < view.decor.length; d += 1) {
+    const decor = view.decor[d];
+    if (!decor) continue;
+    if (seenArtifacts.has(decor.artifactId)) {
+      ctx.addIssue({
+        code: "custom",
+        message: `Decor ${decor.artifactId} appears more than once in ${viewport}`,
+        path: [viewport, "decor", d, "artifactId"],
+      });
+    }
+    seenArtifacts.add(decor.artifactId);
+  }
+}
+const shelfLayoutSchema = z
+  .object({
+    desktop: shelfViewportLayoutSchema,
+    mobile: shelfViewportLayoutSchema,
+  })
+  .superRefine((layout, ctx) => {
+    uniqueIdsPerViewport(layout.desktop, ctx, "desktop");
+    uniqueIdsPerViewport(layout.mobile, ctx, "mobile");
+  });
 
 const craftItemSchema = z.object({
   title: nonEmpty("Craft item title"),
@@ -198,6 +290,16 @@ const contentSaveSchema = z.object({
     groups: [],
   }),
   shelfArtifacts: z.array(shelfArtifactSchema).optional().default([]),
+  shelfLayout: shelfLayoutSchema.optional().default({
+    desktop: {
+      planks: [{ id: "plank-1", items: [] }, { id: "plank-2", items: [] }],
+      decor: [],
+    },
+    mobile: {
+      planks: [{ id: "plank-1", items: [] }, { id: "plank-2", items: [] }],
+      decor: [],
+    },
+  }),
 });
 
 export type ParseContentSaveResult =

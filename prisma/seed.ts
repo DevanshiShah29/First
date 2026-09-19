@@ -53,18 +53,19 @@ async function main() {
     { maxWait: 15_000, timeout: 60_000 },
   );
 
-  const [projects, experience, memories, shelfArtifacts, skillGroups, craftGroups] =
+  const [projects, experience, memories, shelfArtifacts, shelfLayout, skillGroups, craftGroups] =
     await Promise.all([
       prisma.project.count(),
       prisma.experience.count(),
       prisma.memory.count(),
       prisma.shelfArtifact.count(),
+      prisma.shelfLayout.count(),
       prisma.skillGroup.count(),
       prisma.craftGroup.count(),
     ]);
 
   console.log(
-    `Seeded normalized tables from src/content/data.json → projects=${projects}, experience=${experience}, memories=${memories}, shelfArtifacts=${shelfArtifacts}, skillGroups=${skillGroups}, craftGroups=${craftGroups}`,
+    `Seeded normalized tables from src/content/data.json → projects=${projects}, experience=${experience}, memories=${memories}, shelfArtifacts=${shelfArtifacts}, shelfLayout=${shelfLayout}, skillGroups=${skillGroups}, craftGroups=${craftGroups}`,
   );
 }
 

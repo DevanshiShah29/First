@@ -1,11 +1,33 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { isShelfArtifactPlaced, type ShelfArtifactItem } from "@/content/types";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
+import {
+  EMPTY_SHELF_LAYOUT,
+  shelfViewportFor,
+  shelfViewportHasItems,
+  SHELF_MOBILE_MAX_REM,
+  type BookOrientation,
+  type ShelfArtifactItem,
+  type ShelfDecorPlacement,
+  type ShelfLayout,
+  type ShelfPlankItem,
+  type ShelfViewport,
+} from "@/content/types";
 import type { GoodreadsBook } from "@/lib/goodreads";
-import { MediaImage } from "../MediaImage";
 import { ShelfArtifact } from "./ShelfArtifacts";
-import { SHELF_GAP_REM, spineLabel, spineStyle } from "./spineStyle";
+import { SpineFace, spineArtClass } from "./SpineFace";
+import {
+  decorLeftCss,
+  SHELF_GAP_REM,
+  shelfLiveBayWidthRem,
+  spineStyle,
+} from "./spineStyle";
 
 type ShelfSection = {
   id: string;
@@ -16,14 +38,15 @@ type ShelfSection = {
 type RowItem = { kind: "book"; book: GoodreadsBook };
 
 /**
- * Packs books into spine rows (full width — decor is a free 2D overlay).
- * @example packRows(books, 40) // RowItem[][]
+ * Packs books into spine rows (auto-pack fallback when no CMS layout items).
+ * @example packRows(books, 40)
  */
 function packRows(books: GoodreadsBook[], widthRem: number) {
   const rows: RowItem[][] = [];
   let row: RowItem[] = [];
   let used = 0;
   const budget = Math.max(widthRem, 4);
+  const gap = SHELF_GAP_REM;
 
   const pushRow = () => {
     if (!row.length) return;
@@ -34,7 +57,7 @@ function packRows(books: GoodreadsBook[], widthRem: number) {
 
   for (const book of books) {
     const width = spineStyle(book).widthRem;
-    const next = used === 0 ? width : used + SHELF_GAP_REM + width;
+    const next = used === 0 ? width : used + gap + width;
     if (row.length > 0 && next > budget) {
       pushRow();
       row = [{ kind: "book", book }];
@@ -65,45 +88,90 @@ function focusListBook(book: GoodreadsBook) {
 }
 
 /**
- * Flat spine book on a shelf.
+ * Display box for a spine given orientation.
+ * @example spineBox(book, "horizontal")
+ */
+function spineBox(book: GoodreadsBook, orientation: BookOrientation) {
+  const style = spineStyle(book);
+  if (orientation === "horizontal") {
+    return { widthRem: style.heightRem, heightRem: style.widthRem, style };
+  }
+  return { widthRem: style.widthRem, heightRem: style.heightRem, style };
+}
+
+/**
+ * Orientation → CSS modifier class.
+ * @example orientationClass("tilt-left")
+ */
+function orientationClass(orientation: BookOrientation) {
+  switch (orientation) {
+    case "horizontal":
+      return "is-horizontal";
+    case "tilt-left":
+      return "is-tilt-left";
+    case "tilt-right":
+      return "is-tilt-right";
+    default:
+      return "";
+  }
+}
+
+/**
+ * Spine book on a shelf (cover crop when available).
  * @example <ShelfBook book={book} />
  */
-function ShelfBook({ book }: { book: GoodreadsBook }) {
-  const style = spineStyle(book);
+function ShelfBook({
+  book,
+  orientation = "vertical",
+  interactive,
+}: {
+  book: GoodreadsBook;
+  orientation?: BookOrientation;
+  interactive: boolean;
+}) {
+  const box = spineBox(book, orientation);
+  const className = [
+    "bookshelf-spine",
+    spineArtClass(book),
+    orientationClass(orientation),
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  const cssVars = {
+    "--spine-color": box.style.color,
+    "--spine-width": `${box.widthRem}rem`,
+    "--spine-height": `${box.heightRem}rem`,
+    "--spine-text": box.style.textColor,
+  } as CSSProperties;
+
+  if (!interactive) {
+    return (
+      <div
+        className={className}
+        aria-label={`${book.title}${book.author ? ` by ${book.author}` : ""}`}
+        style={cssVars}
+      >
+        <SpineFace book={book} style={box.style} />
+      </div>
+    );
+  }
+
   return (
     <button
       type="button"
-      className={`bookshelf-spine is-${style.variant}`}
+      className={className}
       onClick={() => focusListBook(book)}
       aria-label={`${book.title}${book.author ? ` by ${book.author}` : ""}`}
-      style={
-        {
-          "--spine-color": style.color,
-          "--spine-width": `${style.widthRem}rem`,
-          "--spine-height": `${style.heightRem}rem`,
-          "--spine-text": style.textColor,
-        } as CSSProperties
-      }
+      style={cssVars}
     >
-      {book.cover ? (
-        <MediaImage
-          src={book.cover}
-          alt=""
-          className="bookshelf-spine-art"
-          width={80}
-          height={240}
-          sizes="40px"
-          loading="lazy"
-        />
-      ) : null}
-      <span className="bookshelf-spine-shade" aria-hidden />
-      <span className="bookshelf-spine-title">{spineLabel(book.title)}</span>
+      <SpineFace book={book} style={box.style} />
     </button>
   );
 }
 
 /**
- * One labeled status shelf with wooden rows.
+ * Auto-pack shelf bay from Goodreads sections.
  * @example <ShelfBay section={section} />
  */
 function ShelfBay({ section }: { section: ShelfSection }) {
@@ -113,13 +181,10 @@ function ShelfBay({ section }: { section: ShelfSection }) {
   useEffect(() => {
     const node = bayRef.current;
     if (!node) return;
-
     const update = () => {
       const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      const next = Math.max(12, (node.clientWidth - 24) / rem);
-      setWidthRem(next);
+      setWidthRem(Math.max(12, (node.clientWidth - 24) / rem));
     };
-
     update();
     const observer = new ResizeObserver(update);
     observer.observe(node);
@@ -127,7 +192,6 @@ function ShelfBay({ section }: { section: ShelfSection }) {
   }, []);
 
   const rows = useMemo(() => packRows(section.books, widthRem), [section.books, widthRem]);
-
   const showHead = Boolean(section.title.trim());
 
   return (
@@ -147,7 +211,6 @@ function ShelfBay({ section }: { section: ShelfSection }) {
         </div>
       ) : null}
 
-{/* Bookology-style cabinet: crown, side walls, recessed back */}
       <div className="bookshelf-case">
         <div className="bookshelf-case-crown" aria-hidden />
         <div className="bookshelf-case-body">
@@ -158,7 +221,7 @@ function ShelfBay({ section }: { section: ShelfSection }) {
                 <div key={`${section.id}-row-${index}`} className="bookshelf-row">
                   <div className="bookshelf-books">
                     {row.map((item) => (
-                      <ShelfBook key={item.book.id} book={item.book} />
+                      <ShelfBook key={item.book.id} book={item.book} interactive />
                     ))}
                   </div>
                   <div className="bookshelf-plank" aria-hidden />
@@ -174,47 +237,240 @@ function ShelfBay({ section }: { section: ShelfSection }) {
 }
 
 /**
- * Wooden spine shelves with free-placed decor overlay.
- * @example <Bookshelf sections={sections} artifacts={items} />
+ * Renders one plank item (book-stack or spacer).
+ * @example <PlankItemView item={item} … />
+ */
+function PlankItemView({
+  item,
+  bookById,
+  interactive,
+}: {
+  item: ShelfPlankItem;
+  bookById: Map<string, GoodreadsBook>;
+  interactive: boolean;
+}) {
+  if (item.type === "spacer") {
+    return (
+      <div
+        className="bookshelf-spacer"
+        style={{ width: `${item.widthRem}rem` }}
+        aria-hidden
+      />
+    );
+  }
+
+  if (item.type !== "book-stack" || !Array.isArray(item.bookIds)) return null;
+
+  const books = item.bookIds
+    .map((id) => bookById.get(id))
+    .filter((book): book is GoodreadsBook => Boolean(book));
+  if (!books.length) return null;
+
+  return (
+    <div className={`bookshelf-stack is-${item.orientation}`} data-stack-id={item.id}>
+      {books.map((book) => (
+        <ShelfBook
+          key={`${item.id}-${book.id}`}
+          book={book}
+          orientation={item.orientation}
+          interactive={interactive}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Free-positioned decor overlay (X in rem so it tracks stacks across viewport widths).
+ * @example <DecorLayer placements={…} />
+ */
+function DecorLayer({
+  placements,
+  artifactById,
+  roomWidthRem,
+}: {
+  placements: ShelfDecorPlacement[];
+  artifactById: Map<string, ShelfArtifactItem>;
+  roomWidthRem: number;
+}) {
+  if (!placements.length) return null;
+  return (
+    <div className="bookshelf-decor-layer" aria-hidden>
+      {placements.map((placement) => {
+        const artifact = artifactById.get(placement.artifactId);
+        if (!artifact || !artifact.enabled || !artifact.imageUrl.trim()) return null;
+        return (
+          <ShelfArtifact
+            key={placement.id}
+            artifact={{
+              imageUrl: artifact.imageUrl,
+              widthRem: placement.widthRem ?? artifact.widthRem,
+              heightRem: placement.heightRem ?? artifact.heightRem,
+              name: artifact.name,
+              leftCss: decorLeftCss(placement, roomWidthRem),
+              yPercent: placement.yPercent,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * CMS plank cabinet.
+ * @example <PlankCabinet planks={…} />
+ */
+function PlankCabinet({
+  planks,
+  bookById,
+  interactive,
+}: {
+  planks: { id: string; items: ShelfPlankItem[] }[];
+  bookById: Map<string, GoodreadsBook>;
+  interactive: boolean;
+}) {
+  return (
+    <section className="bookshelf-section" aria-label="Bookshelf">
+      <div className="bookshelf-case">
+        <div className="bookshelf-case-crown" aria-hidden />
+        <div className="bookshelf-case-body">
+          <div className="bookshelf-case-side is-left" aria-hidden />
+          <div className="bookshelf-case-back">
+            <div className="bookshelf-bay">
+              {planks.map((plank) => (
+                <div key={plank.id} className="bookshelf-row" data-plank-id={plank.id}>
+                  <div
+                    className={`bookshelf-books${plank.items.length === 0 ? " is-empty-bay" : ""}`}
+                  >
+                    {plank.items.map((item) => (
+                      <PlankItemView
+                        key={item.id}
+                        item={item}
+                        bookById={bookById}
+                        interactive={interactive}
+                      />
+                    ))}
+                  </div>
+                  <div className="bookshelf-plank" aria-hidden />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bookshelf-case-side is-right" aria-hidden />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Tracks desktop vs mobile shelf viewport.
+ * @example useShelfViewport()
+ */
+function useShelfViewport(force?: ShelfViewport): ShelfViewport {
+  const [viewport, setViewport] = useState<ShelfViewport>("desktop");
+
+  useEffect(() => {
+    if (force) return;
+    const mq = window.matchMedia(`(max-width: ${SHELF_MOBILE_MAX_REM}rem)`);
+    const sync = () => setViewport(mq.matches ? "mobile" : "desktop");
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, [force]);
+
+  return force ?? viewport;
+}
+
+/**
+ * Wooden spine shelves — CMS plank layout when configured, else auto-pack.
+ * @example <Bookshelf sections={sections} shelfLayout={layout} />
  */
 export function Bookshelf({
   sections,
   artifacts = [],
+  shelfLayout = EMPTY_SHELF_LAYOUT,
   interactiveBooks = true,
+  forceViewport,
+  layoutMode = "auto",
 }: {
   sections: ShelfSection[];
   artifacts?: ShelfArtifactItem[];
-  /** When false, book taps are disabled (CMS placement canvas). */
+  shelfLayout?: ShelfLayout;
   interactiveBooks?: boolean;
+  forceViewport?: ShelfViewport;
+  layoutMode?: "auto" | "builder";
 }) {
+  const viewport = useShelfViewport(forceViewport);
   const filled = sections.filter((section) => section.books.length > 0);
-  const placedArtifacts = useMemo(
-    () => artifacts.filter(isShelfArtifactPlaced),
-    [artifacts],
-  );
+  const bookById = useMemo(() => {
+    const map = new Map<string, GoodreadsBook>();
+    for (const section of filled) {
+      for (const book of section.books) map.set(book.id, book);
+    }
+    return map;
+  }, [filled]);
 
-  if (!filled.length) return null;
+  const artifactById = useMemo(() => {
+    const map = new Map<string, ShelfArtifactItem>();
+    for (const item of artifacts) map.set(item.id, item);
+    return map;
+  }, [artifacts]);
+
+  const view = shelfViewportFor(shelfLayout, viewport);
+  const useBuilderLayout = layoutMode === "builder" || shelfViewportHasItems(view);
+  const roomRef = useRef<HTMLDivElement>(null);
+  const [roomWidthRem, setRoomWidthRem] = useState(shelfLiveBayWidthRem(viewport));
+
+  useEffect(() => {
+    const node = roomRef.current;
+    if (!node) return;
+    const update = () => {
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      setRoomWidthRem(Math.max(4, node.clientWidth / rem));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [viewport, useBuilderLayout, view.planks.length]);
+
+  if (!filled.length && !useBuilderLayout) return null;
 
   return (
-    <div className={`bookshelf${interactiveBooks ? "" : " is-placement-canvas"}`}>
+    <div
+      className={`bookshelf${interactiveBooks ? "" : " is-placement-canvas"}${
+        useBuilderLayout ? " is-builder-layout" : ""
+      }`}
+    >
       {interactiveBooks ? (
         <p className="bookshelf-hint">Tap a shelf book to jump to its notes below</p>
       ) : (
-        <p className="bookshelf-hint">Drag ornaments onto the shelf · resize from corners</p>
+        <p className="bookshelf-hint">
+          Drop stacks onto a plank · decor places freely on the cabinet
+        </p>
       )}
 
-      <div className="bookshelf-room">
+      <div ref={roomRef} className="bookshelf-room">
         <div className="bookshelf-stage">
-          {filled.map((section) => (
-            <ShelfBay key={section.id} section={section} />
-          ))}
+          {useBuilderLayout ? (
+            <PlankCabinet
+              planks={view.planks}
+              bookById={bookById}
+              interactive={interactiveBooks}
+            />
+          ) : (
+            filled.map((section) => <ShelfBay key={section.id} section={section} />)
+          )}
         </div>
-        {placedArtifacts.length > 0 ? (
-          <div className="bookshelf-decor-layer" aria-hidden={interactiveBooks || undefined}>
-            {placedArtifacts.map((item) => (
-              <ShelfArtifact key={item.id} artifact={item} />
-            ))}
-          </div>
+
+        {useBuilderLayout ? (
+          <DecorLayer
+            placements={view.decor ?? []}
+            artifactById={artifactById}
+            roomWidthRem={roomWidthRem}
+          />
         ) : null}
       </div>
     </div>

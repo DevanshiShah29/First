@@ -245,7 +245,183 @@ export type MemoryItem = {
   color?: string;
 };
 
-/** CMS-managed shelf ornament for the /reading bookshelf. */
+/** Live shelf breakpoint — matches `.bookshelf-*` CSS at 40rem. */
+export const SHELF_MOBILE_MAX_REM = 40;
+
+export type ShelfViewport = "desktop" | "mobile";
+
+/** How a book stack displays on a plank. */
+export type BookOrientation = "vertical" | "horizontal" | "tilt-left" | "tilt-right";
+
+export const BOOK_ORIENTATIONS: BookOrientation[] = [
+  "vertical",
+  "horizontal",
+  "tilt-left",
+  "tilt-right",
+];
+
+/** Soft cap for books in one stack (editor + validation). */
+export const SHELF_STACK_MAX_BOOKS = 8;
+
+/** Default / clamp range for White Space (spacer) width in rem. */
+export const SHELF_SPACER_DEFAULT_REM = 7.5;
+export const SHELF_SPACER_MIN_REM = 0.5;
+export const SHELF_SPACER_MAX_REM = 24;
+
+/**
+ * Type guard for BookOrientation.
+ * @example isBookOrientation("tilt-left") // true
+ */
+export function isBookOrientation(value: string): value is BookOrientation {
+  return (BOOK_ORIENTATIONS as readonly string[]).includes(value);
+}
+
+/**
+ * One ordered book stack on a plank — moves/reorders as a single unit.
+ * `bookIds` order: left→right for vertical/tilt; bottom→top for horizontal piles.
+ */
+export type ShelfBookStackItem = {
+  id: string;
+  type: "book-stack";
+  orientation: BookOrientation;
+  bookIds: string[];
+};
+
+/** Invisible horizontal gap in plank order (CMS shows a dashed placeholder). */
+export type ShelfSpacerItem = {
+  id: string;
+  type: "spacer";
+  widthRem: number;
+};
+
+/** Ordered plank composition unit (stacks + white space). Decor is free-placed. */
+export type ShelfPlankItem = ShelfBookStackItem | ShelfSpacerItem;
+
+/**
+ * Free-positioned decor inside the shelf cabinet (place anywhere).
+ * `xRem` is the horizontal offset from the room’s left edge (matches rem-sized stacks).
+ * `xPercent` is legacy / display fallback when `xRem` is missing.
+ * Optional size overrides; null/omit → catalog defaults.
+ */
+export type ShelfDecorPlacement = {
+  id: string;
+  artifactId: string;
+  xPercent: number;
+  /** Horizontal offset in rem from `.bookshelf-room` left; preferred over xPercent. */
+  xRem?: number | null;
+  yPercent: number;
+  widthRem?: number | null;
+  heightRem?: number | null;
+};
+
+/** One shelf plank (drop zone) with left→right ordered items. */
+export type ShelfPlank = {
+  id: string;
+  items: ShelfPlankItem[];
+};
+
+/** Plank stacks/spacers + free decor for one viewport (desktop or mobile). */
+export type ShelfViewportLayout = {
+  planks: ShelfPlank[];
+  decor: ShelfDecorPlacement[];
+};
+
+/** CMS-managed plank layouts for desktop + mobile (fully independent). */
+export type ShelfLayout = {
+  desktop: ShelfViewportLayout;
+  mobile: ShelfViewportLayout;
+};
+
+/**
+ * Builds N empty planks with stable ids.
+ * @example createEmptyPlanks(2) // [{id:"plank-1",items:[]},…]
+ */
+export function createEmptyPlanks(count: number): ShelfPlank[] {
+  const n = Math.min(6, Math.max(1, Math.trunc(count) || 1));
+  return Array.from({ length: n }, (_, i) => ({
+    id: `plank-${i + 1}`,
+    items: [],
+  }));
+}
+
+/**
+ * Empty viewport layout with two planks and no decor.
+ * @example emptyViewportLayout() // { planks: […], decor: [] }
+ */
+export function emptyViewportLayout(plankCount = 2): ShelfViewportLayout {
+  return { planks: createEmptyPlanks(plankCount), decor: [] };
+}
+
+export const EMPTY_SHELF_LAYOUT: ShelfLayout = {
+  desktop: emptyViewportLayout(2),
+  mobile: emptyViewportLayout(2),
+};
+
+/**
+ * Picks desktop vs mobile plank tree (always includes a decor array).
+ * @example shelfViewportFor(layout, "mobile") // ShelfViewportLayout
+ */
+export function shelfViewportFor(layout: ShelfLayout, viewport: ShelfViewport): ShelfViewportLayout {
+  const raw = viewport === "mobile" ? layout.mobile : layout.desktop;
+  if (!raw?.planks?.length) return emptyViewportLayout(2);
+  return {
+    planks: raw.planks,
+    decor: Array.isArray(raw.decor) ? raw.decor : [],
+  };
+}
+
+/**
+ * True when the viewport has at least one stack/spacer or decor placement.
+ * @example shelfViewportHasItems(layout.desktop) // true
+ */
+export function shelfViewportHasItems(view: ShelfViewportLayout | null | undefined) {
+  if (!view) return false;
+  const planks = view.planks ?? [];
+  const decor = view.decor ?? [];
+  return planks.some((plank) => (plank.items?.length ?? 0) > 0) || decor.length > 0;
+}
+
+/**
+ * Collects Goodreads book ids already placed in a viewport (unique).
+ * @example placedBookIds(layout, "desktop") // Set<"123">
+ */
+export function placedBookIds(layout: ShelfLayout, viewport: ShelfViewport): Set<string> {
+  const ids = new Set<string>();
+  for (const plank of shelfViewportFor(layout, viewport).planks) {
+    for (const item of plank.items) {
+      if (item.type !== "book-stack") continue;
+      for (const bookId of item.bookIds) {
+        if (bookId.trim()) ids.add(bookId);
+      }
+    }
+  }
+  return ids;
+}
+
+/**
+ * Collects catalog artifact ids used in a viewport's free decor layer.
+ * @example placedArtifactIds(layout, "desktop") // Set<"a1">
+ */
+export function placedArtifactIds(layout: ShelfLayout, viewport: ShelfViewport): Set<string> {
+  const ids = new Set<string>();
+  for (const decor of shelfViewportFor(layout, viewport).decor) {
+    if (decor.artifactId.trim()) ids.add(decor.artifactId);
+  }
+  return ids;
+}
+
+/**
+ * True when an artifact id appears on either viewport layout.
+ * @example isArtifactOnShelf(layout, id) // true
+ */
+export function isArtifactOnShelf(layout: ShelfLayout, artifactId: string) {
+  return (
+    placedArtifactIds(layout, "desktop").has(artifactId) ||
+    placedArtifactIds(layout, "mobile").has(artifactId)
+  );
+}
+
+/** CMS-managed shelf ornament catalog entry (placement lives in ShelfLayout). */
 export type ShelfArtifactItem = {
   id: string;
   name: string;
@@ -253,26 +429,7 @@ export type ShelfArtifactItem = {
   widthRem: number;
   heightRem: number;
   enabled: boolean;
-  /** Left edge as % of bookshelf room width; null = unplaced. */
-  xPercent: number | null;
-  /** Top edge as % of bookshelf room height; null = unplaced. */
-  yPercent: number | null;
 };
-
-/**
- * True when an ornament should render on the live shelf.
- * @example isShelfArtifactPlaced(item) // true
- */
-export function isShelfArtifactPlaced(item: ShelfArtifactItem) {
-  return (
-    item.enabled &&
-    Boolean(item.imageUrl.trim()) &&
-    item.xPercent != null &&
-    item.yPercent != null &&
-    Number.isFinite(item.xPercent) &&
-    Number.isFinite(item.yPercent)
-  );
-}
 
 export type CraftItem = {
   title: string;
@@ -311,6 +468,7 @@ export type ContentData = {
   memories?: MemoryItem[];
   craft?: CraftContent;
   shelfArtifacts?: ShelfArtifactItem[];
+  shelfLayout?: ShelfLayout;
 };
 
 /** Public site props: sensitive media URLs stripped; playback via server proxy. */

@@ -1,4 +1,4 @@
-import type { ShelfArtifactItem } from "@/content/types";
+import { EMPTY_SHELF_LAYOUT, type ShelfArtifactItem, type ShelfLayout } from "@/content/types";
 import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
 import { MediaImage } from "./MediaImage";
 import { NewTabHint } from "./a11y";
@@ -98,14 +98,16 @@ function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: 
 
 /**
  * Renders Goodreads shelves: visual bookshelf on top, original lists below.
- * @example <ReadingLibrary library={data} artifacts={items} />
+ * @example <ReadingLibrary library={data} artifacts={items} shelfLayout={layout} />
  */
 export function ReadingLibrary({
   library,
   artifacts = [],
+  shelfLayout = EMPTY_SHELF_LAYOUT,
 }: {
   library: GoodreadsLibrary;
   artifacts?: ShelfArtifactItem[];
+  shelfLayout?: ShelfLayout;
 }) {
   const total = library.currentlyReading.length + library.read.length + library.toRead.length;
 
@@ -167,7 +169,11 @@ export function ReadingLibrary({
       </section>
 
       <div className="section-shell mt-10">
-        <Bookshelf sections={shelfSections(library)} artifacts={artifacts} />
+        <Bookshelf
+          sections={shelfSections(library)}
+          artifacts={artifacts}
+          shelfLayout={shelfLayout}
+        />
       </div>
 
       {library.currentlyReading.length ? (

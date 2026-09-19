@@ -128,8 +128,6 @@ export function useCmsNavigation(
           widthRem: 1.85,
           heightRem: 5.4,
           enabled: true,
-          xPercent: null,
-          yPercent: null,
         },
       ],
     });
@@ -242,12 +240,12 @@ export function useCmsNavigation(
       case "artifacts":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Shelf decor", current: true },
+          { label: "Shelf", current: true },
         ];
       case "artifacts-edit":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Shelf decor", onClick: () => go("artifacts") },
+          { label: "Shelf", onClick: () => go("artifacts") },
           {
             label: artifact
               ? artifact.name === "New ornament"

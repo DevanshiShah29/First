@@ -666,7 +666,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
 }
 @media (min-width: 40rem) {
   .bookshelf-room {
-    padding: 1.65rem 1.2rem 1.9rem;
+    padding: 0;
   }
 }
 .bookshelf-stage {
@@ -677,6 +677,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   z-index: 1;
 }
 .bookshelf-section {
+  position: relative;
   margin: 0;
 }
 .bookshelf-section-head {
@@ -796,11 +797,77 @@ html:not([data-theme="light"]) .theme-icon-moon {
   flex-wrap: nowrap;
   align-items: flex-end;
   justify-content: flex-start;
-  /* Bookology packs spines nearly flush */
+  /* Keep in sync with SHELF_GAP_REM / SHELF_ROW_MIN_HEIGHT_REM in spineStyle.ts */
   gap: 0.06rem;
-  min-height: 9.5rem;
+  min-height: 11.6rem;
   padding: 0 0.12rem;
   overflow: hidden;
+}
+.bookshelf-books.is-empty-bay {
+  /* Keeps empty plank geometry stable when no stacks are placed. */
+  min-height: 11.6rem;
+}
+/* Book stack unit — vertical/tilt = row; horizontal = vertical pile */
+.bookshelf-stack {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  flex-shrink: 0;
+  flex-direction: row;
+  align-items: flex-end;
+  /* Keep in sync with SHELF_GAP_REM */
+  gap: 0.06rem;
+}
+.bookshelf-stack.is-horizontal {
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0.04rem;
+}
+.bookshelf-stack.is-horizontal .bookshelf-spine {
+  /* Keep each lying book’s own footprint in the pile */
+  flex: 0 0 auto;
+}
+.bookshelf-stack.is-tilt-left,
+.bookshelf-stack.is-tilt-right {
+  gap: 0.02rem;
+}
+.bookshelf-spine.is-horizontal {
+  writing-mode: horizontal-tb;
+}
+.bookshelf-spine.is-horizontal .bookshelf-spine-title {
+  writing-mode: horizontal-tb;
+  transform: none;
+  max-width: 92%;
+  max-height: none;
+  font-size: 0.52rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bookshelf-spine.is-tilt-left {
+  transform: rotate(-14deg);
+  transform-origin: bottom center;
+  margin-inline: 0.15rem;
+}
+.bookshelf-spine.is-tilt-right {
+  transform: rotate(14deg);
+  transform-origin: bottom center;
+  margin-inline: 0.15rem;
+}
+.bookshelf-spine.is-tilt-left:hover,
+.bookshelf-spine.is-tilt-left:focus-visible,
+.bookshelf-spine.is-tilt-right:hover,
+.bookshelf-spine.is-tilt-right:focus-visible {
+  transform: rotate(var(--tilt-hover, -14deg)) translateY(-0.3rem);
+}
+.bookshelf-spine.is-tilt-left:hover,
+.bookshelf-spine.is-tilt-left:focus-visible {
+  --tilt-hover: -14deg;
+}
+.bookshelf-spine.is-tilt-right:hover,
+.bookshelf-spine.is-tilt-right:focus-visible {
+  --tilt-hover: 14deg;
 }
 /* Shelf board — whitewashed grain + Bookology contact shadow + soft drop */
 .bookshelf-plank {
@@ -846,7 +913,7 @@ html:not([data-theme="light"]) .theme-icon-moon {
   }
 }
 
-/* Flat spines — tight Bookology packing, soft contact shadow */
+/* Spines — cover crop + cylindrical shade + page edge */
 .bookshelf-spine {
   position: relative;
   display: flex;
@@ -854,27 +921,32 @@ html:not([data-theme="light"]) .theme-icon-moon {
   justify-content: center;
   flex: 0 0 auto;
   width: var(--spine-width, 2rem);
-  height: var(--spine-height, 10rem);
+  height: var(--spine-height, 9.65rem);
   padding: 0.55rem 0.08rem;
   border: 0;
-  border-radius: 0.08rem 0.08rem 0 0;
+  border-radius: 0.1rem 0.1rem 0.02rem 0.02rem;
   overflow: hidden;
+  isolation: isolate;
   background: var(--spine-color, #4a3728);
   color: var(--spine-text, #f6f0e6);
   box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.16),
-    inset -1px 0 0 rgba(0, 0, 0, 0.26),
-    0 2px 6px rgba(0, 0, 0, 0.12);
+    inset 1px 0 0 rgba(255, 255, 255, 0.18),
+    inset -2px 0 0 rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.14);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 [data-theme="dark"] .bookshelf-spine {
   box-shadow:
-    inset 1px 0 0 rgba(255, 255, 255, 0.1),
-    inset -1px 0 0 rgba(0, 0, 0, 0.45),
-    0 2px 8px rgba(0, 0, 0, 0.4);
+    inset 1px 0 0 rgba(255, 255, 255, 0.12),
+    inset -2px 0 0 rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.45);
 }
-.bookshelf-spine.is-leather {
+.bookshelf-spine.is-leather:not(.has-art) {
   background-image: repeating-linear-gradient(
     180deg,
     transparent 0 0.32rem,
@@ -889,9 +961,10 @@ html:not([data-theme="light"]) .theme-icon-moon {
   right: 0;
   height: 0.14rem;
   background: linear-gradient(180deg, rgba(245, 245, 245, 0.55), rgba(160, 160, 160, 0.75));
-  z-index: 2;
+  z-index: 3;
   pointer-events: none;
 }
+
 .bookshelf-spine.is-banded::before { top: 22%; }
 .bookshelf-spine.is-banded::after { top: 72%; }
 .bookshelf-spine-art {
@@ -900,11 +973,16 @@ html:not([data-theme="light"]) .theme-icon-moon {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 45% center;
-  opacity: 0.85;
-  filter: saturate(0.95) contrast(1.08) brightness(0.9);
+  object-position: var(--spine-art-x, 45%) center;
+  filter: saturate(1.05) contrast(1.12) brightness(0.92);
   z-index: 0;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.bookshelf-spine.has-art {
+  /* Fallback cloth peeks only if art fails to paint */
+  background-color: var(--spine-color, #4a3728);
 }
 .bookshelf-spine-shade {
   position: absolute;
@@ -912,13 +990,84 @@ html:not([data-theme="light"]) .theme-icon-moon {
   z-index: 1;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0%, transparent 18%, transparent 75%, rgba(0, 0, 0, 0.4) 100%),
-    linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 16%, transparent 84%, rgba(0, 0, 0, 0.22));
+    /* Cylindrical wrap highlight → shadow */
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0.08) 14%,
+      transparent 32%,
+      transparent 62%,
+      rgba(0, 0, 0, 0.22) 82%,
+      rgba(0, 0, 0, 0.48) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.28) 0%,
+      transparent 14%,
+      transparent 86%,
+      rgba(0, 0, 0, 0.32) 100%
+    );
+}
+.bookshelf-spine.has-art .bookshelf-spine-shade {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.22) 0%,
+      rgba(255, 255, 255, 0.05) 12%,
+      transparent 28%,
+      transparent 58%,
+      rgba(0, 0, 0, 0.28) 78%,
+      rgba(0, 0, 0, 0.55) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.35) 0%,
+      transparent 12%,
+      transparent 88%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+}
+/* Paper block peeking on the binding edge */
+.bookshelf-spine-edge {
+  position: absolute;
+  top: 0.12rem;
+  bottom: 0.08rem;
+  right: 0;
+  width: 0.14rem;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 0 0.04rem 0.04rem 0;
+  background: repeating-linear-gradient(
+    180deg,
+    #f4efe6 0 0.08rem,
+    #e4dccf 0.08rem 0.11rem,
+    #d8cfbf 0.11rem 0.14rem
+  );
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.55),
+    -1px 0 2px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
+}
+.bookshelf-spine.is-horizontal .bookshelf-spine-edge {
+  top: auto;
+  right: 0.12rem;
+  left: 0.12rem;
+  bottom: 0;
+  width: auto;
+  height: 0.12rem;
+  border-radius: 0.04rem 0.04rem 0 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #f4efe6 0 0.08rem,
+    #e4dccf 0.08rem 0.11rem,
+    #d8cfbf 0.11rem 0.14rem
+  );
 }
 .bookshelf-spine-title {
   position: relative;
-  z-index: 2;
+  z-index: 4;
   max-height: 78%;
+  max-width: 92%;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   font-size: 0.58rem;
@@ -928,25 +1077,39 @@ html:not([data-theme="light"]) .theme-icon-moon {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.55),
+    0 0 4px rgba(0, 0, 0, 0.35);
+}
+.bookshelf-spine.has-art .bookshelf-spine-title {
+  /* Foil-readable over busy cover crops */
+  color: #f7f1df;
+  text-shadow:
+    0 0 2px rgba(0, 0, 0, 0.85),
+    0 1px 2px rgba(0, 0, 0, 0.75),
+    0 0 8px rgba(0, 0, 0, 0.45);
 }
 .bookshelf-spine:hover,
 .bookshelf-spine:focus-visible {
   transform: translateY(-0.3rem);
   z-index: 1;
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, 0.22),
+    inset -2px 0 0 rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 6px 14px rgba(0, 0, 0, 0.2);
 }
 .bookshelf-spine:focus-visible {
   outline: 2px solid var(--accent-text);
   outline-offset: 2px;
 }
-/* Free-placed ornaments overlay the whole shelf room */
+/* Free decor overlay (percent-positioned inside cabinet) */
 .bookshelf-decor-layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 2;
+  z-index: 4;
 }
-/* Shelf ornaments — sized/placed from CMS CSS vars */
 .bookshelf-artifact {
   position: absolute;
   left: var(--artifact-x, 0%);
@@ -960,6 +1123,9 @@ html:not([data-theme="light"]) .theme-icon-moon {
   z-index: 2;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.16));
 }
+.bookshelf-artifact.is-free {
+  pointer-events: none;
+}
 [data-theme="dark"] .bookshelf-artifact {
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55));
 }
@@ -972,8 +1138,25 @@ html:not([data-theme="light"]) .theme-icon-moon {
   user-select: none;
   -webkit-user-drag: none;
 }
+/* Invisible public spacer — reserves width only */
+.bookshelf-spacer {
+  flex: 0 0 auto;
+  align-self: stretch;
+  min-height: 1px;
+  pointer-events: none;
+}
 .bookshelf.is-placement-canvas .bookshelf-spine {
   pointer-events: none;
+}
+.bookshelf.is-builder-layout .bookshelf-books {
+  overflow: visible;
+}
+.bookshelf.is-placement-canvas .bookshelf-decor-layer {
+  pointer-events: none;
+}
+.bookshelf.is-placement-canvas .bookshelf-artifact {
+  pointer-events: auto;
+  cursor: grab;
 }
 
 @media (max-width: 40rem) {

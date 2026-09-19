@@ -134,7 +134,7 @@ export function AdminBar({
                 addArtifact();
               }}
             >
-              Shelf decor
+              Shelf
             </button>
           </div>
         </div>

@@ -143,7 +143,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "contact", label: "Contact", icon: <IconContact />, match: screen === "contact" },
     { id: "craft", label: "Craft", icon: <IconCraft />, match: screen === "craft" },
     { id: "memories", label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
-    { id: "artifacts", label: "Shelf decor", icon: <IconShelf />, match: screen.startsWith("artifacts") },
+    { id: "artifacts", label: "Shelf", icon: <IconShelf />, match: screen.startsWith("artifacts") },
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
     { id: "site", label: "Settings", icon: <IconSettings />, match: screen === "site" },
   ];

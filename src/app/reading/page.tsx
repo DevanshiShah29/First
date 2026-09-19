@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
 import { ReadingLibrary } from "@/components/ReadingLibrary";
 import { loadContent } from "@/content/store";
-import { toPublicContent } from "@/content/types";
+import { EMPTY_SHELF_LAYOUT, toPublicContent } from "@/content/types";
 import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -39,7 +39,11 @@ export default async function ReadingPage() {
   }
   return (
     <PageShell content={content}>
-      <ReadingLibrary library={library} artifacts={full.shelfArtifacts ?? []} />
+      <ReadingLibrary
+        library={library}
+        artifacts={full.shelfArtifacts ?? []}
+        shelfLayout={full.shelfLayout ?? EMPTY_SHELF_LAYOUT}
+      />
     </PageShell>
   );
 }

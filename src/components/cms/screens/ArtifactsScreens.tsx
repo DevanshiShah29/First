@@ -2,9 +2,16 @@
 
 // External dependencies
 import Link from "next/link";
+import type { Dispatch, SetStateAction } from "react";
 
 // Application services & types
-import { isShelfArtifactPlaced, type ContentData, type ShelfArtifactItem } from "@/content/types";
+import {
+  EMPTY_SHELF_LAYOUT,
+  isArtifactOnShelf,
+  type ContentData,
+  type ShelfArtifactItem,
+  type ShelfLayout,
+} from "@/content/types";
 import { move, type Screen } from "../types";
 
 // UI components
@@ -12,6 +19,7 @@ import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { Field, TextInput } from "../fields";
 import { ShelfPlacementEditor } from "../shelf/ShelfPlacementEditor";
+import { countPlacedItems, removeArtifactFromLayout } from "../shelf/shelfBuilderOps";
 
 const PHOTOROOM_URL = "https://www.photoroom.com/tools/background-remover";
 
@@ -49,15 +57,19 @@ export function ArtifactsListScreen({
   uploading,
 }: {
   data: ContentData;
-  setData: (data: ContentData) => void;
+  setData: Dispatch<SetStateAction<ContentData>>;
   artifactsList: ShelfArtifactItem[];
   go: (screen: Screen, id?: string | null) => void;
   addArtifact: () => void;
   uploadArtifactImage: (file: File, id: string) => Promise<void>;
   uploading: boolean;
 }) {
-  const placedCount = artifactsList.filter(isShelfArtifactPlaced).length;
+  const shelfLayout: ShelfLayout = data.shelfLayout ?? EMPTY_SHELF_LAYOUT;
+  const placedCounts = countPlacedItems(shelfLayout);
   const enabledCount = artifactsList.filter((item) => item.enabled).length;
+  const placedOrnamentCount = artifactsList.filter((item) =>
+    isArtifactOnShelf(shelfLayout, item.id),
+  ).length;
 
   /**
    * Patches one catalog row by index.
@@ -71,17 +83,25 @@ export function ArtifactsListScreen({
   }
 
   /**
-   * Replaces the full catalog (placement editor).
+   * Replaces the full ornament catalog (placement editor).
    * @example setCatalog(next) // void
    */
   function setCatalog(shelfArtifacts: ShelfArtifactItem[]) {
-    setData({ ...data, shelfArtifacts });
+    setData((current) => ({ ...current, shelfArtifacts }));
+  }
+
+  /**
+   * Replaces free book layout (placement editor).
+   * @example setLayout(next) // void
+   */
+  function setLayout(next: ShelfLayout) {
+    setData((current) => ({ ...current, shelfLayout: next }));
   }
 
   return (
     <>
       <h1 className="wp-screen-title">
-        Shelf decor
+        Shelf
         <button type="button" className="wp-btn wp-btn-primary" onClick={addArtifact}>
           Add New
         </button>
@@ -92,8 +112,8 @@ export function ArtifactsListScreen({
 
       <div className="wp-shelf-hero">
         <p className="wp-sub" style={{ margin: 0 }}>
-          Build a Bookology-style shelf: upload transparent ornaments, place them on the preview,
-          then save. The live /reading page mirrors this arrangement in light and dark.
+          Books come from Goodreads. Compose planks with book stacks and White Space; place decor
+          anywhere on the cabinet and resize it. Desktop and mobile layouts are independent.
         </p>
         <div className="wp-shelf-stats" aria-label="Catalog summary">
           <span>
@@ -103,7 +123,12 @@ export function ArtifactsListScreen({
             <strong>{enabledCount}</strong> enabled
           </span>
           <span>
-            <strong>{placedCount}</strong> on shelf
+            <strong>{placedOrnamentCount}</strong> ornaments on shelf
+          </span>
+          <span>
+            <strong>{placedCounts.stacks}</strong> stacks ·{" "}
+            <strong>{placedCounts.books}</strong> books ·{" "}
+            <strong>{placedCounts.spacers}</strong> spacers
           </span>
         </div>
       </div>
@@ -121,21 +146,29 @@ export function ArtifactsListScreen({
         <div className="wp-shelf-step">
           <span className="wp-shelf-step-num">2</span>
           <div>
-            <strong>Arrange on shelf</strong>
-            <p>Drag from the tray onto the preview. Move and resize with the handles.</p>
+            <strong>Build the shelf</strong>
+            <p>
+              Drop stacks onto a plank and pick Goodreads books, use White Space for gaps, and
+              place/resize decor anywhere. Select a stack to edit or remove it.
+            </p>
           </div>
         </div>
         <div className="wp-shelf-step">
           <span className="wp-shelf-step-num">3</span>
           <div>
             <strong>Save</strong>
-            <p>Publish to /reading. Unplaced or disabled items stay off the live shelf.</p>
+            <p>Publish to /reading. Configure Desktop and Mobile separately.</p>
           </div>
         </div>
       </div>
 
-      <Metabox id="artifact_arrange" title="Arrange on shelf">
-        <ShelfPlacementEditor artifacts={artifactsList} onChange={setCatalog} />
+      <Metabox id="artifact_arrange" title="Shelf Builder">
+        <ShelfPlacementEditor
+          artifacts={artifactsList}
+          onChangeArtifacts={setCatalog}
+          shelfLayout={shelfLayout}
+          onChangeLayout={setLayout}
+        />
       </Metabox>
 
       <Metabox id="artifact_catalog" title="Catalog">
@@ -149,7 +182,7 @@ export function ArtifactsListScreen({
         ) : (
           <div className="wp-shelf-card-grid">
             {artifactsList.map((item, i) => {
-              const placed = isShelfArtifactPlaced(item);
+              const placed = isArtifactOnShelf(shelfLayout, item.id);
               return (
                 <article key={item.id} className={`wp-shelf-card${placed ? " is-placed" : ""}`}>
                   <button
@@ -175,9 +208,7 @@ export function ArtifactsListScreen({
                     </button>
                     <p className="wp-shelf-card-meta">
                       {item.widthRem.toFixed(2)} × {item.heightRem.toFixed(2)} rem
-                      {placed
-                        ? ` · ${item.xPercent?.toFixed(0)}%, ${item.yPercent?.toFixed(0)}%`
-                        : " · not placed"}
+                      {placed ? " · on shelf" : " · not placed"}
                     </p>
                     <div className="wp-shelf-card-actions">
                       <label className="wp-shelf-toggle">
@@ -286,7 +317,8 @@ export function ArtifactsEditScreen({
     setData({ ...data, shelfArtifacts });
   }
 
-  const placed = isShelfArtifactPlaced(artifact);
+  const shelfLayout: ShelfLayout = data.shelfLayout ?? EMPTY_SHELF_LAYOUT;
+  const placed = isArtifactOnShelf(shelfLayout, artifact.id);
 
   return (
     <>
@@ -376,8 +408,8 @@ export function ArtifactsEditScreen({
 
           <Metabox id="artifact_size" title="Size">
             <p className="wp-sub" style={{ marginTop: 0 }}>
-              Prefer resizing on the Arrange canvas with corner handles. These fields are fine-tune
-              fallbacks — any positive rem size is allowed.
+              Default size when this ornament is placed on the cabinet. Any positive rem size is
+              allowed.
             </p>
             <table className="wp-form-table">
               <tbody>
@@ -418,13 +450,13 @@ export function ArtifactsEditScreen({
             </label>
             <p className="wp-sub" style={{ marginTop: 0 }}>
               {placed
-                ? `Placed at ${artifact.xPercent?.toFixed(0)}%, ${artifact.yPercent?.toFixed(0)}%.`
-                : "Not on the shelf yet — open Arrange on shelf to place it."}
+                ? "On the shelf (desktop and/or mobile). Remove it in the Shelf Builder, or use Remove from shelf."
+                : "Not on the shelf yet — open Shelf Builder to place it freely on the cabinet."}
             </p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <CmsSaveButton save={save} dirty={dirty} status={status} />
               <button type="button" className="wp-btn" onClick={() => go("artifacts")}>
-                Back to arrange
+                Back to builder
               </button>
             </div>
             {placed ? (
@@ -432,7 +464,12 @@ export function ArtifactsEditScreen({
                 type="button"
                 className="wp-btn"
                 style={{ marginTop: 8 }}
-                onClick={() => patchArtifact({ xPercent: null, yPercent: null })}
+                onClick={() =>
+                  setData({
+                    ...data,
+                    shelfLayout: removeArtifactFromLayout(shelfLayout, artifact.id),
+                  })
+                }
               >
                 Remove from shelf
               </button>

@@ -89,9 +89,10 @@ export const SHELF_ROW_MIN_HEIGHT_REM = 11.6;
 export const SHELF_LIVE_BAY_WIDTH_DESKTOP_REM = 63.76;
 /**
  * Live mobile plank content width (rem) at a ~390px phone (CMS mobile preview).
- * Room pad 0.85rem + sides 0.78rem + case-back 0.35rem + books 0.12rem each side.
+ * Derived from 390px (24.375rem) minus .section-shell pad (1.5rem each side) and cabinet chrome
+ * (sides 0.78rem, case-back pad 0.35rem, books pad 0.12rem) each side.
  */
-export const SHELF_LIVE_BAY_WIDTH_MOBILE_REM = 20.18;
+export const SHELF_LIVE_BAY_WIDTH_MOBILE_REM = 18.88;
 
 /**
  * Plank capacity used by the CMS overflow badge (matches live /reading, not the CMS panel).

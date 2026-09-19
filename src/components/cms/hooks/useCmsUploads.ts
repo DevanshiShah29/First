@@ -62,7 +62,9 @@ export function useCmsUploads(
       return;
     }
     const photoUrl = res.data.url;
-    const memories = (data.memories ?? []).map((m) => (m.id === id ? { ...m, photoUrl } : m));
+    const memories = (data.memories ?? []).map((m) =>
+      m.id === id ? { ...m, photoUrl } : m,
+    );
     setData({ ...data, memories });
     setNotice("Memory photo uploaded. Save changes to update.");
   }
@@ -124,7 +126,10 @@ export function useCmsUploads(
    * Uploads a shelf ornament image and attaches it by id.
    * @example uploadArtifactImage(file, id) // void
    */
-  async function uploadArtifactImage(file: File, id: string) {
+  async function uploadArtifactImage(
+    file: File,
+    id: string,
+  ): Promise<string | null> {
     setUploading(true);
     setError("");
     setNotice("");
@@ -132,14 +137,17 @@ export function useCmsUploads(
     setUploading(false);
     if (!res.ok || !res.data?.url) {
       setError(res.error || "Ornament upload failed.");
-      return;
+      return null;
     }
     const imageUrl = res.data.url;
-    const shelfArtifacts = (data.shelfArtifacts ?? []).map((item) =>
-      item.id === id ? { ...item, imageUrl } : item,
-    );
-    setData({ ...data, shelfArtifacts });
+    setData((current) => {
+      const shelfArtifacts = (current.shelfArtifacts ?? []).map((item) =>
+        item.id === id ? { ...item, imageUrl } : item,
+      );
+      return { ...current, shelfArtifacts };
+    });
     setNotice("Shelf ornament uploaded. Save changes to update.");
+    return imageUrl;
   }
 
   return {

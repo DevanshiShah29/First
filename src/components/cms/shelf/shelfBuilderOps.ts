@@ -195,7 +195,7 @@ export function moveItem(
     loc.item.type === "book-stack"
       ? { ...loc.item, bookIds: [...loc.item.bookIds] }
       : { ...loc.item };
-  let next = removeItem(view, itemId);
+  const next = removeItem(view, itemId);
   let insertAt = toItemIndex;
   if (loc.plankIndex === toPlankIndex && loc.itemIndex < toItemIndex) {
     insertAt = Math.max(0, toItemIndex - 1);

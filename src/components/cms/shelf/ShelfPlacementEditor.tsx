@@ -135,8 +135,10 @@ function clientToRoomPos(
 ) {
   const rem = remSize > 0 ? remSize : 16;
   const xRem = rect.width > 0 ? (clientX - rect.left) / rem : 0;
-  const xPercent = rect.width > 0 ? ((clientX - rect.left) / rect.width) * 100 : 0;
-  const yPercent = rect.height > 0 ? ((clientY - rect.top) / rect.height) * 100 : 0;
+  const xPercent =
+    rect.width > 0 ? ((clientX - rect.left) / rect.width) * 100 : 0;
+  const yPercent =
+    rect.height > 0 ? ((clientY - rect.top) / rect.height) * 100 : 0;
   return {
     xRem: Math.round(Math.max(0, xRem) * 100) / 100,
     xPercent: clamp(xPercent, 0, 100),
@@ -200,7 +202,10 @@ export function ShelfPlacementEditor({
   const liveBayWidthRem = shelfLiveBayWidthRem(viewport);
   const counts = countPlacedItems(layout);
 
-  const sections = useMemo(() => (library ? shelfSections(library) : []), [library]);
+  const sections = useMemo(
+    () => (library ? shelfSections(library) : []),
+    [library],
+  );
   const allBooks = useMemo(() => {
     const map = new Map<string, GoodreadsBook>();
     for (const section of sections) {
@@ -250,7 +255,9 @@ export function ShelfPlacementEditor({
 
     const syncRoomAndMigrate = () => {
       const rem =
-        Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+        Number.parseFloat(
+          getComputedStyle(document.documentElement).fontSize,
+        ) || 16;
       const widthRem = Math.max(4, room.getBoundingClientRect().width / rem);
       setRoomWidthRem(widthRem);
 
@@ -295,8 +302,12 @@ export function ShelfPlacementEditor({
      */
     async function load() {
       try {
-        const res = await fetch("/api/goodreads", { credentials: "same-origin" });
-        const data = (await res.json()) as GoodreadsLibrary & { error?: string };
+        const res = await fetch("/api/goodreads", {
+          credentials: "same-origin",
+        });
+        const data = (await res.json()) as GoodreadsLibrary & {
+          error?: string;
+        };
         if (cancelled) return;
         if (!res.ok && !data.configured) {
           setLoadError(data.error || "Could not load Goodreads shelves.");
@@ -332,7 +343,11 @@ export function ShelfPlacementEditor({
    */
   const measureTargets = useCallback(() => {
     const bay = bayRef.current;
-    if (!bay) return { plankRects: [] as DOMRect[], itemRectsByPlank: [] as DOMRect[][] };
+    if (!bay)
+      return {
+        plankRects: [] as DOMRect[],
+        itemRectsByPlank: [] as DOMRect[][],
+      };
     const rows = [...bay.querySelectorAll<HTMLElement>("[data-editor-plank]")];
     const plankRects = rows.map((row) => row.getBoundingClientRect());
     const itemRectsByPlank = rows.map((row) =>
@@ -363,7 +378,9 @@ export function ShelfPlacementEditor({
     const room = roomRef.current;
     if (!room || !artifactId) return;
     const rect = room.getBoundingClientRect();
-    const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const rem =
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize) ||
+      16;
     const pos = clientToRoomPos(clientX, clientY, rect, rem);
     const item = makeDecorPlacement(artifactId, pos);
     commitView({ ...cloneViewport(view), decor: [...view.decor, item] });
@@ -387,7 +404,9 @@ export function ShelfPlacementEditor({
       if (!target) return;
       const before = findItemLocation(view, payload.itemId);
       const kind = before?.item.type === "spacer" ? "spacer" : "stack";
-      commitView(moveItem(view, payload.itemId, target.plankIndex, target.itemIndex));
+      commitView(
+        moveItem(view, payload.itemId, target.plankIndex, target.itemIndex),
+      );
       setSelected({ kind, id: payload.itemId });
       return;
     }
@@ -397,9 +416,16 @@ export function ShelfPlacementEditor({
         const room = roomRef.current;
         if (!room) return;
         const rem =
-          Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+          Number.parseFloat(
+            getComputedStyle(document.documentElement).fontSize,
+          ) || 16;
         setPendingDecor(
-          clientToRoomPos(ev.clientX, ev.clientY, room.getBoundingClientRect(), rem),
+          clientToRoomPos(
+            ev.clientX,
+            ev.clientY,
+            room.getBoundingClientRect(),
+            rem,
+          ),
         );
         return;
       }
@@ -412,9 +438,16 @@ export function ShelfPlacementEditor({
         const room = roomRef.current;
         if (!room) return;
         const rem =
-          Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+          Number.parseFloat(
+            getComputedStyle(document.documentElement).fontSize,
+          ) || 16;
         setPendingDecor(
-          clientToRoomPos(ev.clientX, ev.clientY, room.getBoundingClientRect(), rem),
+          clientToRoomPos(
+            ev.clientX,
+            ev.clientY,
+            room.getBoundingClientRect(),
+            rem,
+          ),
         );
         return;
       }
@@ -450,14 +483,21 @@ export function ShelfPlacementEditor({
         setPendingStack(null);
         return;
       }
-      const nextIds = [...loc.item.bookIds, ...unique].slice(0, SHELF_STACK_MAX_BOOKS);
-      commitView(patchItem(view, pendingStack.appendToId, { bookIds: nextIds }));
+      const nextIds = [...loc.item.bookIds, ...unique].slice(
+        0,
+        SHELF_STACK_MAX_BOOKS,
+      );
+      commitView(
+        patchItem(view, pendingStack.appendToId, { bookIds: nextIds }),
+      );
       setSelected({ kind: "stack", id: pendingStack.appendToId });
       setPendingStack(null);
       return;
     }
     const item = makeStackItem(unique, pendingStack.orientation);
-    commitView(insertItem(view, pendingStack.plankIndex, pendingStack.itemIndex, item));
+    commitView(
+      insertItem(view, pendingStack.plankIndex, pendingStack.itemIndex, item),
+    );
     setSelected({ kind: "stack", id: item.id });
     setPendingStack(null);
   }
@@ -534,7 +574,8 @@ export function ShelfPlacementEditor({
     ev.dataTransfer.dropEffect = movingItem ? "move" : "copy";
     if (
       dragRef.current?.source === "palette-decor" ||
-      (dragRef.current?.source === "palette" && dragRef.current.kind === "decor")
+      (dragRef.current?.source === "palette" &&
+        dragRef.current.kind === "decor")
     ) {
       setInsertPreview(null);
       return;
@@ -553,11 +594,18 @@ export function ShelfPlacementEditor({
     const isSpacer = ev.dataTransfer.getData("text/shelf-spacer") === "1";
     const isDecor = ev.dataTransfer.getData("text/shelf-decor") === "1";
     if (itemId) dragRef.current = { source: "item", itemId };
-    else if (artifactId) dragRef.current = { source: "palette-decor", artifactId };
+    else if (artifactId)
+      dragRef.current = { source: "palette-decor", artifactId };
     else if (isSpacer) dragRef.current = { source: "palette", kind: "spacer" };
     else if (isDecor) dragRef.current = { source: "palette", kind: "decor" };
-    else if (orientation && ORIENTATION_META.some((o) => o.kind === orientation)) {
-      dragRef.current = { source: "palette", kind: orientation as BookOrientation };
+    else if (
+      orientation &&
+      ORIENTATION_META.some((o) => o.kind === orientation)
+    ) {
+      dragRef.current = {
+        source: "palette",
+        kind: orientation as BookOrientation,
+      };
     }
     handleDrop(ev);
   }
@@ -602,13 +650,18 @@ export function ShelfPlacementEditor({
    * Starts free-moving a decor ornament with pointer capture.
    * @example beginDecorMove(ev, placement)
    */
-  function beginDecorMove(ev: ReactPointerEvent, placement: ShelfDecorPlacement) {
+  function beginDecorMove(
+    ev: ReactPointerEvent,
+    placement: ShelfDecorPlacement,
+  ) {
     ev.preventDefault();
     ev.stopPropagation();
     const room = roomRef.current;
     if (!room) return;
     const rect = room.getBoundingClientRect();
-    const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const rem =
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize) ||
+      16;
     const roomWidthRem = Math.max(4, rect.width / rem);
     const pos = clientToRoomPos(ev.clientX, ev.clientY, rect, rem);
     const originX = placementXRem(placement, roomWidthRem);
@@ -636,7 +689,9 @@ export function ShelfPlacementEditor({
     ev.preventDefault();
     ev.stopPropagation();
     const room = roomRef.current;
-    const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const rem =
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize) ||
+      16;
     const roomWidthRem = room
       ? Math.max(4, room.getBoundingClientRect().width / rem)
       : shelfLiveBayWidthRem(viewport);
@@ -666,7 +721,10 @@ export function ShelfPlacementEditor({
       const room = roomRef.current;
       if (!room) return;
       const rect = room.getBoundingClientRect();
-      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const rem =
+        Number.parseFloat(
+          getComputedStyle(document.documentElement).fontSize,
+        ) || 16;
 
       if (mode.source === "decor-move") {
         const pos = clientToRoomPos(ev.clientX, ev.clientY, rect, rem);
@@ -756,466 +814,384 @@ export function ShelfPlacementEditor({
 
   return (
     <div className="wp-shelf-builder">
-      <div className="wp-shelf-placement-head">
-        <div>
-          <h2 className="wp-shelf-placement-title">Shelf Builder</h2>
-          <p className="wp-sub" style={{ margin: 0 }}>
-            Compose planks with book stacks and White Space. Place decor anywhere on the cabinet
-            and resize it. Select a stack to edit or remove its books. Desktop and mobile are
-            independent.
-          </p>
-        </div>
-        <div className="wp-shelf-placement-badges">
-          <span>{counts.books} books</span>
-          <span>{counts.stacks} stacks</span>
-          <span>{counts.decor} decor</span>
-          <span>{counts.spacers} spacers</span>
-          <span>
-            {view.planks.length} planks ({viewport})
-          </span>
-        </div>
-      </div>
-
       <div className="wp-shelf-builder-toolbar">
-        <div style={{ display: "inline-flex", gap: 4 }}>
+        <div className="wp-shelf-segment" role="group" aria-label="Viewport">
           <button
             type="button"
-            className={`wp-btn${viewport === "desktop" ? " wp-btn-primary" : ""}`}
+            className={`wp-shelf-segment-btn${viewport === "desktop" ? " is-active" : ""}`}
             onClick={() => {
               setViewport("desktop");
               setSelected(null);
-            }}
-          >
+            }}>
             Desktop
           </button>
           <button
             type="button"
-            className={`wp-btn${viewport === "mobile" ? " wp-btn-primary" : ""}`}
+            className={`wp-shelf-segment-btn${viewport === "mobile" ? " is-active" : ""}`}
             onClick={() => {
               setViewport("mobile");
               setSelected(null);
-            }}
-          >
+            }}>
             Mobile
           </button>
         </div>
-        <button type="button" className="wp-btn" onClick={copyDesktopToMobile}>
-          Copy desktop → mobile
-        </button>
-      </div>
 
-      <div className="wp-shelf-builder-grid">
-        <aside className="wp-shelf-builder-sidebar" aria-label="Components">
-          <p className="wp-shelf-palette-label">Components</p>
-          <div className="wp-shelf-palette wp-shelf-palette-stack">
-            {ORIENTATION_META.map((entry) => (
+        <p className="wp-shelf-toolbar-hint">
+          <strong>{counts.books}</strong> books placed ({unplacedBooks.length}{" "}
+          free) · <strong>{counts.stacks}</strong> stacks ·{" "}
+          <strong>{counts.decor}</strong> decor ·{" "}
+          <strong>{counts.spacers}</strong> spacers ·{" "}
+          <strong>{view.planks.length}</strong> planks
+        </p>
+
+        {/* Top Controls: Book stacks, Extras, Planks, Decor tray */}
+        <div className="wp-shelf-top-bar" aria-label="Shelf components">
+          <section className="wp-shelf-palette-wrap wp-shelf-top-section">
+            <p className="wp-shelf-palette-label">Book stacks</p>
+            <div className="wp-shelf-palette-row">
+              {ORIENTATION_META.map((entry) => (
+                <button
+                  key={entry.kind}
+                  type="button"
+                  className="wp-shelf-palette-item"
+                  draggable
+                  onDragStart={(e) => onPaletteDragStart(e, entry.kind)}
+                  onDragEnd={() => {
+                    dragRef.current = null;
+                    setInsertPreview(null);
+                  }}
+                  title={`Drag ${entry.label} onto a plank`}>
+                  <span className="wp-shelf-palette-icon" aria-hidden>
+                    {entry.icon}
+                  </span>
+                  <span>{entry.label}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="wp-shelf-palette-wrap wp-shelf-top-section">
+            <p className="wp-shelf-palette-label">Extras</p>
+            <div className="wp-shelf-palette-row">
               <button
-                key={entry.kind}
                 type="button"
                 className="wp-shelf-palette-item"
                 draggable
-                onDragStart={(e) => onPaletteDragStart(e, entry.kind)}
+                onDragStart={(e) => onPaletteDragStart(e, "decor")}
                 onDragEnd={() => {
                   dragRef.current = null;
                   setInsertPreview(null);
                 }}
-                title={`Drag ${entry.label} onto a plank, then pick Goodreads books`}
-              >
-                <span aria-hidden>{entry.icon}</span>
-                <span>{entry.label}</span>
+                title="Drag onto the cabinet, then pick a catalog ornament">
+                <span className="wp-shelf-palette-icon" aria-hidden>
+                  🪴
+                </span>
+                <span>Decor picker</span>
               </button>
-            ))}
+              <button
+                type="button"
+                className="wp-shelf-palette-item"
+                draggable
+                onDragStart={(e) => onPaletteDragStart(e, "spacer")}
+                onDragEnd={() => {
+                  dragRef.current = null;
+                  setInsertPreview(null);
+                }}
+                title="Drag White Space onto a plank to reserve a gap">
+                <span className="wp-shelf-palette-icon" aria-hidden>
+                  ⬚
+                </span>
+                <span>White Space</span>
+              </button>
+            </div>
+          </section>
+
+          <section className="wp-shelf-palette-wrap wp-shelf-top-section">
+            <p className="wp-shelf-palette-label">
+              Planks ({view.planks.length}/6)
+            </p>
             <button
               type="button"
-              className="wp-shelf-palette-item"
-              draggable
-              onDragStart={(e) => onPaletteDragStart(e, "decor")}
-              onDragEnd={() => {
-                dragRef.current = null;
-                setInsertPreview(null);
-              }}
-              title="Drag onto the cabinet, then pick a catalog ornament"
-            >
-              <span aria-hidden>🪴</span>
-              <span>Decor</span>
+              className="wp-btn wp-btn-small wp-shelf-add-plank"
+              disabled={view.planks.length >= 6}
+              onClick={() => commitView(addPlank(view))}>
+              + Add Plank
             </button>
-            <button
-              type="button"
-              className="wp-shelf-palette-item"
-              draggable
-              onDragStart={(e) => onPaletteDragStart(e, "spacer")}
-              onDragEnd={() => {
-                dragRef.current = null;
-                setInsertPreview(null);
-              }}
-              title="Drag White Space onto a plank to reserve a gap"
-            >
-              <span aria-hidden>⬚</span>
-              <span>White Space</span>
-            </button>
-          </div>
+          </section>
 
-          <button
-            type="button"
-            className="wp-btn wp-btn-primary"
-            style={{ width: "100%", marginTop: 12 }}
-            disabled={view.planks.length >= 6}
-            onClick={() => commitView(addPlank(view))}
-          >
-            + Add Plank
-          </button>
-
-          {decorTray.length > 0 ? (
-            <div className="wp-shelf-palette-wrap" style={{ marginTop: 16 }}>
-              <p className="wp-shelf-palette-label">Decor tray</p>
-              <div className="wp-shelf-palette" aria-label="Unplaced ornaments">
+          <section className="wp-shelf-palette-wrap wp-shelf-top-section wp-shelf-top-decor-section">
+            <p className="wp-shelf-palette-label">Decor tray</p>
+            {decorTray.length > 0 ? (
+              <div
+                className="wp-shelf-decor-tray-wrap"
+                aria-label="Unplaced ornaments">
                 {decorTray.map((item) => (
                   <button
                     key={item.id}
                     type="button"
-                    className="wp-shelf-palette-item"
+                    className="wp-shelf-palette-item is-decor-chip"
                     draggable
                     onDragStart={(e) => onDecorTrayDragStart(e, item.id)}
                     onDragEnd={() => {
                       dragRef.current = null;
                       setInsertPreview(null);
                     }}
-                    title={`Place ${item.name}`}
-                  >
+                    title={`Place ${item.name}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={item.imageUrl} alt="" draggable={false} />
                     <span>{item.name}</span>
                   </button>
                 ))}
               </div>
-            </div>
-          ) : null}
+            ) : (
+              <p className="wp-shelf-palette-empty">
+                {placeableDecor.length === 0
+                  ? "Enable an ornament with an image to place decor."
+                  : "All enabled ornaments are already on this viewport."}
+              </p>
+            )}
+          </section>
+        </div>
+      </div>
 
-          <p className="wp-sub" style={{ marginTop: 16 }}>
-            {unplacedBooks.length} Goodreads books available · {usedBookIds.size} placed on{" "}
-            {viewport}
-          </p>
-        </aside>
+      {/* Selection Inspector Banner */}
+      {selectedLoc && selectedLoc.item.type === "book-stack" ? (
+        <div className="wp-shelf-inspector-banner">
+          <ItemInspector
+            item={selectedLoc.item}
+            bookById={bookById}
+            unplacedBooks={unplacedBooks}
+            onPatch={(patch) =>
+              commitView(patchItem(view, selectedLoc.item.id, patch))
+            }
+            onAddBooks={editSelectedStack}
+            onRemoveBook={(bookId) => {
+              const stack = selectedLoc.item;
+              if (stack.type !== "book-stack") return;
+              const nextIds = stack.bookIds.filter((id) => id !== bookId);
+              if (!nextIds.length) {
+                commitView(removeItem(view, stack.id));
+                setSelected(null);
+                return;
+              }
+              commitView(patchItem(view, stack.id, { bookIds: nextIds }));
+            }}
+            onRemove={removeSelected}
+            onClose={() => setSelected(null)}
+          />
+        </div>
+      ) : null}
 
+      {selectedLoc?.item.type === "spacer" ? (
+        <div className="wp-shelf-inspector-banner">
+          <SpacerInspector
+            item={selectedLoc.item}
+            onPatch={(patch) =>
+              commitView(patchItem(view, selectedLoc.item.id, patch))
+            }
+            onRemove={removeSelected}
+            onClose={() => setSelected(null)}
+          />
+        </div>
+      ) : null}
+
+      {selectedDecor ? (
+        <div className="wp-shelf-inspector-banner">
+          <DecorInspector
+            decor={selectedDecor}
+            artifact={artifacts.find((a) => a.id === selectedDecor.artifactId)}
+            roomWidthRem={roomWidthRem}
+            onPatch={(patch) =>
+              commitView(patchDecor(view, selectedDecor.id, patch))
+            }
+            onRemove={removeSelected}
+            onClose={() => setSelected(null)}
+          />
+        </div>
+      ) : null}
+
+      <div className="wp-shelf-canvas-shell">
+        <div className="wp-shelf-canvas-label">
+          <span>
+            {viewport === "mobile"
+              ? "Mobile preview (390px)"
+              : "Desktop preview (true 67rem)"}
+          </span>
+          <span className="wp-shelf-canvas-tip">
+            Drop on a plank · decor anywhere
+          </span>
+        </div>
         <div
           className={`wp-shelf-canvas ${
             viewport === "mobile" ? "is-mobile-preview" : "is-desktop-preview"
-          }`}
-          style={
-            viewport === "mobile"
-              ? { maxWidth: 390, marginInline: "auto", width: "100%" }
-              : undefined
-          }
-        >
-          <div className="bookshelf is-placement-canvas is-builder-layout">
-            <div
-              ref={roomRef}
-              className="bookshelf-room"
-              onDragOver={(e) => {
-                e.preventDefault();
-                onBayDragOver(e);
-              }}
-              onDrop={onCabinetDrop}
-            >
-              <div className="bookshelf-stage">
-                <section className="bookshelf-section" aria-label="Shelf builder canvas">
-                  <div className="bookshelf-case">
-                    <div className="bookshelf-case-crown" aria-hidden />
-                    <div className="bookshelf-case-body">
-                      <div className="bookshelf-case-side is-left" aria-hidden />
-                      <div className="bookshelf-case-back">
+          }`}>
+          <div
+            className={
+              viewport === "mobile" ? "wp-shelf-mobile-frame" : undefined
+            }>
+            <div className="bookshelf is-placement-canvas is-builder-layout">
+              <div
+                ref={roomRef}
+                className="bookshelf-room"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  onBayDragOver(e);
+                }}
+                onDrop={onCabinetDrop}>
+                <div className="bookshelf-stage">
+                  <section
+                    className="bookshelf-section"
+                    aria-label="Shelf builder canvas">
+                    <div className="bookshelf-case">
+                      <div className="bookshelf-case-crown" aria-hidden />
+                      <div className="bookshelf-case-body">
                         <div
-                          ref={bayRef}
-                          className="bookshelf-bay"
-                          onDragOver={onBayDragOver}
-                          onDragLeave={() => setInsertPreview(null)}
-                        >
-                          {view.planks.map((plank, plankIndex) => {
-                            // Capacity matches live /reading bay width, not the narrower CMS panel.
-                            const available = liveBayWidthRem;
-                            const used = plankContentWidthRem(plank.items, bookById);
-                            const overflowing = used > available + 0.05;
-                            return (
-                              <div
-                                key={plank.id}
-                                className={`bookshelf-row wp-shelf-editor-row${
-                                  overflowing ? " is-overflowing" : ""
-                                }`}
-                                data-editor-plank={plank.id}
-                              >
-                                <div className="wp-shelf-plank-toolbar">
-                                  <span>Plank {plankIndex + 1}</span>
-                                  {overflowing ? (
-                                    <span className="wp-shelf-overflow-badge">
-                                      Overflow — contents exceed live plank width
-                                    </span>
-                                  ) : null}
-                                  <button
-                                    type="button"
-                                    className="wp-btn wp-btn-small"
-                                    disabled={view.planks.length <= 1}
-                                    onClick={() => {
-                                      commitView(removePlank(view, plankIndex));
-                                      setSelected(null);
-                                    }}
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                                <div
-                                  className={`bookshelf-books${
-                                    plank.items.length === 0 ? " is-empty-bay" : ""
-                                  } wp-shelf-drop-zone${overflowing ? " is-overflowing" : ""}`}
-                                >
-                                  {plank.items.length === 0 ? (
-                                    <span className="wp-shelf-drop-hint">
-                                      Drop stacks or White Space here
-                                    </span>
-                                  ) : null}
-                                  {plank.items.map((item, itemIndex) => (
-                                    <EditorItem
-                                      key={item.id}
-                                      item={item}
-                                      bookById={bookById}
-                                      selected={
-                                        (selected?.kind === "stack" ||
-                                          selected?.kind === "spacer") &&
-                                        selected.id === item.id
-                                      }
-                                      dragging={draggingItemId === item.id}
-                                      showInsertBefore={
-                                        insertPreview?.plankIndex === plankIndex &&
-                                        insertPreview.itemIndex === itemIndex
-                                      }
-                                      onSelect={() =>
-                                        setSelected({
-                                          kind: item.type === "spacer" ? "spacer" : "stack",
-                                          id: item.id,
-                                        })
-                                      }
-                                      onDragStart={(e) => onItemDragStart(e, item.id)}
-                                      onDragEnd={() => {
-                                        dragRef.current = null;
-                                        setDraggingItemId(null);
-                                        setInsertPreview(null);
-                                      }}
-                                    />
-                                  ))}
-                                  {insertPreview?.plankIndex === plankIndex &&
-                                  insertPreview.itemIndex === plank.items.length ? (
-                                    <span className="wp-shelf-insert-caret" aria-hidden />
-                                  ) : null}
-                                </div>
-                                <div className="bookshelf-plank" aria-hidden />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                      <div className="bookshelf-case-side is-right" aria-hidden />
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              <div className="bookshelf-decor-layer wp-shelf-decor-editor">
-                {view.decor.map((placement) => {
-                  const artifact = artifacts.find((a) => a.id === placement.artifactId);
-                  const widthRem = placement.widthRem ?? artifact?.widthRem ?? 1.85;
-                  const heightRem = placement.heightRem ?? artifact?.heightRem ?? 5.4;
-                  const isSelected =
-                    selected?.kind === "decor" && selected.id === placement.id;
-                  return (
-                    <div
-                      key={placement.id}
-                      role="button"
-                      tabIndex={0}
-                      className={`bookshelf-artifact is-free wp-shelf-artifact${
-                        isSelected ? " is-selected" : ""
-                      }`}
-                      style={
-                        {
-                          "--artifact-w": `${widthRem}rem`,
-                          "--artifact-h": `${heightRem}rem`,
-                          "--artifact-x": decorLeftCss(placement, roomWidthRem),
-                          "--artifact-y": `${placement.yPercent}%`,
-                        } as CSSProperties
-                      }
-                      onPointerDown={(e) => beginDecorMove(e, placement)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setSelected({ kind: "decor", id: placement.id });
-                        }
-                      }}
-                      aria-label={`${artifact?.name || "Decor"} (drag to move, handles to resize)`}
-                    >
-                      {artifact?.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={artifact.imageUrl}
-                          alt=""
-                          className="bookshelf-artifact-img"
-                          draggable={false}
+                          className="bookshelf-case-side is-left"
+                          aria-hidden
                         />
-                      ) : (
-                        <span className="wp-sub">Missing</span>
-                      )}
-                      {isSelected
-                        ? (["nw", "ne", "sw", "se"] as const).map((corner) => (
-                            <span
-                              key={corner}
-                              className={`wp-shelf-handle is-${corner}`}
-                              onPointerDown={(e) =>
-                                beginDecorResize(e, placement, corner, widthRem, heightRem)
-                              }
-                            />
-                          ))
-                        : null}
+                        <div className="bookshelf-case-back">
+                          <div
+                            ref={bayRef}
+                            className="bookshelf-bay"
+                            onDragOver={onBayDragOver}
+                            onDragLeave={() => setInsertPreview(null)}>
+                            {view.planks.map((plank, plankIndex) => {
+                              // Capacity matches live /reading bay width, not the narrower CMS panel.
+                              const available = liveBayWidthRem;
+                              const used = plankContentWidthRem(
+                                plank.items,
+                                bookById,
+                              );
+                              const overflowing = used > available + 0.05;
+                              return (
+                                <div
+                                  key={plank.id}
+                                  className={`bookshelf-row wp-shelf-editor-row${
+                                    overflowing ? " is-overflowing" : ""
+                                  }`}
+                                  data-editor-plank={plank.id}>
+                                  <div className="wp-shelf-plank-toolbar">
+                                    <span>Plank {plankIndex + 1}</span>
+                                    {overflowing ? (
+                                      <span className="wp-shelf-overflow-badge">
+                                        Overflow — contents exceed live plank
+                                        width
+                                      </span>
+                                    ) : null}
+                                    <button
+                                      type="button"
+                                      className="wp-btn wp-btn-small"
+                                      disabled={view.planks.length <= 1}
+                                      onClick={() => {
+                                        commitView(
+                                          removePlank(view, plankIndex),
+                                        );
+                                        setSelected(null);
+                                      }}>
+                                      Remove
+                                    </button>
+                                  </div>
+                                  <div
+                                    className={`bookshelf-books${
+                                      plank.items.length === 0
+                                        ? " is-empty-bay"
+                                        : ""
+                                    } wp-shelf-drop-zone${overflowing ? " is-overflowing" : ""}`}>
+                                    {plank.items.length === 0 ? (
+                                      <span className="wp-shelf-drop-hint">
+                                        Drop stacks or White Space here
+                                      </span>
+                                    ) : null}
+                                    {plank.items.map((item, itemIndex) => (
+                                      <EditorItem
+                                        key={item.id}
+                                        item={item}
+                                        bookById={bookById}
+                                        selected={
+                                          (selected?.kind === "stack" ||
+                                            selected?.kind === "spacer") &&
+                                          selected.id === item.id
+                                        }
+                                        dragging={draggingItemId === item.id}
+                                        showInsertBefore={
+                                          insertPreview?.plankIndex ===
+                                            plankIndex &&
+                                          insertPreview.itemIndex === itemIndex
+                                        }
+                                        onSelect={() =>
+                                          setSelected({
+                                            kind:
+                                              item.type === "spacer"
+                                                ? "spacer"
+                                                : "stack",
+                                            id: item.id,
+                                          })
+                                        }
+                                        onDragStart={(e) =>
+                                          onItemDragStart(e, item.id)
+                                        }
+                                        onDragEnd={() => {
+                                          dragRef.current = null;
+                                          setDraggingItemId(null);
+                                          setInsertPreview(null);
+                                        }}
+                                      />
+                                    ))}
+                                    {insertPreview?.plankIndex === plankIndex &&
+                                    insertPreview.itemIndex ===
+                                      plank.items.length ? (
+                                      <span
+                                        className="wp-shelf-insert-caret"
+                                        aria-hidden
+                                      />
+                                    ) : null}
+                                  </div>
+                                  <div
+                                    className="bookshelf-plank"
+                                    aria-hidden
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                        <div
+                          className="bookshelf-case-side is-right"
+                          aria-hidden
+                        />
+                      </div>
                     </div>
-                  );
-                })}
+                  </section>
+                </div>
+
+                <div className="bookshelf-decor-layer wp-shelf-decor-editor">
+                  {view.decor.map((placement) => (
+                    <EditorDecorItem
+                      key={placement.id}
+                      placement={placement}
+                      artifact={artifacts.find(
+                        (a) => a.id === placement.artifactId,
+                      )}
+                      isSelected={
+                        selected?.kind === "decor" &&
+                        selected.id === placement.id
+                      }
+                      roomWidthRem={roomWidthRem}
+                      onSelect={() =>
+                        setSelected({ kind: "decor", id: placement.id })
+                      }
+                      onMoveStart={(e) => beginDecorMove(e, placement)}
+                      onResizeStart={(e, corner, w, h) =>
+                        beginDecorResize(e, placement, corner, w, h)
+                      }
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {selectedLoc && selectedLoc.item.type === "book-stack"
-        ? (() => {
-            const stack = selectedLoc.item;
-            return (
-              <ItemInspector
-                item={stack}
-                bookById={bookById}
-                unplacedBooks={unplacedBooks}
-                onPatch={(patch) => commitView(patchItem(view, stack.id, patch))}
-                onAddBooks={editSelectedStack}
-                onRemoveBook={(bookId) => {
-                  const nextIds = stack.bookIds.filter((id) => id !== bookId);
-                  if (!nextIds.length) {
-                    commitView(removeItem(view, stack.id));
-                    setSelected(null);
-                    return;
-                  }
-                  commitView(patchItem(view, stack.id, { bookIds: nextIds }));
-                }}
-                onRemove={removeSelected}
-              />
-            );
-          })()
-        : null}
-
-      {selectedLoc?.item.type === "spacer" ? (
-        <div className="wp-shelf-selection wp-shelf-inspector">
-          <strong>White Space</strong>
-          <div className="wp-shelf-inspector-field">
-            <span>Width</span>
-            <input
-              type="range"
-              min={SHELF_SPACER_MIN_REM}
-              max={SHELF_SPACER_MAX_REM}
-              step={0.1}
-              value={selectedLoc.item.widthRem}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                const clamped = clamp(n, SHELF_SPACER_MIN_REM, SHELF_SPACER_MAX_REM);
-                commitView(
-                  patchItem(view, selectedLoc.item.id, {
-                    widthRem: Math.round(clamped * 100) / 100,
-                  }),
-                );
-              }}
-            />
-            <input
-              type="number"
-              min={SHELF_SPACER_MIN_REM}
-              max={SHELF_SPACER_MAX_REM}
-              step={0.1}
-              value={selectedLoc.item.widthRem}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                if (!Number.isFinite(n)) return;
-                const clamped = clamp(n, SHELF_SPACER_MIN_REM, SHELF_SPACER_MAX_REM);
-                commitView(
-                  patchItem(view, selectedLoc.item.id, {
-                    widthRem: Math.round(clamped * 100) / 100,
-                  }),
-                );
-              }}
-            />
-            <span>rem</span>
-          </div>
-          <button type="button" className="wp-btn" onClick={removeSelected}>
-            Remove White Space
-          </button>
-        </div>
-      ) : null}
-
-      {selectedDecor ? (
-        <div className="wp-shelf-selection wp-shelf-inspector">
-          <strong>
-            Decor ·{" "}
-            {artifacts.find((a) => a.id === selectedDecor.artifactId)?.name ||
-              selectedDecor.artifactId}
-          </strong>
-          <span>
-            {placementXRem(selectedDecor, roomWidthRem).toFixed(2)}rem,{" "}
-            {selectedDecor.yPercent.toFixed(0)}%
-          </span>
-          <div className="wp-shelf-inspector-field">
-            <span>Width</span>
-            <input
-              type="number"
-              min={0.5}
-              max={24}
-              step={0.1}
-              value={
-                selectedDecor.widthRem ??
-                artifacts.find((a) => a.id === selectedDecor.artifactId)?.widthRem ??
-                1.85
-              }
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                if (!Number.isFinite(n) || n <= 0) return;
-                commitView(
-                  patchDecor(view, selectedDecor.id, {
-                    widthRem: Math.round(n * 100) / 100,
-                  }),
-                );
-              }}
-            />
-            <span>rem</span>
-          </div>
-          <div className="wp-shelf-inspector-field">
-            <span>Height</span>
-            <input
-              type="number"
-              min={0.5}
-              max={24}
-              step={0.1}
-              value={
-                selectedDecor.heightRem ??
-                artifacts.find((a) => a.id === selectedDecor.artifactId)?.heightRem ??
-                5.4
-              }
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                if (!Number.isFinite(n) || n <= 0) return;
-                commitView(
-                  patchDecor(view, selectedDecor.id, {
-                    heightRem: Math.round(n * 100) / 100,
-                  }),
-                );
-              }}
-            />
-            <span>rem</span>
-          </div>
-          <button type="button" className="wp-btn" onClick={removeSelected}>
-            Remove decor
-          </button>
-        </div>
-      ) : null}
 
       {loadError ? (
         <div className="wp-notice is-error" role="alert">
@@ -1228,7 +1204,11 @@ export function ShelfPlacementEditor({
           books={unplacedBooks}
           orientation={pendingStack.orientation}
           maxPick={pendingStack.appendToId ? appendMax : SHELF_STACK_MAX_BOOKS}
-          title={pendingStack.appendToId ? "Add books to stack" : "Pick Goodreads books"}
+          title={
+            pendingStack.appendToId
+              ? "Add books to stack"
+              : "Pick Goodreads books"
+          }
           onConfirm={confirmStack}
           onClose={() => setPendingStack(null)}
         />
@@ -1257,6 +1237,7 @@ function ItemInspector({
   onAddBooks,
   onRemoveBook,
   onRemove,
+  onClose,
 }: {
   item: Extract<ShelfPlankItem, { type: "book-stack" }>;
   bookById: Map<string, GoodreadsBook>;
@@ -1265,6 +1246,7 @@ function ItemInspector({
   onAddBooks: () => void;
   onRemoveBook: (bookId: string) => void;
   onRemove: () => void;
+  onClose?: () => void;
 }) {
   const books = item.bookIds
     .map((id) => bookById.get(id))
@@ -1272,26 +1254,47 @@ function ItemInspector({
 
   return (
     <div className="wp-shelf-selection wp-shelf-inspector">
-      <strong>Book Stack</strong>
+      <div className="wp-shelf-inspector-head">
+        <strong>Book Stack</strong>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span className="wp-shelf-inspector-meta">
+            {books.length}/{SHELF_STACK_MAX_BOOKS} books
+          </span>
+          {onClose ? (
+            <button
+              type="button"
+              className="wp-shelf-inspector-close"
+              onClick={onClose}
+              title="Deselect"
+              aria-label="Deselect">
+              ✕
+            </button>
+          ) : null}
+        </div>
+      </div>
       <div className="wp-shelf-stack-toolbar">
         <button
           type="button"
-          className="wp-btn wp-btn-primary"
-          disabled={item.bookIds.length >= SHELF_STACK_MAX_BOOKS || unplacedBooks.length === 0}
-          onClick={onAddBooks}
-        >
-          Edit / Add books
+          className="wp-btn wp-btn-primary wp-btn-small"
+          disabled={
+            item.bookIds.length >= SHELF_STACK_MAX_BOOKS ||
+            unplacedBooks.length === 0
+          }
+          onClick={onAddBooks}>
+          Edit
         </button>
-        <button type="button" className="wp-btn" onClick={onRemove}>
-          Remove stack
+        <button
+          type="button"
+          className="wp-btn wp-btn-small"
+          onClick={onRemove}>
+          Remove
         </button>
       </div>
       <div className="wp-shelf-inspector-field">
         <span>Orientation</span>
         <select
           value={item.orientation}
-          onChange={(e) => onPatch({ orientation: e.target.value })}
-        >
+          onChange={(e) => onPatch({ orientation: e.target.value })}>
           {ORIENTATION_META.map((entry) => (
             <option key={entry.kind} value={entry.kind}>
               {entry.label}
@@ -1304,18 +1307,253 @@ function ItemInspector({
         <ul className="wp-shelf-stack-books">
           {books.map((book) => (
             <li key={book.id}>
-              <span>{book.title}</span>
+              <span title={book.title}>{book.title}</span>
               <button
                 type="button"
                 className="wp-btn wp-btn-small"
-                onClick={() => onRemoveBook(book.id)}
-              >
-                Remove
+                onClick={() => onRemoveBook(book.id)}>
+                ✕
               </button>
             </li>
           ))}
+          {!books.length ? (
+            <li className="wp-sub">No books in this stack</li>
+          ) : null}
         </ul>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Inspector for White Space gap.
+ */
+function SpacerInspector({
+  item,
+  onPatch,
+  onRemove,
+  onClose,
+}: {
+  item: Extract<ShelfPlankItem, { type: "spacer" }>;
+  onPatch: (patch: Record<string, unknown>) => void;
+  onRemove: () => void;
+  onClose?: () => void;
+}) {
+  return (
+    <div className="wp-shelf-selection wp-shelf-inspector">
+      <div className="wp-shelf-inspector-head">
+        <strong>White Space</strong>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span className="wp-shelf-inspector-meta">
+            {item.widthRem.toFixed(1)} rem
+          </span>
+          {onClose ? (
+            <button
+              type="button"
+              className="wp-shelf-inspector-close"
+              onClick={onClose}
+              title="Deselect"
+              aria-label="Deselect">
+              ✕
+            </button>
+          ) : null}
+        </div>
+      </div>
+      <div className="wp-shelf-inspector-field">
+        <span>Width</span>
+        <input
+          type="range"
+          min={SHELF_SPACER_MIN_REM}
+          max={SHELF_SPACER_MAX_REM}
+          step={0.1}
+          value={item.widthRem}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            const clamped = clamp(
+              n,
+              SHELF_SPACER_MIN_REM,
+              SHELF_SPACER_MAX_REM,
+            );
+            onPatch({ widthRem: Math.round(clamped * 100) / 100 });
+          }}
+        />
+        <input
+          type="number"
+          min={SHELF_SPACER_MIN_REM}
+          max={SHELF_SPACER_MAX_REM}
+          step={0.1}
+          value={item.widthRem}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (!Number.isFinite(n)) return;
+            const clamped = clamp(
+              n,
+              SHELF_SPACER_MIN_REM,
+              SHELF_SPACER_MAX_REM,
+            );
+            onPatch({ widthRem: Math.round(clamped * 100) / 100 });
+          }}
+        />
+        <span>rem</span>
+      </div>
+      <button type="button" className="wp-btn wp-btn-small" onClick={onRemove}>
+        Remove White Space
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Inspector for free-placed Decor ornament.
+ */
+function DecorInspector({
+  decor,
+  artifact,
+  roomWidthRem,
+  onPatch,
+  onRemove,
+  onClose,
+}: {
+  decor: ShelfDecorPlacement;
+  artifact?: ShelfArtifactItem;
+  roomWidthRem: number;
+  onPatch: (patch: Record<string, unknown>) => void;
+  onRemove: () => void;
+  onClose?: () => void;
+}) {
+  return (
+    <div className="wp-shelf-selection wp-shelf-inspector">
+      <div className="wp-shelf-inspector-head">
+        <strong title={artifact?.name || decor.artifactId}>
+          Decor: {artifact?.name || "Ornament"}
+        </strong>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span className="wp-shelf-inspector-meta">
+            {placementXRem(decor, roomWidthRem).toFixed(1)}rem,{" "}
+            {decor.yPercent.toFixed(0)}%
+          </span>
+          {onClose ? (
+            <button
+              type="button"
+              className="wp-shelf-inspector-close"
+              onClick={onClose}
+              title="Deselect"
+              aria-label="Deselect">
+              ✕
+            </button>
+          ) : null}
+        </div>
+      </div>
+      <div className="wp-shelf-inspector-field">
+        <span>Width</span>
+        <input
+          type="number"
+          min={0.5}
+          max={24}
+          step={0.1}
+          value={decor.widthRem ?? artifact?.widthRem ?? 1.85}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (!Number.isFinite(n) || n <= 0) return;
+            onPatch({ widthRem: Math.round(n * 100) / 100 });
+          }}
+        />
+        <span>rem</span>
+      </div>
+      <div className="wp-shelf-inspector-field">
+        <span>Height</span>
+        <input
+          type="number"
+          min={0.5}
+          max={24}
+          step={0.1}
+          value={decor.heightRem ?? artifact?.heightRem ?? 5.4}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (!Number.isFinite(n) || n <= 0) return;
+            onPatch({ heightRem: Math.round(n * 100) / 100 });
+          }}
+        />
+        <span>rem</span>
+      </div>
+      <button type="button" className="wp-btn wp-btn-small" onClick={onRemove}>
+        Remove decor
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Free-placed decor component inside bookshelf-decor-layer.
+ */
+function EditorDecorItem({
+  placement,
+  artifact,
+  isSelected,
+  roomWidthRem,
+  onSelect,
+  onMoveStart,
+  onResizeStart,
+}: {
+  placement: ShelfDecorPlacement;
+  artifact?: ShelfArtifactItem;
+  isSelected: boolean;
+  roomWidthRem: number;
+  onSelect: () => void;
+  onMoveStart: (e: ReactPointerEvent) => void;
+  onResizeStart: (
+    e: ReactPointerEvent,
+    corner: "nw" | "ne" | "sw" | "se",
+    widthRem: number,
+    heightRem: number,
+  ) => void;
+}) {
+  const widthRem = placement.widthRem ?? artifact?.widthRem ?? 1.85;
+  const heightRem = placement.heightRem ?? artifact?.heightRem ?? 5.4;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      className={`bookshelf-artifact is-free wp-shelf-artifact${isSelected ? " is-selected" : ""}`}
+      style={
+        {
+          "--artifact-w": `${widthRem}rem`,
+          "--artifact-h": `${heightRem}rem`,
+          "--artifact-x": decorLeftCss(placement, roomWidthRem),
+          "--artifact-y": `${placement.yPercent}%`,
+        } as CSSProperties
+      }
+      onPointerDown={onMoveStart}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      aria-label={`${artifact?.name || "Decor"} (drag to move, handles to resize)`}>
+      {artifact?.imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={artifact.imageUrl}
+          alt=""
+          className="bookshelf-artifact-img"
+          draggable={false}
+        />
+      ) : (
+        <span className="wp-sub">Missing</span>
+      )}
+      {isSelected
+        ? (["nw", "ne", "sw", "se"] as const).map((corner) => (
+            <span
+              key={corner}
+              className={`wp-shelf-handle is-${corner}`}
+              onPointerDown={(e) =>
+                onResizeStart(e, corner, widthRem, heightRem)
+              }
+            />
+          ))
+        : null}
     </div>
   );
 }
@@ -1346,7 +1584,9 @@ function EditorItem({
   if (item.type === "spacer") {
     return (
       <>
-        {showInsertBefore ? <span className="wp-shelf-insert-caret" aria-hidden /> : null}
+        {showInsertBefore ? (
+          <span className="wp-shelf-insert-caret" aria-hidden />
+        ) : null}
         <div
           role="button"
           tabIndex={0}
@@ -1355,7 +1595,10 @@ function EditorItem({
           className={`wp-shelf-spacer${selected ? " is-selected" : ""}${
             dragging ? " is-dragging" : ""
           }`}
-          style={{ width: `${item.widthRem}rem`, flex: `0 0 ${item.widthRem}rem` }}
+          style={{
+            width: `${item.widthRem}rem`,
+            flex: `0 0 ${item.widthRem}rem`,
+          }}
           onClick={onSelect}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
@@ -1365,8 +1608,7 @@ function EditorItem({
               onSelect();
             }
           }}
-          aria-label={`White Space ${item.widthRem}rem (drag to reorder)`}
-        >
+          aria-label={`White Space ${item.widthRem}rem (drag to reorder)`}>
           White Space
         </div>
       </>
@@ -1379,7 +1621,9 @@ function EditorItem({
 
   return (
     <>
-      {showInsertBefore ? <span className="wp-shelf-insert-caret" aria-hidden /> : null}
+      {showInsertBefore ? (
+        <span className="wp-shelf-insert-caret" aria-hidden />
+      ) : null}
       <div
         role="button"
         tabIndex={0}
@@ -1401,8 +1645,7 @@ function EditorItem({
           books.length
             ? `${books.map((b) => b.title).join(", ")} (select to edit or remove)`
             : "Empty stack"
-        }
-      >
+        }>
         {books.map((book) => {
           const box = spineBox(book, item.orientation);
           return (
@@ -1416,8 +1659,7 @@ function EditorItem({
                   "--spine-color": box.style.color,
                   "--spine-text": box.style.textColor,
                 } as CSSProperties
-              }
-            >
+              }>
               <SpineFace book={book} style={box.style} />
             </div>
           );
@@ -1462,61 +1704,73 @@ function BookPickerModal({
   }
 
   return (
-    <div className="wp-shelf-modal-backdrop" role="presentation" onClick={onClose}>
+    <div
+      className="wp-shelf-modal-backdrop"
+      role="presentation"
+      onClick={onClose}>
       <div
         className="wp-shelf-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="shelf-book-picker-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 id="shelf-book-picker-title">{title}</h3>
-        <p className="wp-sub">
-          Orientation: <strong>{orientation}</strong>. Select up to {maxPick}.
-        </p>
-        {books.length === 0 || maxPick <= 0 ? (
-          <p className="wp-sub">No more books available for this stack.</p>
-        ) : (
-          <ul className="wp-shelf-picker-list">
-            {books.map((book) => {
-              const checked = picked.includes(book.id);
-              const disabled = !checked && picked.length >= maxPick;
-              return (
-                <li key={book.id}>
-                  <button
-                    type="button"
-                    className={`wp-shelf-picker-item${disabled ? " is-disabled" : ""}`}
-                    disabled={disabled}
-                    onClick={() => toggle(book.id)}
-                  >
-                    <input type="checkbox" readOnly checked={checked} tabIndex={-1} />
-                    <span
-                      aria-hidden
-                      style={{
-                        display: "inline-block",
-                        width: 10,
-                        height: 28,
-                        borderRadius: 2,
-                        background: spineStyle(book).color,
-                        marginRight: 8,
-                        verticalAlign: "middle",
-                      }}
-                    />
-                    {book.title}
-                    {book.author ? <span className="wp-sub"> — {book.author}</span> : null}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        onClick={(e) => e.stopPropagation()}>
+        <div className="wp-shelf-modal-head">
+          <h3 id="shelf-book-picker-title">{title}</h3>
+          <p className="wp-sub">
+            Orientation: <strong>{orientation}</strong> · Select up to {maxPick}
+          </p>
+        </div>
+        <div className="wp-shelf-modal-body">
+          {books.length === 0 || maxPick <= 0 ? (
+            <p className="wp-sub">No more books available for this stack.</p>
+          ) : (
+            <ul className="wp-shelf-picker-list">
+              {books.map((book) => {
+                const checked = picked.includes(book.id);
+                const disabled = !checked && picked.length >= maxPick;
+                return (
+                  <li key={book.id}>
+                    <button
+                      type="button"
+                      className={`wp-shelf-picker-item${checked ? " is-checked" : ""}${
+                        disabled ? " is-disabled" : ""
+                      }`}
+                      disabled={disabled}
+                      onClick={() => toggle(book.id)}>
+                      <input
+                        type="checkbox"
+                        readOnly
+                        checked={checked}
+                        tabIndex={-1}
+                      />
+                      <span
+                        aria-hidden
+                        className="wp-shelf-picker-swatch"
+                        style={{ background: spineStyle(book).color }}
+                      />
+                      <span className="wp-shelf-picker-copy">
+                        <span className="wp-shelf-picker-title">
+                          {book.title}
+                        </span>
+                        {book.author ? (
+                          <span className="wp-shelf-picker-author">
+                            {book.author}
+                          </span>
+                        ) : null}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+        <div className="wp-shelf-modal-footer">
           <button
             type="button"
             className="wp-btn wp-btn-primary"
             disabled={picked.length === 0}
-            onClick={() => onConfirm(picked)}
-          >
+            onClick={() => onConfirm(picked)}>
             Add {picked.length || ""} {picked.length === 1 ? "book" : "books"}
           </button>
           <button type="button" className="wp-btn" onClick={onClose}>
@@ -1542,39 +1796,48 @@ function DecorPickerModal({
   onClose: () => void;
 }) {
   return (
-    <div className="wp-shelf-modal-backdrop" role="presentation" onClick={onClose}>
+    <div
+      className="wp-shelf-modal-backdrop"
+      role="presentation"
+      onClick={onClose}>
       <div
         className="wp-shelf-modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="shelf-decor-picker-title"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h3 id="shelf-decor-picker-title">Pick decor</h3>
-        {artifacts.length === 0 ? (
-          <p className="wp-sub">
-            No enabled ornaments left for this viewport. Add one in the catalog below.
-          </p>
-        ) : (
-          <ul className="wp-shelf-picker-list">
-            {artifacts.map((item) => (
-              <li key={item.id}>
-                <button
-                  type="button"
-                  className="wp-shelf-picker-item"
-                  onClick={() => onPick(item.id)}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.imageUrl} alt="" draggable={false} />
-                  {item.name}
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        <button type="button" className="wp-btn" onClick={onClose}>
-          Cancel
-        </button>
+        onClick={(e) => e.stopPropagation()}>
+        <div className="wp-shelf-modal-head">
+          <h3 id="shelf-decor-picker-title">Pick decor</h3>
+          <p className="wp-sub">Choose an enabled ornament for this spot.</p>
+        </div>
+        <div className="wp-shelf-modal-body">
+          {artifacts.length === 0 ? (
+            <p className="wp-sub">
+              No enabled ornaments left for this viewport. Add one in the
+              catalog below.
+            </p>
+          ) : (
+            <ul className="wp-shelf-picker-list">
+              {artifacts.map((item) => (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    className="wp-shelf-picker-item is-decor"
+                    onClick={() => onPick(item.id)}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.imageUrl} alt="" draggable={false} />
+                    <span className="wp-shelf-picker-title">{item.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="wp-shelf-modal-footer">
+          <button type="button" className="wp-btn" onClick={onClose}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -373,6 +373,9 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               addArtifact={addArtifact}
               uploadArtifactImage={uploadArtifactImage}
               uploading={uploading}
+              save={save}
+              dirty={dirty}
+              status={status}
             />
           )}
 

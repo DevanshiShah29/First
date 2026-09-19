@@ -116,21 +116,20 @@ export function useCmsNavigation(
    */
   function addArtifact() {
     const id = newId();
-    const shelfArtifacts = data.shelfArtifacts ?? [];
-    setData({
-      ...data,
+    setData((current) => ({
+      ...current,
       shelfArtifacts: [
-        ...shelfArtifacts,
+        ...(current.shelfArtifacts ?? []),
         {
           id,
-          name: "New ornament",
+          name: "",
           imageUrl: "",
           widthRem: 1.85,
           heightRem: 5.4,
           enabled: true,
         },
       ],
-    });
+    }));
     go("artifacts-edit", id);
   }
 

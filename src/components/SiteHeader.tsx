@@ -4,7 +4,7 @@
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import Link from "next/link";
 
-// Application services & types
+import type { CraftContent, PublicSiteContent, SiteContent } from "@/content/types";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 
@@ -37,15 +37,27 @@ export function SiteHeader({
   name,
   allowToggle,
   variant = "page",
+  site,
+  craft,
 }: {
   name: string;
   allowToggle: boolean;
   variant?: "home" | "page";
+  site?: PublicSiteContent | SiteContent;
+  craft?: CraftContent;
 }) {
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const nav = variant === "home" ? homeNav : pageNav;
+  const displayName = site?.name || name;
+  const notesLabel = craft?.title?.trim() || "Notes";
+
+  const mobilePages = [
+    { href: "/reading", label: "Book Nook" },
+    { href: "/memories", label: "Memories" },
+    { href: "/craft", label: notesLabel },
+  ];
 
   useEffect(() => {
     /**
@@ -57,6 +69,34 @@ export function SiteHeader({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      document.body.style.overflow = "";
+      return;
+    }
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    function onResize() {
+      if (window.innerWidth >= 768 && open) {
+        setOpen(false);
+      }
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [open]);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, []);
 
   /**
@@ -89,11 +129,11 @@ export function SiteHeader({
             className="group inline-flex items-center rounded-md"
             onClick={(e) => onHashLink(e, "#top")}
           >
-            <Logo name={name} />
+            <Logo name={displayName} />
           </a>
         ) : (
           <Link href="/" className="group inline-flex items-center rounded-md">
-            <Logo name={name} />
+            <Logo name={displayName} />
           </Link>
         )}
         <div className="flex items-center gap-3">
@@ -123,26 +163,87 @@ export function SiteHeader({
           </button>
         </div>
       </nav>
-      <ul
+
+      {/* Full-width slide-over menu panel (opens from right to left) */}
+      <aside
         id={menuId}
-        className={
-          open
-            ? "section-shell flex flex-col gap-3 border-t border-line py-4 md:hidden"
-            : "hidden"
-        }
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+        aria-hidden={!open}
+        className={`fixed inset-0 z-50 flex h-full w-full flex-col bg-background transition-transform duration-300 ease-in-out md:hidden ${
+          open ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
       >
-        {nav.map((item) => (
-          <li key={item.href}>
+        <div className="section-shell flex h-18 items-center justify-between border-b border-line">
+          {variant === "home" ? (
             <a
-              href={item.href}
-              className="block py-2 text-sm text-muted transition hover:text-accent-hover"
-              onClick={(e) => onHashLink(e, item.href)}
+              href="#top"
+              className="group inline-flex items-center rounded-md"
+              onClick={(e) => onHashLink(e, "#top")}
             >
-              {item.label}
+              <Logo name={displayName} />
             </a>
-          </li>
-        ))}
-      </ul>
+          ) : (
+            <Link
+              href="/"
+              className="group inline-flex items-center rounded-md"
+              onClick={() => setOpen(false)}
+            >
+              <Logo name={displayName} />
+            </Link>
+          )}
+          <button
+            type="button"
+            className="icon-btn rounded-md border border-line p-2 text-foreground"
+            aria-label="Close navigation menu"
+            onClick={() => setOpen(false)}
+          >
+            <IconClose />
+          </button>
+        </div>
+
+        <div className="section-shell flex flex-1 flex-col justify-between overflow-y-auto py-8">
+          <nav aria-label="Mobile navigation">
+            <ul className="space-y-1">
+              {nav.map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    className="block rounded-lg px-3 py-2.5 text-base font-medium text-muted transition hover:bg-brand/10 hover:text-accent-hover"
+                    onClick={(e) => onHashLink(e, item.href)}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <div className="my-4 border-t border-line" />
+            <ul className="space-y-1">
+              {mobilePages.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="block rounded-lg px-3 py-2.5 text-base font-medium text-muted transition hover:bg-brand/10 hover:text-accent-hover"
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {allowToggle ? (
+            <div className="mt-8 border-t border-line pt-4 flex items-center justify-between">
+              <span className="text-2xs font-medium uppercase tracking-kicker-tight text-muted-soft">
+                Theme
+              </span>
+              <ThemeToggle />
+            </div>
+          ) : null}
+        </div>
+      </aside>
     </>
   );
 

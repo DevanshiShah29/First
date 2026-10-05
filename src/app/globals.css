@@ -402,7 +402,7 @@ html.jar-stars-active.has-custom-cursor * {
   border: 0;
 }
 
-.icon-btn {
+@utility icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -466,6 +466,10 @@ html:not([data-theme="light"]) .theme-icon-moon {
 }
 
 .logo-mark {
+  border-radius: 30%;
+  overflow: hidden;
+  clip-path: inset(0 round 30%);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
   box-shadow: 0 0 22px
     color-mix(in srgb, var(--brand-from, #7c3aed) 38%, transparent);
 }

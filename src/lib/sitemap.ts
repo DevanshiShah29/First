@@ -27,15 +27,10 @@ export function siteMap(
 
   const explore: SiteLink[] = [
     { href: "/", label: "Home" },
-    { href: "/reading", label: "Reading" },
-    { href: "/memories", label: "Memory Jar" },
+    { href: "/reading", label: "Book Nook" },
+    { href: "/memories", label: "Memories" },
+    { href: "/craft", label: craft?.title?.trim() || "Notes" },
   ];
-  const craftPublished = Boolean(
-    craft?.title?.trim() || craft?.intro?.trim() || (craft?.groups?.length ?? 0) > 0,
-  );
-  if (craftPublished) {
-    explore.push({ href: "/craft", label: craft?.title?.trim() || "Craft" });
-  }
 
   return [
     {

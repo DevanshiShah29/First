@@ -80,7 +80,13 @@ export function Site({ content }: { content: PublicContentData }) {
     <div className="min-h-screen bg-background text-foreground">
       <Cursor />
       <SkipLink />
-      <SiteHeader name={site.name} allowToggle={content.theme.allowToggle} variant="home" />
+      <SiteHeader
+        name={site.name}
+        site={site}
+        craft={craft}
+        allowToggle={content.theme.allowToggle}
+        variant="home"
+      />
 
       <main id="main-content" tabIndex={-1}>
         <Hero site={site} onProjects={(e) => onSectionLink(e, "#projects")} />

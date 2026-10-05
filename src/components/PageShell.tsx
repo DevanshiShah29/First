@@ -29,7 +29,12 @@ export function PageShell({
     <div className="min-h-screen bg-background text-foreground">
       <Cursor />
       <SkipLink />
-      <SiteHeader name={site.name} allowToggle={content.theme.allowToggle} />
+      <SiteHeader
+        name={site.name}
+        site={site}
+        craft={craft}
+        allowToggle={content.theme.allowToggle}
+      />
       <main id="main-content" tabIndex={-1} className="w-full">
         {children}
       </main>

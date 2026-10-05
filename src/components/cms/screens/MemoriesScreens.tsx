@@ -42,7 +42,7 @@ export function MemoriesListScreen({
   return (
     <>
       <h1 className="wp-screen-title">
-        Memory Jar
+        Memories
         <button type="button" className="wp-btn wp-btn-primary" onClick={addMemory}>
           Add New
         </button>

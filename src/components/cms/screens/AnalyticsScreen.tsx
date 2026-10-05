@@ -40,10 +40,10 @@ function formatWhen(iso: string) {
 function pageLabel(path: string) {
   if (path === "/") return "Home";
   const known: Record<string, string> = {
-    "/craft": "Craft",
-    "/memories": "Memory Jar",
-    "/memory-jar": "Memory Jar",
-    "/reading": "Reading",
+    "/craft": "Notes",
+    "/memories": "Memories",
+    "/memory-jar": "Memories",
+    "/reading": "Book Nook",
   };
   return known[path] || path;
 }

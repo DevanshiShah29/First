@@ -16,7 +16,7 @@ export const revalidate = 1800;
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
   return buildPageMetadata({
-    title: `Reading | ${content.site.name}`,
+    title: `Book Nook | ${content.site.name}`,
     description: `Books ${content.site.name} is reading, has read, and wants to read — with notes from Goodreads.`,
     path: "/reading",
     siteName: content.site.name,

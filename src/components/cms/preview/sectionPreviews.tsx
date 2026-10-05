@@ -99,7 +99,13 @@ export function SectionPreview({
     case "appearance":
       return (
         <div className="min-h-full bg-background text-foreground">
-          <SiteHeader name={site.name} allowToggle={false} variant="home" />
+          <SiteHeader
+            name={site.name}
+            site={site}
+            craft={craft}
+            allowToggle={false}
+            variant="home"
+          />
           <Hero site={site} onProjects={noopProjects} />
           <AboutSection site={site} craft={craft} />
         </div>

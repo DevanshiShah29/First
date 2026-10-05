@@ -115,7 +115,7 @@ export function ReadingLibrary({
     return (
       <section id="library" className="section-shell py-20 sm:py-28">
         <p className="kicker">From the desk</p>
-        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Reading</h1>
+        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Book Nook</h1>
         <p className="mt-5 max-w-xl text-muted">
           The bookshelf is taking a break. Add a Goodreads profile in the CMS to fill this page.
         </p>
@@ -127,7 +127,7 @@ export function ReadingLibrary({
     return (
       <section id="library" className="section-shell py-20 sm:py-28">
         <p className="kicker">From the desk</p>
-        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Reading</h1>
+        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Book Nook</h1>
         <p className="mt-5 max-w-xl text-muted">
           Couldn’t load books from Goodreads right now.{" "}
           <a className="text-accent-text" href={library.profileUrl} target="_blank" rel="noopener noreferrer">
@@ -145,7 +145,7 @@ export function ReadingLibrary({
         <Fade y={24}>
           <p className="kicker">From the desk</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
-            Reading
+            Book Nook
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
             Everything on my Goodreads shelves — what I’m in the middle of, what I’ve finished, and what I want next,

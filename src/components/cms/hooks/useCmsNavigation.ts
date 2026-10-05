@@ -221,12 +221,12 @@ export function useCmsNavigation(
       case "memories":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Memory Jar", current: true },
+          { label: "Memories", current: true },
         ];
       case "memories-edit":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Memory Jar", onClick: () => go("memories") },
+          { label: "Memories", onClick: () => go("memories") },
           {
             label: memory
               ? memory.title === "New memory"

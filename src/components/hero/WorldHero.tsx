@@ -16,11 +16,11 @@ import { Ingredients, MiniUi, Notes } from "./fx";
 type SpotId = "piano" | "jar" | "camera" | "laptop" | "book" | "cook" | "travel";
 
 const spots: { id: SpotId; label: string; left: string; top: string; w: string; h: string }[] = [
-  { id: "jar", label: "Jar of stars", left: "9%", top: "16%", w: "10%", h: "18%" },
+  { id: "jar", label: "Memories", left: "9%", top: "16%", w: "10%", h: "18%" },
   { id: "piano", label: "Piano", left: "6%", top: "38%", w: "26%", h: "42%" },
   { id: "camera", label: "Photos", left: "18%", top: "1%", w: "14%", h: "14%" },
   { id: "laptop", label: "Building", left: "42%", top: "40%", w: "22%", h: "24%" },
-  { id: "book", label: "Reading", left: "46%", top: "68%", w: "18%", h: "20%" },
+  { id: "book", label: "Book Nook", left: "46%", top: "68%", w: "18%", h: "20%" },
   { id: "cook", label: "Cooking", left: "68%", top: "16%", w: "24%", h: "32%" },
   { id: "travel", label: "Travel", left: "70%", top: "52%", w: "28%", h: "42%" },
 ];

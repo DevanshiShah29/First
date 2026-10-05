@@ -18,6 +18,7 @@ export function LogoMark({ className = "h-9 w-9", title }: LogoProps) {
     <svg
       viewBox="0 0 40 40"
       className={className}
+      style={{ borderRadius: "30%", overflow: "hidden" }}
       aria-hidden={title ? undefined : true}
       role={title ? "img" : undefined}
     >

@@ -103,12 +103,14 @@ export function SiteFooter({
         </div>
       </Fade>
     </div>
-    <div className="border-t border-line py-6">
+      <div className="border-t border-line py-6">
         <div className="section-shell flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-soft">
+            A little corner of the internet, made with ♡ and a lot of Ctrl + Z
+          </p>
           <p className="text-sm text-muted-soft">
             © {new Date().getFullYear()} {site.name}
           </p>
-          <p className="text-sm text-muted-soft">Built with Next.js</p>
         </div>
       </div>
     </footer>

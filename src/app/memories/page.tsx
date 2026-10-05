@@ -16,7 +16,7 @@ export const viewport: Viewport = {
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
   return buildPageMetadata({
-    title: `a little jar of stars | ${content.site.name}`,
+    title: `Memories | ${content.site.name}`,
     description:
       "Tuck away tiny happy memories as they happen. On low days, open your jar for a random one — a small, private ritual of self-comfort.",
     path: "/memories",

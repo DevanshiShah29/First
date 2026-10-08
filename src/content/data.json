@@ -23,6 +23,11 @@
     "philosophy": "",
     "experienceIntro": "",
     "contactLine": "",
+    "contactMedia": {
+      "kind": "none",
+      "url": "",
+      "alt": ""
+    },
     "email": "",
     "linkedin": "",
     "github": "",

@@ -756,12 +756,12 @@ export async function fetchCmsAnalytics(
 }
 
 /**
- * Upload a CMS asset (hero, memory, skill icon, or resume).
+ * Upload a CMS asset (hero, contact, memory, skill icon, or resume).
  * @example await uploadCmsFile(file, "hero") // { ok: true, data: { url, kind } }
  */
 export async function uploadCmsFile(
   file: File,
-  folder?: "hero" | "skills" | "memories" | "resume" | "artifacts",
+  folder?: "hero" | "skills" | "memories" | "resume" | "artifacts" | "contact",
 ): Promise<ApiResponse<UploadFileResponse>> {
   try {
     const form = new FormData();

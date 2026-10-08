@@ -42,6 +42,10 @@ model SiteSettings {
   philosophy       String   @default("")
   experienceIntro  String   @default("")
   contactLine      String   @default("")
+  /// Contact card media: "none" | "image" | "video"
+  contactMediaKind String   @default("none")
+  contactMediaUrl  String   @default("")
+  contactMediaAlt  String   @default("")
   email            String   @default("")
   linkedin         String   @default("")
   github           String   @default("")

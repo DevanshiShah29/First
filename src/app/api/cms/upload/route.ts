@@ -6,7 +6,7 @@ import { sniffUploadMagic } from "@/server/upload-magic";
 
 export const runtime = "nodejs";
 
-const FOLDERS = new Set<UploadFolder>(["hero", "skills", "memories", "resume", "artifacts"]);
+const FOLDERS = new Set<UploadFolder>(["hero", "skills", "memories", "resume", "artifacts", "contact"]);
 const MAX_BYTES = 25 * 1024 * 1024;
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 

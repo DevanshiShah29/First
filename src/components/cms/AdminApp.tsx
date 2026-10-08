@@ -110,6 +110,8 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     uploading,
     setHeroMedia,
     uploadHeroFile,
+    setContactMedia,
+    uploadContactFile,
     uploadMemoryPhoto,
     uploadResume,
     uploadSkillIcon,
@@ -231,6 +233,8 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             <ContactScreen
               data={data}
               setData={setData}
+              setContactMedia={setContactMedia}
+              uploadContactFile={uploadContactFile}
               uploadResume={uploadResume}
               uploading={uploading}
               save={save}

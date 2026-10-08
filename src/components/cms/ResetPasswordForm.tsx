@@ -45,7 +45,7 @@ export function ResetPasswordForm({ token: initialToken }: { token: string }) {
 
   if (!token) {
     return (
-      <div className="wp-login">
+      <main className="wp-login">
         <div className="wp-login-box">
           <h1>
             <Link href="/">
@@ -60,7 +60,7 @@ export function ResetPasswordForm({ token: initialToken }: { token: string }) {
             <Link href="/admin/login">← Back to login</Link>
           </p>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -95,7 +95,7 @@ export function ResetPasswordForm({ token: initialToken }: { token: string }) {
   }
 
   return (
-    <div className="wp-login">
+    <main className="wp-login">
       <div className="wp-login-box">
         <h1>
           <Link href="/">
@@ -163,6 +163,6 @@ export function ResetPasswordForm({ token: initialToken }: { token: string }) {
           <Link href="/admin/login">← Back to login</Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

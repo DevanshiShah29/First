@@ -1,11 +1,16 @@
 "use client";
 
 // External dependencies
-import { useEffect, useRef, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 
 // Application services & types
+import type { ContactMedia } from "@/content/types";
 import { createVisibilityGate } from "@/hooks/active-loop";
 import { useReducedMotion } from "@/hooks/reduced-motion";
+import { parsePlayableMedia } from "@/lib/media-url";
+
+// UI components
+import { MediaImage } from "@/components/MediaImage";
 
 /**
  * Renders the decorative tilting contact card scene.
@@ -113,8 +118,7 @@ export function ContactScene() {
       onPointerMove={tiltFromEvent}
       onPointerLeave={() => {
         interacting.current = false;
-      }}
-    >
+      }}>
       <div className="contact-scene-glow" />
       <div className="contact-scene-glow is-alt" />
       <div ref={rig} className="contact-scene-rig">
@@ -137,4 +141,78 @@ export function ContactScene() {
       </div>
     </div>
   );
+}
+
+/**
+ * Renders CMS image or video in the contact card media slot.
+ * @example <ContactMediaFrame media={site.contactMedia} />
+ */
+export function ContactMediaFrame({ media }: { media: ContactMedia }) {
+  const reduce = useReducedMotion();
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  const playable = parsePlayableMedia(
+    media.url,
+    media.kind === "image" ? "image" : "video",
+  );
+  const alt = media.alt.trim();
+  const failed = failedUrl === media.url;
+
+  if (failed || playable.type === "unsupported") return <ContactScene />;
+
+  if (playable.type === "iframe") {
+    const src = reduce
+      ? playable.src
+          .replace(/autoplay=1/g, "autoplay=0")
+          .replace(/controls=0/g, "controls=1")
+      : playable.src;
+    return (
+      <div className="contact-media">
+        <iframe
+          src={src}
+          className="contact-media-frame"
+          title={alt || "Contact video"}
+          allow={`${reduce ? "" : "autoplay; "}encrypted-media; picture-in-picture`}
+          allowFullScreen
+        />
+      </div>
+    );
+  }
+
+  if (playable.type === "file" && playable.kind === "video") {
+    return (
+      <div className="contact-media">
+        <video
+          className="contact-media-frame"
+          src={playable.src}
+          onError={() => setFailedUrl(media.url)}
+          autoPlay={!reduce}
+          muted
+          loop
+          playsInline
+          controls={reduce}
+          title={alt || "Contact video"}
+        />
+      </div>
+    );
+  }
+
+  if (playable.type === "file") {
+    return (
+      <div className="contact-media">
+        <MediaImage
+          src={playable.src}
+          alt={alt}
+          width={1600}
+          height={1000}
+          unoptimized
+          className="contact-media-frame"
+          sizes="(max-width: 768px) 100vw, 40vw"
+          style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          onError={() => setFailedUrl(media.url)}
+        />
+      </div>
+    );
+  }
+
+  return <ContactScene />;
 }

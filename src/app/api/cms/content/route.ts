@@ -8,6 +8,21 @@ import { requireCmsMutation, verifySessionCookie } from "@/server/cms-auth";
 export const runtime = "nodejs";
 
 /**
+ * Maps a save failure to a short message without connection details.
+ * @example saveErrorMessage(err) // "Could not reach the database..."
+ */
+function saveErrorMessage(err: unknown) {
+  const message = err instanceof Error ? err.message : "";
+  if (/Can't reach database server|P1001|timed out/i.test(message)) {
+    return "Could not reach the database. Check DATABASE_URL and try again.";
+  }
+  if (/Unknown argument `contactMedia|contactMediaKind|P2022/i.test(message)) {
+    return "The database client is out of date. Restart the dev server, then save again.";
+  }
+  return "Could not save content to the database. Check DATABASE_URL and try again.";
+}
+
+/**
  * Handles GET /api/cms/content.
  * @example GET // {content} when session cookie is valid
  */
@@ -47,12 +62,7 @@ export async function POST(req: Request) {
     await saveContent(parsed.content);
   } catch (err) {
     console.error("saveContent failed", err);
-    return NextResponse.json(
-      {
-        error: "Could not save content to the database. Check DATABASE_URL and try again.",
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: saveErrorMessage(err) }, { status: 500 });
   }
   revalidateTag(CMS_CONTENT_TAG, "max");
   // Layout revalidation covers nested public routes; avoid stacking redundant path work.

@@ -79,9 +79,9 @@ export function SiteFooter({
 
           {groups.map((group) => (
             <nav key={group.title} aria-label={group.title}>
-              <h2 className="text-2xs font-medium uppercase tracking-kicker-tight text-muted-soft">
+              <h3 className="text-2xs font-medium uppercase tracking-kicker-tight text-muted-soft">
                 {group.title}
-              </h2>
+              </h3>
               <ul className="mt-4 space-y-2.5">
                 {group.links.map((link) => (
                   <li key={link.href + link.label}>

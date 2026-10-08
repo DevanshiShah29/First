@@ -98,6 +98,32 @@ export const DEFAULT_HERO_MEDIA: HeroMedia = {
   side: "right",
 };
 
+export type ContactMediaKind = "none" | "image" | "video";
+
+/** Image or video shown on the contact card. Empty kind keeps the built-in scene. */
+export type ContactMedia = {
+  kind: ContactMediaKind;
+  url: string;
+  /** Accessible name. An empty alt treats an image as decorative. */
+  alt: string;
+};
+
+export const DEFAULT_CONTACT_MEDIA: ContactMedia = {
+  kind: "none",
+  url: "",
+  alt: "",
+};
+
+/**
+ * True when contact media should replace the built-in scene.
+ * @example hasContactMedia({ kind: "image", url: "/a.jpg", alt: "" }) // true
+ */
+export function hasContactMedia(
+  media: ContactMedia | null | undefined,
+): media is ContactMedia {
+  return Boolean(media && media.kind !== "none" && media.url.trim());
+}
+
 export type SiteContent = {
   name: string;
   initials: string;
@@ -117,6 +143,7 @@ export type SiteContent = {
   philosophy: string;
   experienceIntro: string;
   contactLine: string;
+  contactMedia: ContactMedia;
   email: string;
   linkedin: string;
   github: string;

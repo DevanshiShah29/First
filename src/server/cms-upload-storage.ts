@@ -2,7 +2,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { put } from "@vercel/blob";
 
-export type UploadFolder = "hero" | "skills" | "memories" | "resume" | "artifacts";
+export type UploadFolder = "hero" | "skills" | "memories" | "resume" | "artifacts" | "contact";
 
 export type StoredUpload = {
   /** Public URL (blob CDN or same-origin /uploads/...). */

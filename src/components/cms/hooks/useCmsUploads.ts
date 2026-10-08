@@ -4,7 +4,12 @@
 import { useState, type Dispatch, type SetStateAction } from "react";
 
 // Application services & types
-import type { ContentData, HeroMedia } from "@/content/types";
+import {
+  DEFAULT_CONTACT_MEDIA,
+  type ContactMedia,
+  type ContentData,
+  type HeroMedia,
+} from "@/content/types";
 import { uploadCmsFile } from "@/lib/cms-client";
 
 /**
@@ -45,6 +50,55 @@ export function useCmsUploads(
       return;
     }
     setHeroMedia({ url: res.data.url, kind: res.data.kind ?? "image" });
+  }
+
+  /**
+   * Merges a patch into site.contactMedia.
+   * @example setContactMedia({ kind: "image" }) // void
+   */
+  function setContactMedia(patch: Partial<ContactMedia>) {
+    setData((current) => ({
+      ...current,
+      site: {
+        ...current.site,
+        contactMedia: {
+          ...DEFAULT_CONTACT_MEDIA,
+          ...current.site.contactMedia,
+          ...patch,
+        },
+      },
+    }));
+  }
+
+  /**
+   * Uploads a contact card image or video and stores its URL.
+   * @example uploadContactFile(file) // void
+   */
+  async function uploadContactFile(file: File) {
+    setUploading(true);
+    setError("");
+    setNotice("");
+    const res = await uploadCmsFile(file, "contact");
+    setUploading(false);
+    if (!res.ok || !res.data?.url) {
+      setError(res.error || "Contact media upload failed.");
+      return;
+    }
+    const url = res.data.url;
+    const kind = res.data.kind === "video" ? "video" : "image";
+    setData((current) => ({
+      ...current,
+      site: {
+        ...current.site,
+        contactMedia: {
+          ...DEFAULT_CONTACT_MEDIA,
+          ...current.site.contactMedia,
+          url,
+          kind,
+        },
+      },
+    }));
+    setNotice("Contact media uploaded. Save changes to publish it.");
   }
 
   /**
@@ -154,6 +208,8 @@ export function useCmsUploads(
     uploading,
     setHeroMedia,
     uploadHeroFile,
+    setContactMedia,
+    uploadContactFile,
     uploadMemoryPhoto,
     uploadResume,
     uploadSkillIcon,

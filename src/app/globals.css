@@ -2091,6 +2091,14 @@ html:not([data-theme="light"]) .theme-icon-moon {
   outline-offset: 3px;
 }
 
+/* Name, email, and message already show focus with a border color change. */
+#contact input:focus,
+#contact input:focus-visible,
+#contact textarea:focus,
+#contact textarea:focus-visible {
+  outline: none;
+}
+
 .contact-scene {
   position: relative;
   isolation: isolate;
@@ -2099,6 +2107,27 @@ html:not([data-theme="light"]) .theme-icon-moon {
   flex: 1 1 auto;
   perspective: 920px;
   touch-action: pan-y;
+}
+
+.contact-media {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: 18.5rem;
+  flex: 0 0 18.5rem;
+  background: transparent;
+}
+
+.contact-media-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border: 0;
+  object-fit: contain;
+  object-position: center;
 }
 
 .contact-scene-glow {
@@ -2339,6 +2368,11 @@ html:not([data-theme="light"]) .theme-icon-moon {
 @media (max-width: 640px) {
   .contact-scene {
     min-height: 14.5rem;
+  }
+
+  .contact-media {
+    height: 14.5rem;
+    flex-basis: 14.5rem;
   }
 }
 

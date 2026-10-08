@@ -24,6 +24,7 @@ import {
   type ShelfPlankItem,
   type ShelfViewport,
 } from "@/content/types";
+import { useDialogFocus } from "@/hooks/use-dialog-focus";
 import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
 import { shelfSections } from "@/components/reading/shelfSections";
 import { SpineFace, spineArtClass } from "@/components/reading/SpineFace";
@@ -1445,6 +1446,44 @@ function DecorInspector({
         </div>
       </div>
       <div className="wp-shelf-inspector-field">
+        <span>X</span>
+        <input
+          type="number"
+          min={0}
+          max={Math.max(roomWidthRem, 4)}
+          step={0.1}
+          value={Math.round(placementXRem(decor, roomWidthRem) * 100) / 100}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (!Number.isFinite(n)) return;
+            const nextXRem = Math.max(0, n);
+            onPatch({
+              xRem: Math.round(nextXRem * 100) / 100,
+              xPercent: clamp((nextXRem / roomWidthRem) * 100, 0, 100),
+            });
+          }}
+        />
+        <span>rem</span>
+      </div>
+      <div className="wp-shelf-inspector-field">
+        <span>Y</span>
+        <input
+          type="number"
+          min={0}
+          max={100}
+          step={1}
+          value={Math.round(decor.yPercent * 10) / 10}
+          onChange={(e) => {
+            const n = Number(e.target.value);
+            if (!Number.isFinite(n)) return;
+            onPatch({
+              yPercent: clamp(Math.round(n * 10) / 10, 0, 100),
+            });
+          }}
+        />
+        <span>%</span>
+      </div>
+      <div className="wp-shelf-inspector-field">
         <span>Width</span>
         <input
           type="number"
@@ -1689,7 +1728,19 @@ function BookPickerModal({
   onConfirm: (bookIds: string[]) => void;
   onClose: () => void;
 }) {
+  const dialogRef = useDialogFocus<HTMLDivElement>(true);
   const [picked, setPicked] = useState<string[]>([]);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   /**
    * Toggles a book in the multi-select set.
@@ -1709,6 +1760,8 @@ function BookPickerModal({
       role="presentation"
       onClick={onClose}>
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className="wp-shelf-modal"
         role="dialog"
         aria-modal="true"
@@ -1795,12 +1848,27 @@ function DecorPickerModal({
   onPick: (artifactId: string) => void;
   onClose: () => void;
 }) {
+  const dialogRef = useDialogFocus<HTMLDivElement>(true);
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   return (
     <div
       className="wp-shelf-modal-backdrop"
       role="presentation"
       onClick={onClose}>
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className="wp-shelf-modal"
         role="dialog"
         aria-modal="true"

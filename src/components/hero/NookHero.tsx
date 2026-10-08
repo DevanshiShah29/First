@@ -258,7 +258,7 @@ export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
             type="button"
             className="world-playing"
             onClick={onPianoToggle}
-            aria-label="Stop piano music"
+            aria-label="Playing — Stop piano music"
           >
             ♪ Playing
           </button>

@@ -34,6 +34,12 @@ const heroMediaSchema = z.object({
   side: z.enum(["left", "right"]),
 });
 
+const contactMediaSchema = z.object({
+  kind: z.enum(["none", "image", "video"]),
+  url: z.string(),
+  alt: z.string(),
+});
+
 const siteSchema = z.object({
   name: nonEmpty("Site name"),
   initials: nonEmpty("Initials").max(4),
@@ -53,6 +59,11 @@ const siteSchema = z.object({
   philosophy: z.string(),
   experienceIntro: z.string(),
   contactLine: z.string(),
+  contactMedia: contactMediaSchema.optional().default({
+    kind: "none",
+    url: "",
+    alt: "",
+  }),
   email: z.string(),
   linkedin: z.string(),
   github: z.string(),

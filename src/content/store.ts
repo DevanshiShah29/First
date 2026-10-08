@@ -5,6 +5,7 @@ import { normalizeHex } from "@/lib/hex";
 import { prisma } from "@/server/prisma";
 import { decryptSecret, encryptSecret } from "@/server/secrets-crypto";
 import {
+  DEFAULT_CONTACT_MEDIA,
   DEFAULT_HERO_MEDIA,
   DEFAULT_THEME,
   EMPTY_CRAFT,
@@ -19,6 +20,7 @@ import {
   isHeroTemplate,
   isSkillIcon,
   type BookOrientation,
+  type ContactMediaKind,
   type ContentData,
   type CraftContent,
   type CraftGroup,
@@ -115,6 +117,22 @@ function parseHeroMedia(value: unknown): HeroMedia {
 }
 
 /**
+ * Parses contact card media JSON into ContactMedia.
+ * @example parseContactMedia({kind:"image", url:"/a.jpg"}) // ContactMedia
+ */
+function parseContactMedia(value: unknown) {
+  const row = asRecord(value);
+  const kindRaw = str(row.kind, DEFAULT_CONTACT_MEDIA.kind);
+  const kind: ContactMediaKind =
+    kindRaw === "image" || kindRaw === "video" || kindRaw === "none" ? kindRaw : "none";
+  return {
+    kind,
+    url: str(row.url),
+    alt: str(row.alt),
+  };
+}
+
+/**
  * Parses site settings JSON into SiteContent with safe defaults.
  * @example parseSite({}) // SiteContent
  */
@@ -143,6 +161,7 @@ function parseSite(value: unknown): SiteContent {
     philosophy: str(s.philosophy),
     experienceIntro: str(s.experienceIntro),
     contactLine: str(s.contactLine),
+    contactMedia: parseContactMedia(s.contactMedia),
     email: str(s.email),
     linkedin: str(s.linkedin),
     github: str(s.github),
@@ -704,6 +723,9 @@ async function siteCoreData(site: SiteContent) {
     philosophy: site.philosophy,
     experienceIntro: site.experienceIntro,
     contactLine: site.contactLine,
+    contactMediaKind: site.contactMedia?.kind ?? "none",
+    contactMediaUrl: site.contactMedia?.url ?? "",
+    contactMediaAlt: site.contactMedia?.alt ?? "",
     email: site.email,
     linkedin: site.linkedin,
     github: site.github,
@@ -793,6 +815,9 @@ export async function persistContent(
       philosophy: data.site.philosophy,
       experienceIntro: data.site.experienceIntro,
       contactLine: data.site.contactLine,
+      contactMediaKind: data.site.contactMedia.kind,
+      contactMediaUrl: data.site.contactMedia.url,
+      contactMediaAlt: data.site.contactMedia.alt,
       email: data.site.email,
       linkedin: data.site.linkedin,
       github: data.site.github,
@@ -815,6 +840,9 @@ export async function persistContent(
         philosophy: previous.site.philosophy,
         experienceIntro: previous.site.experienceIntro,
         contactLine: previous.site.contactLine,
+        contactMediaKind: previous.site.contactMedia.kind,
+        contactMediaUrl: previous.site.contactMedia.url,
+        contactMediaAlt: previous.site.contactMedia.alt,
         email: previous.site.email,
         linkedin: previous.site.linkedin,
         github: previous.site.github,
@@ -1165,6 +1193,11 @@ async function fetchContentFromDb(): Promise<ContentData> {
       philosophy: site.philosophy,
       experienceIntro: site.experienceIntro,
       contactLine: site.contactLine,
+      contactMedia: {
+        kind: site.contactMediaKind,
+        url: site.contactMediaUrl,
+        alt: site.contactMediaAlt,
+      },
       email: site.email,
       linkedin: site.linkedin,
       github: site.github,

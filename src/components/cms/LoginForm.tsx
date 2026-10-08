@@ -64,7 +64,7 @@ export function LoginForm({ configured }: { configured: boolean }) {
   }
 
   return (
-    <div className="wp-login">
+    <main className="wp-login">
       <div className="wp-login-box">
         <h1>
           <Link href="/">
@@ -133,6 +133,6 @@ export function LoginForm({ configured }: { configured: boolean }) {
           <Link href="/">← Go to site</Link>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

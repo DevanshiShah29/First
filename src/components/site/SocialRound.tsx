@@ -20,9 +20,8 @@ export function SocialRound({
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
-      className="icon-btn rounded-full border border-line bg-chip p-3 transition-all duration-300 hover:border-brand/40 hover:bg-brand/10 hover:text-accent-hover"
-      aria-label={label}
-    >
+      className="icon-btn text-brand backgound-white rounded-full border border-line  p-3 transition-all duration-300 hover:border-brand/40 hover:bg-brand/10 hover:text-accent-hover"
+      aria-label={label}>
       {children}
       {external ? <NewTabHint /> : null}
     </a>

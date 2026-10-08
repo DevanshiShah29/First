@@ -150,8 +150,7 @@ function ShelfBook({
       <div
         className={className}
         aria-label={`${book.title}${book.author ? ` by ${book.author}` : ""}`}
-        style={cssVars}
-      >
+        style={cssVars}>
         <SpineFace book={book} style={box.style} />
       </div>
     );
@@ -163,8 +162,7 @@ function ShelfBook({
       className={className}
       onClick={() => focusListBook(book)}
       aria-label={`${book.title}${book.author ? ` by ${book.author}` : ""}`}
-      style={cssVars}
-    >
+      style={cssVars}>
       <SpineFace book={book} style={box.style} />
     </button>
   );
@@ -182,7 +180,10 @@ function ShelfBay({ section }: { section: ShelfSection }) {
     const node = bayRef.current;
     if (!node) return;
     const update = () => {
-      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const rem =
+        Number.parseFloat(
+          getComputedStyle(document.documentElement).fontSize,
+        ) || 16;
       setWidthRem(Math.max(12, (node.clientWidth - 24) / rem));
     };
     update();
@@ -191,22 +192,25 @@ function ShelfBay({ section }: { section: ShelfSection }) {
     return () => observer.disconnect();
   }, []);
 
-  const rows = useMemo(() => packRows(section.books, widthRem), [section.books, widthRem]);
+  const rows = useMemo(
+    () => packRows(section.books, widthRem),
+    [section.books, widthRem],
+  );
   const showHead = Boolean(section.title.trim());
 
   return (
     <section
       className="bookshelf-section"
       aria-label={showHead ? undefined : "Bookshelf"}
-      aria-labelledby={showHead ? `${section.id}-title` : undefined}
-    >
+      aria-labelledby={showHead ? `${section.id}-title` : undefined}>
       {showHead ? (
         <div className="bookshelf-section-head">
           <h2 id={`${section.id}-title`} className="bookshelf-section-title">
             {section.title}
           </h2>
           <p className="bookshelf-count">
-            {section.books.length} {section.books.length === 1 ? "book" : "books"}
+            {section.books.length}{" "}
+            {section.books.length === 1 ? "book" : "books"}
           </p>
         </div>
       ) : null}
@@ -218,10 +222,16 @@ function ShelfBay({ section }: { section: ShelfSection }) {
           <div className="bookshelf-case-back">
             <div ref={bayRef} className="bookshelf-bay">
               {rows.map((row, index) => (
-                <div key={`${section.id}-row-${index}`} className="bookshelf-row">
+                <div
+                  key={`${section.id}-row-${index}`}
+                  className="bookshelf-row">
                   <div className="bookshelf-books">
                     {row.map((item) => (
-                      <ShelfBook key={item.book.id} book={item.book} interactive />
+                      <ShelfBook
+                        key={item.book.id}
+                        book={item.book}
+                        interactive
+                      />
                     ))}
                   </div>
                   <div className="bookshelf-plank" aria-hidden />
@@ -267,7 +277,9 @@ function PlankItemView({
   if (!books.length) return null;
 
   return (
-    <div className={`bookshelf-stack is-${item.orientation}`} data-stack-id={item.id}>
+    <div
+      className={`bookshelf-stack is-${item.orientation}`}
+      data-stack-id={item.id}>
       {books.map((book) => (
         <ShelfBook
           key={`${item.id}-${book.id}`}
@@ -298,7 +310,8 @@ function DecorLayer({
     <div className="bookshelf-decor-layer" aria-hidden>
       {placements.map((placement) => {
         const artifact = artifactById.get(placement.artifactId);
-        if (!artifact || !artifact.enabled || !artifact.imageUrl.trim()) return null;
+        if (!artifact || !artifact.enabled || !artifact.imageUrl.trim())
+          return null;
         return (
           <ShelfArtifact
             key={placement.id}
@@ -339,10 +352,12 @@ function PlankCabinet({
           <div className="bookshelf-case-back">
             <div className="bookshelf-bay">
               {planks.map((plank) => (
-                <div key={plank.id} className="bookshelf-row" data-plank-id={plank.id}>
+                <div
+                  key={plank.id}
+                  className="bookshelf-row"
+                  data-plank-id={plank.id}>
                   <div
-                    className={`bookshelf-books${plank.items.length === 0 ? " is-empty-bay" : ""}`}
-                  >
+                    className={`bookshelf-books${plank.items.length === 0 ? " is-empty-bay" : ""}`}>
                     {plank.items.map((item) => (
                       <PlankItemView
                         key={item.id}
@@ -419,15 +434,21 @@ export function Bookshelf({
   }, [artifacts]);
 
   const view = shelfViewportFor(shelfLayout, viewport);
-  const useBuilderLayout = layoutMode === "builder" || shelfViewportHasItems(view);
+  const useBuilderLayout =
+    layoutMode === "builder" || shelfViewportHasItems(view);
   const roomRef = useRef<HTMLDivElement>(null);
-  const [roomWidthRem, setRoomWidthRem] = useState(shelfLiveBayWidthRem(viewport));
+  const [roomWidthRem, setRoomWidthRem] = useState(
+    shelfLiveBayWidthRem(viewport),
+  );
 
   useEffect(() => {
     const node = roomRef.current;
     if (!node) return;
     const update = () => {
-      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const rem =
+        Number.parseFloat(
+          getComputedStyle(document.documentElement).fontSize,
+        ) || 16;
       setRoomWidthRem(Math.max(4, node.clientWidth / rem));
     };
     update();
@@ -442,10 +463,9 @@ export function Bookshelf({
     <div
       className={`bookshelf${interactiveBooks ? "" : " is-placement-canvas"}${
         useBuilderLayout ? " is-builder-layout" : ""
-      }`}
-    >
+      }`}>
       {interactiveBooks ? (
-        <p className="bookshelf-hint">Tap a shelf book to jump to its notes below</p>
+        ""
       ) : (
         <p className="bookshelf-hint">
           Drop stacks onto a plank · decor places freely on the cabinet
@@ -461,7 +481,9 @@ export function Bookshelf({
               interactive={interactiveBooks}
             />
           ) : (
-            filled.map((section) => <ShelfBay key={section.id} section={section} />)
+            filled.map((section) => (
+              <ShelfBay key={section.id} section={section} />
+            ))
           )}
         </div>
 

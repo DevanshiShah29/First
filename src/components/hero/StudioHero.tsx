@@ -577,7 +577,7 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
         </div>
 
         {pianoPlaying ? (
-          <button type="button" className="world-playing" onClick={onPianoToggle} aria-label="Stop piano music">
+          <button type="button" className="world-playing" onClick={onPianoToggle} aria-label="Playing — Stop piano music">
             ♪ Playing
           </button>
         ) : null}

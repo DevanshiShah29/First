@@ -876,6 +876,11 @@ button.wp-bar-item:disabled {
   color: #1d2327;
 }
 
+.wp-status.is-visibility-draft {
+  background: #f6e2b3;
+  color: #614200;
+}
+
 .wp-widgets {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1796,6 +1801,7 @@ button.wp-bar-item:disabled {
 
 .wp-skill-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   align-items: center;
   padding-top: 2px;

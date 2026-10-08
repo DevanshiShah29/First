@@ -1,4 +1,4 @@
-import type { CraftContent, PublicSiteContent, SiteContent } from "@/content/types";
+import { isPublished, type CraftContent, type PublicSiteContent, type SiteContent } from "@/content/types";
 
 export type SiteLink = {
   href: string;
@@ -29,8 +29,10 @@ export function siteMap(
     { href: "/", label: "Home" },
     { href: "/reading", label: "Book Nook" },
     { href: "/memories", label: "Memories" },
-    { href: "/craft", label: craft?.title?.trim() || "Notes" },
   ];
+  if (craft && isPublished(craft.status)) {
+    explore.push({ href: "/craft", label: craft.title?.trim() || "Notes" });
+  }
 
   return [
     {

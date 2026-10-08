@@ -48,6 +48,8 @@ export function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
     };
   }, [projects]);
 
+  if (projects.length === 0) return null;
+
   return (
     <section id="projects" tabIndex={-1} aria-labelledby="projects-heading" className="py-16 sm:py-24">
       <div className="section-shell">

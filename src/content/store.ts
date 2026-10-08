@@ -3,6 +3,16 @@ import { unstable_cache } from "next/cache";
 import { cache } from "react";
 import { normalizeHex } from "@/lib/hex";
 import { prisma } from "@/server/prisma";
+import { parseContentForSave } from "@/content/validate";
+import {
+  replaceCraftGroups,
+  replaceExperience,
+  replaceMemories,
+  replaceProjects,
+  replaceShelfArtifacts,
+  replaceSiteStats,
+  replaceSkillGroups,
+} from "@/content/persist-writes";
 import { decryptSecret, encryptSecret } from "@/server/secrets-crypto";
 import {
   DEFAULT_CONTACT_MEDIA,
@@ -19,6 +29,7 @@ import {
   isBookOrientation,
   isHeroTemplate,
   isSkillIcon,
+  publishStatusOf,
   type BookOrientation,
   type ContactMediaKind,
   type ContentData,
@@ -194,6 +205,7 @@ function parseExperience(value: unknown): ExperienceItem[] {
       summary: str(row.summary),
       bullets: strList(row.bullets),
       stack: strList(row.stack),
+      status: publishStatusOf(row.status),
     };
   });
 }
@@ -213,6 +225,7 @@ function parseProjects(value: unknown): ProjectItem[] {
       tags: strList(row.tags),
       github: str(row.github),
       demo: str(row.demo),
+      status: publishStatusOf(row.status),
     };
   });
 }
@@ -236,9 +249,10 @@ function parseSkillGroups(value: unknown, defaultTitle = "Skills"): SkillGroup[]
         icon: isSkillIcon(iconRaw) ? iconRaw : "empty",
         ...(color ? { color } : {}),
         ...(iconUrl ? { iconUrl } : {}),
+        status: publishStatusOf(row.status),
       };
     });
-    return { title: str(g.title, defaultTitle), items };
+    return { title: str(g.title, defaultTitle), items, status: publishStatusOf(g.status) };
   });
 }
 
@@ -336,6 +350,7 @@ function parseMemories(value: unknown): MemoryItem[] {
       icon: str(row.icon),
       photoUrl: str(row.photoUrl),
       color: str(row.color),
+      status: publishStatusOf(row.status),
     };
   });
 }
@@ -365,6 +380,7 @@ function parseShelfArtifacts(value: unknown): ShelfArtifactItem[] {
       widthRem: parsePositiveRem(row.widthRem, 1.85),
       heightRem: parsePositiveRem(row.heightRem, 5.4),
       enabled: row.enabled !== false,
+      status: publishStatusOf(row.status),
     };
   });
 }
@@ -663,17 +679,20 @@ function parseCraft(value: unknown): CraftContent {
     title: str(root.title),
     intro: str(root.intro),
     footnote: str(root.footnote),
+    status: publishStatusOf(root.status),
     groups: groupsRaw.map((group) => {
       const g = asRecord(group);
       const itemsRaw = Array.isArray(g.items) ? g.items : [];
       return {
         title: str(g.title, "Untitled group"),
         intro: str(g.intro),
+        status: publishStatusOf(g.status),
         items: itemsRaw.map((item) => {
           const row = asRecord(item);
           return {
             title: str(row.title, "Untitled"),
             why: str(row.why),
+            status: publishStatusOf(row.status),
           };
         }),
       };
@@ -880,215 +899,93 @@ export async function persistContent(
       title: craft.title,
       intro: craft.intro,
       footnote: craft.footnote,
+      status: publishStatusOf(craft.status),
     }) !==
       fingerprint({
         kicker: prevCraft.kicker,
         title: prevCraft.title,
         intro: prevCraft.intro,
         footnote: prevCraft.footnote,
+        status: publishStatusOf(prevCraft.status),
       });
   const craftGroupsChanged =
     !previous || fingerprint(craft.groups) !== fingerprint(prevCraft.groups);
 
+  // Sequential on purpose. Promise.all on the direct Neon connection opens one
+  // connection per query, and each new connection costs seconds from here.
+  const craftSettingsData = {
+    kicker: craft.kicker,
+    title: craft.title,
+    intro: craft.intro,
+    footnote: craft.footnote,
+    status: publishStatusOf(craft.status),
+  };
+  // Existing rows use UPDATE (one statement). Upsert adds a read before and after.
   if (siteCoreChanged) {
-    await db.siteSettings.upsert({
-      where: { id: SITE_ID },
-      create: { id: SITE_ID, ...siteFields },
-      update: siteFields,
-    });
+    if (previous) await db.siteSettings.update({ where: { id: SITE_ID }, data: siteFields });
+    else {
+      await db.siteSettings.upsert({
+        where: { id: SITE_ID },
+        create: { id: SITE_ID, ...siteFields },
+        update: siteFields,
+      });
+    }
   }
-
-  await Promise.all([
-    heroChanged
-      ? db.heroSettings.upsert({
-          where: { siteId: SITE_ID },
-          create: { site: { connect: { id: SITE_ID } }, ...heroFields },
-          update: heroFields,
-        })
-      : Promise.resolve(),
-    themeChanged
-      ? db.themeSettings.upsert({
-          where: { siteId: SITE_ID },
-          create: { site: { connect: { id: SITE_ID } }, ...themeFields },
-          update: themeFields,
-        })
-      : Promise.resolve(),
-    craftPageChanged || craftGroupsChanged
-      ? db.craftSettings.upsert({
-          where: { id: SITE_ID },
-          create: {
-            id: SITE_ID,
-            kicker: craft.kicker,
-            title: craft.title,
-            intro: craft.intro,
-            footnote: craft.footnote,
-          },
-          update: {
-            kicker: craft.kicker,
-            title: craft.title,
-            intro: craft.intro,
-            footnote: craft.footnote,
-          },
-        })
-      : Promise.resolve(),
-  ]);
-
-  // Only wipe+rewrite collections that actually changed (biggest save win).
-  const clears: Promise<unknown>[] = [];
-  if (statsChanged) clears.push(db.siteStat.deleteMany({ where: { siteId: SITE_ID } }));
-  if (experienceChanged) clears.push(db.experience.deleteMany());
-  if (projectsChanged) clears.push(db.project.deleteMany());
-  if (memoriesChanged) clears.push(db.memory.deleteMany());
-  if (shelfArtifactsChanged) clears.push(db.shelfArtifact.deleteMany());
-  if (skillsChanged) clears.push(db.skillGroup.deleteMany());
-  if (craftGroupsChanged) clears.push(db.craftGroup.deleteMany());
-  if (clears.length > 0) await Promise.all(clears);
-
-  const skillCreates: Prisma.SkillGroupCreateInput[] = [];
-  if (skillsChanged) {
-    const skillBundles: { kind: "skills" | "technologies"; groups: SkillGroup[] }[] = [
-      { kind: "skills", groups: data.skills },
-      { kind: "technologies", groups: data.technologies ?? [] },
-    ];
-    for (const bundle of skillBundles) {
-      for (let g = 0; g < bundle.groups.length; g++) {
-        const group = bundle.groups[g];
-        skillCreates.push({
-          kind: bundle.kind,
-          title: group.title,
-          sortOrder: g,
-          items: {
-            create: group.items.map((item, i) => ({
-              sortOrder: i,
-              name: item.name,
-              icon: item.icon,
-              color: item.color ?? null,
-              iconUrl: item.iconUrl ?? null,
-            })),
-          },
-        });
-      }
+  if (heroChanged) {
+    if (previous) await db.heroSettings.update({ where: { siteId: SITE_ID }, data: heroFields });
+    else {
+      await db.heroSettings.upsert({
+        where: { siteId: SITE_ID },
+        create: { site: { connect: { id: SITE_ID } }, ...heroFields },
+        update: heroFields,
+      });
+    }
+  }
+  if (themeChanged) {
+    if (previous) await db.themeSettings.update({ where: { siteId: SITE_ID }, data: themeFields });
+    else {
+      await db.themeSettings.upsert({
+        where: { siteId: SITE_ID },
+        create: { site: { connect: { id: SITE_ID } }, ...themeFields },
+        update: themeFields,
+      });
+    }
+  }
+  if (craftPageChanged || (craftGroupsChanged && !previous)) {
+    if (previous) await db.craftSettings.update({ where: { id: SITE_ID }, data: craftSettingsData });
+    else {
+      await db.craftSettings.upsert({
+        where: { id: SITE_ID },
+        create: { id: SITE_ID, ...craftSettingsData },
+        update: craftSettingsData,
+      });
     }
   }
 
-  const craftCreates: Prisma.CraftGroupCreateInput[] = craftGroupsChanged
-    ? craft.groups.map((group, g) => ({
-        craft: { connect: { id: SITE_ID } },
-        title: group.title,
-        intro: group.intro,
-        sortOrder: g,
-        items: {
-          create: group.items.map((item, i) => ({
-            sortOrder: i,
-            title: item.title,
-            why: item.why,
-          })),
-        },
-      }))
-    : [];
-
-  await Promise.all([
-    statsChanged && data.site.stats.length > 0
-      ? db.siteStat.createMany({
-          data: data.site.stats.map((stat, i) => ({
-            siteId: SITE_ID,
-            sortOrder: i,
-            value: stat.value,
-            suffix: stat.suffix,
-            label: stat.label,
-          })),
-        })
-      : Promise.resolve(),
-    experienceChanged && data.experience.length > 0
-      ? db.experience.createMany({
-          data: data.experience.map((item, i) => ({
-            id: item.id,
-            sortOrder: i,
-            when: item.when,
-            current: item.current,
-            role: item.role,
-            company: item.company,
-            summary: item.summary,
-            bullets: item.bullets,
-            stack: item.stack,
-          })),
-        })
-      : Promise.resolve(),
-    projectsChanged && data.projects.length > 0
-      ? db.project.createMany({
-          data: data.projects.map((item, i) => ({
-            id: item.id,
-            sortOrder: i,
-            name: item.name,
-            blurb: item.blurb,
-            tags: item.tags,
-            github: item.github,
-            demo: item.demo,
-          })),
-        })
-      : Promise.resolve(),
-    memoriesChanged && (data.memories ?? []).length > 0
-      ? db.memory.createMany({
-          data: (data.memories ?? []).map((item, i) => ({
-            id: item.id,
-            sortOrder: i,
-            title: item.title ?? "",
-            note: item.note,
-            date: item.date ?? "",
-            category: item.category ?? "",
-            icon: item.icon ?? "",
-            photoUrl: item.photoUrl ?? "",
-            color: item.color ?? "",
-          })),
-        })
-      : Promise.resolve(),
-    shelfArtifactsChanged && (data.shelfArtifacts ?? []).length > 0
-      ? db.shelfArtifact.createMany({
-          data: (data.shelfArtifacts ?? []).map((item, i) => ({
-            id: item.id,
-            sortOrder: i,
-            name: item.name,
-            imageUrl: item.imageUrl,
-            widthRem: item.widthRem,
-            heightRem: item.heightRem,
-            enabled: item.enabled,
-            // Placement lives in ShelfLayout JSON; clear legacy % columns.
-            xPercent: null,
-            yPercent: null,
-            mobileXPercent: null,
-            mobileYPercent: null,
-            mobileWidthRem: null,
-            mobileHeightRem: null,
-          })),
-        })
-      : Promise.resolve(),
-    shelfLayoutChanged
-      ? db.shelfLayout.upsert({
-          where: { id: SITE_ID },
-          create: {
-            id: SITE_ID,
-            rowCount: Math.max(
-              (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).desktop.planks.length,
-              (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).mobile.planks.length,
-              1,
-            ),
-            desktop: (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).desktop as unknown as Prisma.InputJsonValue,
-            mobile: (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).mobile as unknown as Prisma.InputJsonValue,
-          },
-          update: {
-            rowCount: Math.max(
-              (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).desktop.planks.length,
-              (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).mobile.planks.length,
-              1,
-            ),
-            desktop: (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).desktop as unknown as Prisma.InputJsonValue,
-            mobile: (data.shelfLayout ?? EMPTY_SHELF_LAYOUT).mobile as unknown as Prisma.InputJsonValue,
-          },
-        })
-      : Promise.resolve(),
-    ...skillCreates.map((create) => db.skillGroup.create({ data: create })),
-    ...craftCreates.map((create) => db.craftGroup.create({ data: create })),
-  ]);
+  if (statsChanged) await replaceSiteStats(db, data.site.stats);
+  if (experienceChanged) await replaceExperience(db, data.experience);
+  if (projectsChanged) await replaceProjects(db, data.projects);
+  if (memoriesChanged) await replaceMemories(db, data.memories ?? []);
+  if (shelfArtifactsChanged) await replaceShelfArtifacts(db, data.shelfArtifacts ?? []);
+  if (shelfLayoutChanged) {
+    const layout = data.shelfLayout ?? EMPTY_SHELF_LAYOUT;
+    const rowCount = Math.max(layout.desktop.planks.length, layout.mobile.planks.length, 1);
+    const layoutData = {
+      rowCount,
+      desktop: layout.desktop as unknown as Prisma.InputJsonValue,
+      mobile: layout.mobile as unknown as Prisma.InputJsonValue,
+    };
+    if (previous) await db.shelfLayout.update({ where: { id: SITE_ID }, data: layoutData });
+    else {
+      await db.shelfLayout.upsert({
+        where: { id: SITE_ID },
+        create: { id: SITE_ID, ...layoutData },
+        update: layoutData,
+      });
+    }
+  }
+  if (skillsChanged) await replaceSkillGroups(db, data.skills, data.technologies ?? []);
+  if (craftGroupsChanged) await replaceCraftGroups(db, craft.groups);
 }
 
 /**
@@ -1151,20 +1048,24 @@ async function fetchContentFromDb(): Promise<ContentData> {
       .filter((g) => g.kind === kind)
       .map((g) => ({
         title: g.title,
+        status: publishStatusOf(g.status),
         items: g.items.map((item) => ({
           name: item.name,
           icon: isSkillIcon(item.icon) ? item.icon : "empty",
           ...(item.color ? { color: item.color } : {}),
           ...(item.iconUrl ? { iconUrl: item.iconUrl } : {}),
+          status: publishStatusOf(item.status),
         })),
       }));
 
   const craftGroups: CraftGroup[] = (craftSettings?.groups ?? []).map((g) => ({
     title: g.title,
     intro: g.intro,
+    status: publishStatusOf(g.status),
     items: g.items.map((item) => ({
       title: item.title,
       why: item.why,
+      status: publishStatusOf(item.status),
     })),
   }));
 
@@ -1217,6 +1118,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
       summary: item.summary,
       bullets: item.bullets,
       stack: item.stack,
+      status: publishStatusOf(item.status),
     })),
     projects: projects.map((item) => ({
       id: item.id,
@@ -1225,6 +1127,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
       tags: item.tags,
       github: item.github,
       demo: item.demo,
+      status: publishStatusOf(item.status),
     })),
     skills: toSkillGroups("skills"),
     technologies: toSkillGroups("technologies"),
@@ -1247,6 +1150,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
       icon: item.icon,
       photoUrl: item.photoUrl,
       color: item.color,
+      status: publishStatusOf(item.status),
     })),
     craft: craftSettings
       ? {
@@ -1254,6 +1158,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
           title: craftSettings.title,
           intro: craftSettings.intro,
           footnote: craftSettings.footnote,
+          status: publishStatusOf(craftSettings.status),
           groups: craftGroups,
         }
       : EMPTY_CRAFT,
@@ -1264,6 +1169,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
       widthRem: item.widthRem,
       heightRem: item.heightRem,
       enabled: item.enabled,
+      status: publishStatusOf(item.status),
     })),
     shelfLayout: shelfLayoutRow
       ? parseShelfLayout({
@@ -1275,29 +1181,43 @@ async function fetchContentFromDb(): Promise<ContentData> {
   });
 }
 
-const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v7"], {
+const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v8"], {
   tags: [CMS_CONTENT_TAG],
-  // Safety net if on-demand revalidation is missed; CMS save also revalidates the tag.
+  // Fallback if a save misses tag expiration. Saves pass revalidateTag(..., { expire: 0 }).
   revalidate: 3600,
 });
 
+/** Last document written by this process. Avoids an 8-query reread on the next save. */
+let savedSnapshot: ContentData | null = null;
+
 /**
  * Loads cached CMS content (request-deduped).
+ * After a save in this process, returns that document instead of hitting Neon again.
  * @example await loadContent() // ContentData
  */
-export const loadContent = cache(async (): Promise<ContentData> => getCachedContent());
-
-const TX_OPTIONS = { maxWait: 15_000, timeout: 60_000 } as const;
+export const loadContent = cache(async (): Promise<ContentData> => {
+  if (savedSnapshot) return structuredClone(savedSnapshot);
+  return getCachedContent();
+});
 
 /**
- * Persists ContentData in a Prisma transaction.
- * Diffs against the live DB document so unchanged collections are not wiped.
+ * Baseline for a diff. Prefers the in-process snapshot, then the warm CMS cache.
+ * Both are normalized the same way as the save payload so unchanged sections match.
+ * @example await baselineForSave() // ContentData | null
+ */
+async function baselineForSave(): Promise<ContentData | null> {
+  const raw = savedSnapshot ?? (await getCachedContent());
+  const parsed = parseContentForSave(raw);
+  return parsed.ok ? parsed.content : raw;
+}
+
+/**
+ * Persists ContentData. Unchanged sections are skipped.
+ * Writes run on one connection, without a wrapping interactive transaction.
  * @example await saveContent(data) // void
  */
 export async function saveContent(data: ContentData): Promise<void> {
-  // Read outside the write txn so we can skip unchanged collections.
-  const previous = await fetchContentFromDb();
-  await prisma.$transaction(async (tx) => {
-    await persistContent(tx, data, previous);
-  }, TX_OPTIONS);
+  const previous = await baselineForSave();
+  await persistContent(prisma, data, previous);
+  savedSnapshot = structuredClone(data);
 }

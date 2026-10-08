@@ -4,7 +4,7 @@
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import Link from "next/link";
 
-import type { CraftContent, PublicSiteContent, SiteContent } from "@/content/types";
+import { isPublished, type CraftContent, type PublicSiteContent, type SiteContent } from "@/content/types";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 
@@ -56,7 +56,7 @@ export function SiteHeader({
   const mobilePages = [
     { href: "/reading", label: "Book Nook" },
     { href: "/memories", label: "Memories" },
-    { href: "/craft", label: notesLabel },
+    ...(craft && isPublished(craft.status) ? [{ href: "/craft", label: notesLabel }] : []),
   ];
 
   useEffect(() => {

@@ -1,11 +1,54 @@
 "use client";
 
 // Application services & types
-import type { ContentData } from "@/content/types";
+import type { ContentData, PublishStatus, SkillGroup } from "@/content/types";
 import type { Screen } from "../types";
 
 // UI components
 import { Metabox } from "../components/Metabox";
+
+/**
+ * Counts entries whose status is draft.
+ * @example draftCount(data.projects) // 1
+ */
+function draftCount(items: { status?: PublishStatus }[]) {
+  return items.filter((item) => item.status === "draft").length;
+}
+
+/**
+ * Counts a draft craft page plus draft groups and items.
+ * @example draftCraftCount(data.craft) // 1
+ */
+function draftCraftCount(craft: ContentData["craft"]) {
+  if (!craft) return 0;
+  const page = craft.status === "draft" ? 1 : 0;
+  return craft.groups.reduce((total, group) => {
+    const groupDraft = group.status === "draft" ? 1 : 0;
+    const items = group.items.filter((item) => item.status === "draft").length;
+    return total + groupDraft + items;
+  }, page);
+}
+
+/**
+ * Counts draft skill groups and draft items.
+ * @example draftSkillCount(data.skills) // 2
+ */
+function draftSkillCount(groups: SkillGroup[]) {
+  return groups.reduce((total, group) => {
+    const groupDraft = group.status === "draft" ? 1 : 0;
+    const itemDrafts = group.items.filter((item) => item.status === "draft").length;
+    return total + groupDraft + itemDrafts;
+  }, 0);
+}
+
+/**
+ * Appends a draft count when any entries are unpublished.
+ * @example withDrafts("3 Projects", 1) // "3 Projects (1 draft)"
+ */
+function withDrafts(label: string, drafts: number) {
+  if (!drafts) return label;
+  return `${label} (${drafts} draft${drafts === 1 ? "" : "s"})`;
+}
 
 interface DashboardScreenProps {
   data: ContentData;
@@ -53,22 +96,28 @@ export function DashboardScreen({
             </li>
             <li>
               <button type="button" onClick={() => go("experience")}>
-                {data.experience.length} Experience
+                {withDrafts(`${data.experience.length} Experience`, draftCount(data.experience))}
               </button>
             </li>
             <li>
               <button type="button" onClick={() => go("projects")}>
-                {data.projects.length} Projects
+                {withDrafts(`${data.projects.length} Projects`, draftCount(data.projects))}
               </button>
             </li>
             <li>
               <button type="button" onClick={() => go("skills")}>
-                {(data.skills ?? []).reduce((n, g) => n + g.items.length, 0)} Skills
+                {withDrafts(
+                  `${(data.skills ?? []).reduce((n, g) => n + g.items.length, 0)} Skills`,
+                  draftSkillCount(data.skills ?? []),
+                )}
               </button>
             </li>
             <li>
               <button type="button" onClick={() => go("technologies")}>
-                {(data.technologies ?? []).reduce((n, g) => n + g.items.length, 0)} Technologies
+                {withDrafts(
+                  `${(data.technologies ?? []).reduce((n, g) => n + g.items.length, 0)} Technologies`,
+                  draftSkillCount(data.technologies ?? []),
+                )}
               </button>
             </li>
             <li>
@@ -78,12 +127,15 @@ export function DashboardScreen({
             </li>
             <li>
               <button type="button" onClick={() => go("craft")}>
-                {(data.craft?.groups ?? []).reduce((n, g) => n + g.items.length, 0)} Craft
+                {withDrafts(
+                  `${(data.craft?.groups ?? []).reduce((n, g) => n + g.items.length, 0)} Craft`,
+                  draftCraftCount(data.craft),
+                )}
               </button>
             </li>
             <li>
               <button type="button" onClick={() => go("memories")}>
-                {memoriesList.length} Memories
+                {withDrafts(`${memoriesList.length} Memories`, draftCount(memoriesList))}
               </button>
             </li>
             <li>

@@ -19,6 +19,7 @@ import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
+import { PublishStatusControl } from "../components/PublishStatusControl";
 import { Field, TextInput } from "../fields";
 import { SkillItemRow } from "../SkillItemRow";
 
@@ -225,7 +226,7 @@ export function SkillGroupsScreen({
           onClick={() =>
             setData({
               ...data,
-              [kind]: [...groups, { title: `New ${noun} group`, items: [] }],
+              [kind]: [...groups, { title: `New ${noun} group`, items: [], status: "draft" }],
             })
           }
         >
@@ -370,7 +371,7 @@ export function SkillGroupsScreen({
           key={`${prefix}_${gi}`}
           id={`${prefix}_${gi}`}
           title={group.title || `${title} group`}
-          badge={`${group.items.length} ${group.items.length === 1 ? noun : `${noun}s`}`}
+          badge={`${group.status === "draft" ? "Draft · " : ""}${group.items.length} ${group.items.length === 1 ? noun : `${noun}s`}`}
           actions={
             <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
               <button
@@ -406,6 +407,21 @@ export function SkillGroupsScreen({
                   onChange={(groupTitle) => {
                     const nextGroups = [...groups];
                     nextGroups[gi] = { ...group, title: groupTitle };
+                    setData({ ...data, [kind]: nextGroups });
+                  }}
+                />
+              </Field>
+              <Field
+                label="Status"
+                hint="Draft groups stay off the public site, including every item inside them."
+              >
+                <PublishStatusControl
+                  compact
+                  status={group.status}
+                  label={`Publish status for ${group.title || `${noun} group`}`}
+                  onChange={(status) => {
+                    const nextGroups = [...groups];
+                    nextGroups[gi] = { ...group, status };
                     setData({ ...data, [kind]: nextGroups });
                   }}
                 />
@@ -448,7 +464,7 @@ export function SkillGroupsScreen({
                 const nextGroups = [...groups];
                 nextGroups[gi] = {
                   ...group,
-                  items: [...group.items, { name: `New ${noun}`, icon: "empty" }],
+                  items: [...group.items, { name: `New ${noun}`, icon: "empty", status: "draft" }],
                 };
                 setData({ ...data, [kind]: nextGroups });
               }}

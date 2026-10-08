@@ -6,8 +6,8 @@ import { EMPTY_SHELF_LAYOUT, toPublicContent } from "@/content/types";
 import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
 import { buildPageMetadata } from "@/lib/seo";
 
-/** Align with Goodreads fetch revalidate (~30m). CMS saves also revalidate this path. */
-export const revalidate = 1800;
+/** Dynamic so a saved shelf draft is not held in the page cache. Goodreads itself still caches for 30 minutes. */
+export const dynamic = "force-dynamic";
 
 /**
  * Builds reading page metadata from CMS.
@@ -41,7 +41,7 @@ export default async function ReadingPage() {
     <PageShell content={content}>
       <ReadingLibrary
         library={library}
-        artifacts={full.shelfArtifacts ?? []}
+        artifacts={content.shelfArtifacts ?? []}
         shelfLayout={full.shelfLayout ?? EMPTY_SHELF_LAYOUT}
       />
     </PageShell>

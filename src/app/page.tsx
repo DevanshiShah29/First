@@ -4,6 +4,9 @@ import { loadContent } from "@/content/store";
 import { toPublicContent } from "@/content/types";
 import { buildPageMetadata } from "@/lib/seo";
 
+/** Saved drafts must leave the public homepage on the next request. */
+export const dynamic = "force-dynamic";
+
 /**
  * Builds home page metadata from CMS.
  * @example generateMetadata() // Metadata

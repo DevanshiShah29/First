@@ -14,6 +14,7 @@ import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
+import { PublishStatusBadge, PublishStatusControl } from "../components/PublishStatusControl";
 import { Field, TextArea, TextInput } from "../fields";
 
 /**
@@ -58,6 +59,7 @@ export function ExperienceListScreen({
           Add New
         </button>
       </h1>
+      <p className="wp-sub">Draft roles stay off the public site until you publish them.</p>
       <table className="wp-list-table">
         <thead>
           <tr>
@@ -73,10 +75,25 @@ export function ExperienceListScreen({
               <td>
                 <button type="button" className="row-title" onClick={() => go("experience-edit", item.id)}>
                   {item.role || "(no title)"}
-                </button>
+                </button>{" "}
+                <PublishStatusBadge status={item.status} />
                 <div className="wp-row-actions">
                   <button type="button" onClick={() => go("experience-edit", item.id)}>
                     Edit
+                  </button>
+                  {" | "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const experience = [...data.experience];
+                      experience[i] = {
+                        ...item,
+                        status: item.status === "draft" ? "published" : "draft",
+                      };
+                      setData({ ...data, experience });
+                    }}
+                  >
+                    {item.status === "draft" ? "Publish" : "Draft"}
                   </button>
                   {" | "}
                   <button
@@ -340,10 +357,19 @@ function ExperienceEditForm({
             </div>
           </Metabox>
         </div>
-        <Metabox id="exp_publish" title="Publish" badge={job.current ? "Current" : "Past"}>
+        <Metabox
+          id="exp_publish"
+          title="Publish"
+          badge={job.status === "draft" ? "Draft" : job.current ? "Current" : "Past"}
+        >
+          <PublishStatusControl
+            status={job.status}
+            onChange={(status) => patchJob({ status })}
+            hint="Draft roles stay off the public Experience section until you publish them."
+          />
           <div className="wp-publish-misc">
             <p>
-              Status: <strong>{job.current ? "Current" : "Past"}</strong>
+              Role: <strong>{job.current ? "Current" : "Past"}</strong>
             </p>
             <label className="wp-check">
               <input

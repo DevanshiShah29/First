@@ -13,6 +13,8 @@ export function SkillsSection({
   skillGroups?: SkillGroup[];
   techGroups?: SkillGroup[];
 }) {
+  if (skillGroups.length === 0 && techGroups.length === 0) return null;
+
   return (
     <section id="skills" tabIndex={-1} aria-labelledby="skills-heading" className="py-16 sm:py-24">
       <div className="section-shell">

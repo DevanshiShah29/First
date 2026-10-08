@@ -4,7 +4,7 @@
 import type { MouseEvent } from "react";
 
 // Application services & types
-import { EMPTY_CRAFT, toPublicContent, type ContentData } from "@/content/types";
+import { EMPTY_CRAFT, isPublished, toPublicContent, type ContentData } from "@/content/types";
 
 // UI components
 import { CraftView } from "@/components/craft/CraftView";
@@ -85,6 +85,15 @@ export function SectionPreview({
         </div>
       );
     case "craft":
+      if (content.craft && !isPublished(content.craft.status)) {
+        return (
+          <div className="min-h-full bg-background p-8 text-foreground">
+            <p className="text-sm text-muted">
+              This page is a draft. It is hidden on the public site, including navigation, until you publish it.
+            </p>
+          </div>
+        );
+      }
       return (
         <div className="min-h-full bg-background text-foreground">
           <CraftView craft={craft ?? EMPTY_CRAFT} showFooterLinks={false} />

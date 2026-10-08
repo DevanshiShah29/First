@@ -139,19 +139,36 @@ async function hmac(value: string) {
   return bytesToB64(sig);
 }
 
+const SESSION_VERSION_TTL_MS = 60_000;
+
+let sessionVersionCache: { value: number; expiresAt: number } | null = null;
+
 /**
- * Reads CmsAuth.sessionVersion (0 on missing/error).
+ * Remembers the auth row version so later saves skip a Neon round trip.
+ * @example rememberSessionVersion(3) // void
+ */
+function rememberSessionVersion(value: number) {
+  sessionVersionCache = { value, expiresAt: Date.now() + SESSION_VERSION_TTL_MS };
+}
+
+/**
+ * Reads CmsAuth.sessionVersion (0 on missing/error). Cached for a minute.
+ * Password changes refresh the cache in this process immediately.
  * @example await currentSessionVersion() // 3
  */
 async function currentSessionVersion(): Promise<number> {
+  const cached = sessionVersionCache;
+  if (cached && cached.expiresAt > Date.now()) return cached.value;
   try {
     const row = await prisma.cmsAuth.findUnique({
       where: { id: "main" },
       select: { sessionVersion: true },
     });
-    return row?.sessionVersion ?? 0;
+    const value = row?.sessionVersion ?? 0;
+    rememberSessionVersion(value);
+    return value;
   } catch {
-    return 0;
+    return cached?.value ?? 0;
   }
 }
 
@@ -360,6 +377,7 @@ export async function setStoredPassword(password: string) {
       resetTokenExpiresAt: null,
     },
   });
+  rememberSessionVersion(sessionVersion);
 }
 
 /**

@@ -178,7 +178,32 @@ export async function fetchGoodreadsShelf(userId: string, shelf: string) {
 }
 
 /**
+ * Parses a Goodreads `user_read_at` value to epoch ms.
+ * @example readAtTimestamp("Fri Oct 02 00:00:00 -0700 2026") // 1790…
+ */
+export function readAtTimestamp(raw: string): number | null {
+  const value = raw.trim();
+  if (!value) return null;
+  const time = Date.parse(value);
+  return Number.isNaN(time) ? null : time;
+}
+
+/**
+ * Newest finished book first. Books with no reading date stay in their original order at the end.
+ * @example books.sort(compareReadAtDesc)
+ */
+export function compareReadAtDesc(a: { readAt: string }, b: { readAt: string }) {
+  const left = readAtTimestamp(a.readAt);
+  const right = readAtTimestamp(b.readAt);
+  if (left === null && right === null) return 0;
+  if (left === null) return 1;
+  if (right === null) return -1;
+  return right - left;
+}
+
+/**
  * Loads currently-reading, read, and to-read shelves.
+ * The read shelf is ordered by reading date, newest first.
  * @example await loadGoodreadsLibrary(url, name) // GoodreadsLibrary
  */
 export async function loadGoodreadsLibrary(profileUrl: string, name: string): Promise<GoodreadsLibrary> {
@@ -194,7 +219,7 @@ export async function loadGoodreadsLibrary(profileUrl: string, name: string): Pr
     name,
     profileUrl: `https://www.goodreads.com/user/show/${userId}`,
     currentlyReading,
-    read,
+    read: read.sort(compareReadAtDesc),
     toRead,
   };
 }

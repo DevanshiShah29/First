@@ -5,6 +5,9 @@ import { loadContent } from "@/content/store";
 import { toPublicContent } from "@/content/types";
 import { buildPageMetadata } from "@/lib/seo";
 
+/** Saved drafts must leave the memory jar on the next request. */
+export const dynamic = "force-dynamic";
+
 export const viewport: Viewport = {
   themeColor: "#FBF4EA",
 };

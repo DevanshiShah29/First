@@ -1,6 +1,10 @@
 import type { MetadataRoute } from "next";
 import { loadContent } from "@/content/store";
+import { toPublicContent } from "@/content/types";
 import { siteOrigin } from "@/lib/site-url";
+
+/** A drafted /craft page must drop out of the sitemap on the next request. */
+export const dynamic = "force-dynamic";
 
 /**
  * Builds the public sitemap including craft when published.
@@ -9,7 +13,7 @@ import { siteOrigin } from "@/lib/site-url";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = siteOrigin();
   const now = new Date();
-  const content = await loadContent();
+  const content = toPublicContent(await loadContent());
   const craft = content.craft;
   const craftPublished = Boolean(
     craft?.title?.trim() || craft?.intro?.trim() || (craft?.groups?.length ?? 0) > 0,

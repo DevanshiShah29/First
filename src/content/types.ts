@@ -151,6 +151,25 @@ export type SiteContent = {
   stats: { value: number; suffix: string; label: string }[];
 };
 
+/** Public visibility for a CMS entry. Missing means published. */
+export type PublishStatus = "published" | "draft";
+
+/**
+ * Coerces a stored status. Anything other than "draft" stays published.
+ * @example publishStatusOf("draft") // "draft"
+ */
+export function publishStatusOf(value: unknown): PublishStatus {
+  return value === "draft" ? "draft" : "published";
+}
+
+/**
+ * True when an entry should appear on the public site.
+ * @example isPublished("draft") // false
+ */
+export function isPublished(status: PublishStatus | null | undefined): boolean {
+  return status !== "draft";
+}
+
 export type ExperienceItem = {
   id: string;
   when: string;
@@ -160,6 +179,8 @@ export type ExperienceItem = {
   summary: string;
   bullets: string[];
   stack: string[];
+  /** Missing means published so existing roles stay on the public site. */
+  status?: PublishStatus;
 };
 
 export type ProjectItem = {
@@ -169,6 +190,8 @@ export type ProjectItem = {
   tags: string[];
   github: string;
   demo: string;
+  /** Missing means published so existing projects stay on the public site. */
+  status?: PublishStatus;
 };
 
 export type SkillItem = {
@@ -177,11 +200,15 @@ export type SkillItem = {
   color?: string;
   /** Custom icon: uploaded image URL (PNG/WebP/etc). Takes precedence over `icon`. */
   iconUrl?: string;
+  /** Missing means published so existing skills stay on the public site. */
+  status?: PublishStatus;
 };
 
 export type SkillGroup = {
   title: string;
   items: SkillItem[];
+  /** Missing means published so existing groups stay on the public site. */
+  status?: PublishStatus;
 };
 
 export type ThemeMode = "light" | "dark" | "system";
@@ -270,6 +297,8 @@ export type MemoryItem = {
   icon?: string;
   photoUrl?: string;
   color?: string;
+  /** Missing means published so existing memories stay in the public jar. */
+  status?: PublishStatus;
 };
 
 /** Live shelf breakpoint — matches `.bookshelf-*` CSS at 40rem. */
@@ -456,17 +485,23 @@ export type ShelfArtifactItem = {
   widthRem: number;
   heightRem: number;
   enabled: boolean;
+  /** Missing means published. Draft ornaments stay off the public shelf. */
+  status?: PublishStatus;
 };
 
 export type CraftItem = {
   title: string;
   why: string;
+  /** Missing means published so existing notes stay on the public page. */
+  status?: PublishStatus;
 };
 
 export type CraftGroup = {
   title: string;
   intro: string;
   items: CraftItem[];
+  /** Missing means published so existing groups stay on the public page. */
+  status?: PublishStatus;
 };
 
 export type CraftContent = {
@@ -475,6 +510,8 @@ export type CraftContent = {
   intro: string;
   footnote: string;
   groups: CraftGroup[];
+  /** Missing means published so the existing /craft page stays public. */
+  status?: PublishStatus;
 };
 
 export const EMPTY_CRAFT: CraftContent = {
@@ -483,6 +520,7 @@ export const EMPTY_CRAFT: CraftContent = {
   intro: "",
   footnote: "",
   groups: [],
+  status: "published",
 };
 
 export type ContentData = {
@@ -508,7 +546,41 @@ export type PublicContentData = Omit<ContentData, "site"> & {
 };
 
 /**
- * Strips sensitive media URLs for public pages.
+ * Keeps published skill groups and drops draft items inside them.
+ * Groups with no published items are omitted.
+ * @example publishedSkillGroups(groups) // SkillGroup[]
+ */
+function publishedSkillGroups(groups: SkillGroup[] | undefined): SkillGroup[] {
+  return (groups ?? [])
+    .filter((group) => isPublished(group.status))
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => isPublished(item.status)),
+    }))
+    .filter((group) => group.items.length > 0);
+}
+
+/**
+ * Returns craft copy with draft groups and items removed.
+ * A draft page is omitted entirely.
+ * @example publishedCraft(craft) // CraftContent | undefined
+ */
+function publishedCraft(craft: CraftContent | undefined): CraftContent | undefined {
+  if (!craft || !isPublished(craft.status)) return undefined;
+  return {
+    ...craft,
+    groups: craft.groups
+      .filter((group) => isPublished(group.status))
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => isPublished(item.status)),
+      }))
+      .filter((group) => group.title.trim() || group.intro.trim() || group.items.length > 0),
+  };
+}
+
+/**
+ * Strips sensitive media URLs and draft entries for public pages.
  * @example toPublicContent(data) // PublicContentData
  */
 export function toPublicContent(content: ContentData): PublicContentData {
@@ -519,6 +591,13 @@ export function toPublicContent(content: ContentData): PublicContentData {
       ...rest,
       pianoAvailable: Boolean(pianoYoutubeUrl?.trim()),
     },
+    experience: content.experience.filter((item) => isPublished(item.status)),
+    projects: content.projects.filter((item) => isPublished(item.status)),
+    skills: publishedSkillGroups(content.skills),
+    technologies: publishedSkillGroups(content.technologies),
+    memories: (content.memories ?? []).filter((item) => isPublished(item.status)),
+    craft: publishedCraft(content.craft),
+    shelfArtifacts: (content.shelfArtifacts ?? []).filter((item) => isPublished(item.status)),
   };
 }
 

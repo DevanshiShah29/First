@@ -4,6 +4,7 @@
 import type { SkillItem } from "@/content/types";
 
 // UI components
+import { PublishStatusControl } from "./components/PublishStatusControl";
 import { HexColorInput, TextInput } from "./fields";
 
 // Icons
@@ -104,6 +105,12 @@ export function SkillItemRow({
         </p>
       </div>
       <div className="wp-skill-actions">
+        <PublishStatusControl
+          compact
+          status={item.status}
+          label={`Publish status for ${item.name || noun}`}
+          onChange={(status) => onChange({ ...item, status })}
+        />
         <button
           type="button"
           className="wp-btn"

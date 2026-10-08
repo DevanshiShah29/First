@@ -63,6 +63,7 @@ export function useCmsNavigation(
           summary: "",
           bullets: [""],
           stack: [],
+          status: "draft",
         },
       ],
     });
@@ -79,7 +80,7 @@ export function useCmsNavigation(
       ...data,
       projects: [
         ...data.projects,
-        { id, name: "New project", blurb: "", tags: [], github: "", demo: "" },
+        { id, name: "New project", blurb: "", tags: [], github: "", demo: "", status: "draft" },
       ],
     });
     go("projects-edit", id);
@@ -104,6 +105,7 @@ export function useCmsNavigation(
           category: "Tiny Joy",
           photoUrl: "",
           color: "#A78BFA",
+          status: "draft",
         },
       ],
     });
@@ -127,6 +129,7 @@ export function useCmsNavigation(
           widthRem: 1.85,
           heightRem: 5.4,
           enabled: true,
+          status: "draft",
         },
       ],
     }));

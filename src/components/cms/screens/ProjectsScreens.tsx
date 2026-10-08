@@ -14,6 +14,7 @@ import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
+import { PublishStatusBadge, PublishStatusControl } from "../components/PublishStatusControl";
 import { Field, StringList, TextArea, TextInput } from "../fields";
 
 /**
@@ -39,6 +40,7 @@ export function ProjectsListScreen({
           Add New
         </button>
       </h1>
+      <p className="wp-sub">Draft projects stay off the public site until you publish them.</p>
       <table className="wp-list-table">
         <thead>
           <tr>
@@ -53,10 +55,25 @@ export function ProjectsListScreen({
               <td>
                 <button type="button" className="row-title" onClick={() => go("projects-edit", item.id)}>
                   {item.name || "(no title)"}
-                </button>
+                </button>{" "}
+                <PublishStatusBadge status={item.status} />
                 <div className="wp-row-actions">
                   <button type="button" onClick={() => go("projects-edit", item.id)}>
                     Edit
+                  </button>
+                  {" | "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const projects = [...data.projects];
+                      projects[i] = {
+                        ...item,
+                        status: item.status === "draft" ? "published" : "draft",
+                      };
+                      setData({ ...data, projects });
+                    }}
+                  >
+                    {item.status === "draft" ? "Publish" : "Draft"}
                   </button>
                   {" | "}
                   <button
@@ -308,7 +325,16 @@ function ProjectsEditForm({
             </div>
           </Metabox>
         </div>
-        <Metabox id="proj_publish" title="Publish" badge={project.demo ? "Live Demo" : "No Demo"}>
+        <Metabox
+          id="proj_publish"
+          title="Publish"
+          badge={project.status === "draft" ? "Draft" : project.demo ? "Live Demo" : "Published"}
+        >
+          <PublishStatusControl
+            status={project.status}
+            onChange={(status) => patchProject({ status })}
+            hint="Draft projects stay off the public Projects section until you publish them."
+          />
           <div className="wp-publish-misc">
             <p>
               Demo: <strong>{project.demo ? "Live" : "None"}</strong>

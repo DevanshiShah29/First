@@ -77,6 +77,8 @@ const siteSchema = z.object({
   ),
 });
 
+const publishStatusSchema = z.enum(["published", "draft"]).default("published");
+
 const experienceSchema = z.object({
   id: nonEmpty("Experience id"),
   when: z.string(),
@@ -86,6 +88,7 @@ const experienceSchema = z.object({
   summary: z.string(),
   bullets: z.array(z.string()),
   stack: z.array(z.string()),
+  status: publishStatusSchema,
 });
 
 const projectSchema = z.object({
@@ -95,6 +98,7 @@ const projectSchema = z.object({
   tags: z.array(z.string()),
   github: z.string(),
   demo: z.string(),
+  status: publishStatusSchema,
 });
 
 const skillItemSchema = z.object({
@@ -102,11 +106,13 @@ const skillItemSchema = z.object({
   icon: z.enum(skillIconIds),
   color: z.string().optional(),
   iconUrl: z.string().optional(),
+  status: publishStatusSchema,
 });
 
 const skillGroupSchema = z.object({
   title: nonEmpty("Skill group title"),
   items: z.array(skillItemSchema),
+  status: publishStatusSchema,
 });
 
 const paletteSchema = z.object({
@@ -152,6 +158,7 @@ const memorySchema = z.object({
   icon: z.string().optional(),
   photoUrl: z.string().optional(),
   color: z.string().optional(),
+  status: publishStatusSchema,
 });
 
 const remOrNull = z
@@ -169,6 +176,7 @@ const shelfArtifactSchema = z.object({
   widthRem: z.number().finite().positive(),
   heightRem: z.number().finite().positive(),
   enabled: z.boolean(),
+  status: publishStatusSchema,
 });
 
 const shelfBookStackSchema = z.object({
@@ -269,12 +277,14 @@ const shelfLayoutSchema = z
 const craftItemSchema = z.object({
   title: nonEmpty("Craft item title"),
   why: z.string(),
+  status: publishStatusSchema,
 });
 
 const craftGroupSchema = z.object({
   title: nonEmpty("Craft group title"),
   intro: z.string(),
   items: z.array(craftItemSchema),
+  status: publishStatusSchema,
 });
 
 const craftSchema = z.object({
@@ -283,6 +293,7 @@ const craftSchema = z.object({
   intro: z.string(),
   footnote: z.string(),
   groups: z.array(craftGroupSchema),
+  status: publishStatusSchema,
 });
 
 const contentSaveSchema = z.object({
@@ -299,6 +310,7 @@ const contentSaveSchema = z.object({
     intro: "",
     footnote: "",
     groups: [],
+    status: "published",
   }),
   shelfArtifacts: z.array(shelfArtifactSchema).optional().default([]),
   shelfLayout: shelfLayoutSchema.optional().default({

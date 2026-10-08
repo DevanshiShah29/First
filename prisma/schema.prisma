@@ -113,6 +113,8 @@ model Experience {
   summary   String   @default("")
   bullets   String[]
   stack     String[]
+  /// "published" | "draft". Drafts stay off the public site.
+  status    String   @default("published")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -128,6 +130,8 @@ model Project {
   tags      String[]
   github    String   @default("")
   demo      String   @default("")
+  /// "published" | "draft". Drafts stay off the public site.
+  status    String   @default("published")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -145,6 +149,8 @@ model Memory {
   icon      String  @default("")
   photoUrl  String  @default("")
   color     String  @default("")
+  /// "published" | "draft". Drafts stay out of the public jar.
+  status    String  @default("published")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -161,6 +167,8 @@ model ShelfArtifact {
   widthRem  Float   @default(1.85)
   heightRem Float   @default(5.4)
   enabled   Boolean @default(true)
+  /// "published" | "draft". Drafts stay off the public shelf.
+  status    String  @default("published")
   /// Legacy free-% placement columns (unused; cleared on save).
   xPercent  Float?
   yPercent  Float?
@@ -195,6 +203,8 @@ model SkillGroup {
   kind      String
   title     String
   sortOrder Int
+  /// "published" | "draft". Draft groups stay off the public site.
+  status    String @default("published")
 
   items SkillItem[]
 
@@ -212,6 +222,8 @@ model SkillItem {
   icon      String  @default("empty")
   color     String?
   iconUrl   String?
+  /// "published" | "draft". Draft items stay off the public site.
+  status    String  @default("published")
 
   group SkillGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
@@ -225,6 +237,8 @@ model CraftSettings {
   title    String @default("")
   intro    String @default("")
   footnote String @default("")
+  /// "published" | "draft". A draft hides /craft and its public links.
+  status   String @default("published")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -238,6 +252,8 @@ model CraftGroup {
   sortOrder Int
   title     String
   intro     String @default("")
+  /// "published" | "draft". Draft groups stay off the public page.
+  status    String @default("published")
 
   craft CraftSettings @relation(fields: [craftId], references: [id], onDelete: Cascade)
   items CraftItem[]
@@ -254,6 +270,8 @@ model CraftItem {
   sortOrder Int
   title     String
   why       String @default("")
+  /// "published" | "draft". Draft items stay off the public page.
+  status    String @default("published")
 
   group CraftGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 

@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { CraftView } from "@/components/craft/CraftView";
 import { loadContent } from "@/content/store";
-import { EMPTY_CRAFT, toPublicContent } from "@/content/types";
+import { EMPTY_CRAFT, isPublished, toPublicContent } from "@/content/types";
 import { buildPageMetadata } from "@/lib/seo";
+
+/** Saved drafts must leave /craft on the next request. */
+export const dynamic = "force-dynamic";
 
 /**
  * Builds craft page metadata from CMS craft fields.
@@ -11,6 +15,7 @@ import { buildPageMetadata } from "@/lib/seo";
  */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
+  if (content.craft && !isPublished(content.craft.status)) notFound();
   const craft = content.craft ?? EMPTY_CRAFT;
   const title = craft.title.trim() || "Craft";
   const description =
@@ -30,7 +35,9 @@ export async function generateMetadata(): Promise<Metadata> {
  * @example <CraftPage /> default export for /craft
  */
 export default async function CraftPage() {
-  const content = toPublicContent(await loadContent());
+  const full = await loadContent();
+  if (full.craft && !isPublished(full.craft.status)) notFound();
+  const content = toPublicContent(full);
   const craft = content.craft ?? EMPTY_CRAFT;
 
   return (

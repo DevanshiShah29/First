@@ -64,7 +64,10 @@ export async function POST(req: Request) {
     console.error("saveContent failed", err);
     return NextResponse.json({ error: saveErrorMessage(err) }, { status: 500 });
   }
-  revalidateTag(CMS_CONTENT_TAG, "max");
+  // "max" is stale-while-revalidate for up to a year, so the next visit would
+  // still render the previous published snapshot. expire: 0 drops the tag now.
+  // Route Handlers cannot call updateTag (Server Actions only).
+  revalidateTag(CMS_CONTENT_TAG, { expire: 0 });
   // Layout revalidation covers nested public routes; avoid stacking redundant path work.
   revalidatePath("/", "layout");
   return NextResponse.json({ ok: true, content: parsed.content });

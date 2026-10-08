@@ -16,6 +16,7 @@ import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
+import { PublishStatusBadge, PublishStatusControl } from "../components/PublishStatusControl";
 import { DatePicker, Field, HexColorInput, TextArea, TextInput } from "../fields";
 
 /**
@@ -51,7 +52,7 @@ export function MemoriesListScreen({
         </Link>
       </h1>
       <p className="wp-sub">
-        Memories hidden inside your interactive Memory Jar. When visitors tap the jar, memories are unlocked one by one.
+        Memories hidden inside your interactive Memory Jar. When visitors tap the jar, memories are unlocked one by one. Draft memories stay out of the jar until you publish them.
       </p>
       <table className="wp-list-table">
         <thead>
@@ -78,13 +79,28 @@ export function MemoriesListScreen({
                 <td>
                   <button type="button" className="row-title" onClick={() => go("memories-edit", item.id)}>
                     {item.title || item.note.slice(0, 30) || "(untitled memory)"}
-                  </button>
+                  </button>{" "}
+                  <PublishStatusBadge status={item.status} />
                   <div style={{ fontSize: "0.85rem", color: "#646970", marginTop: 2, maxHeight: "2.4em", overflow: "hidden", textOverflow: "ellipsis" }}>
                     {item.note || "(empty note)"}
                   </div>
                   <div className="wp-row-actions">
                     <button type="button" onClick={() => go("memories-edit", item.id)}>
                       Edit
+                    </button>
+                    {" | "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const memories = memoriesList.map((memory, index) =>
+                          index === i
+                            ? { ...memory, status: memory.status === "draft" ? "published" as const : "draft" as const }
+                            : memory,
+                        );
+                        setData({ ...data, memories });
+                      }}
+                    >
+                      {item.status === "draft" ? "Publish" : "Draft"}
                     </button>
                     {" | "}
                     <button
@@ -493,7 +509,12 @@ export function MemoriesEditScreen({
             </div>
           </Metabox>
         </div>
-        <Metabox id="mem_publish" title="Publish">
+        <Metabox id="mem_publish" title="Publish" badge={memory.status === "draft" ? "Draft" : "Published"}>
+          <PublishStatusControl
+            status={memory.status}
+            onChange={(status) => patchMemory({ status })}
+            hint="Draft memories stay out of the public jar until you publish them."
+          />
           <div className="wp-publish-actions">
             <button
               type="button"

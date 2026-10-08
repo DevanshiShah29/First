@@ -21,6 +21,7 @@ import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
+import { PublishStatusControl } from "../components/PublishStatusControl";
 import { Field, TextArea, TextInput } from "../fields";
 
 interface CraftScreenProps {
@@ -189,15 +190,15 @@ export function CraftScreen({
           type="button"
           className="wp-btn wp-btn-primary"
           onClick={() =>
-            setGroups([...groups, { title: "New craft group", intro: "", items: [] }])
+            setGroups([...groups, { title: "New craft group", intro: "", items: [], status: "draft" }])
           }
         >
           Add Group
         </button>
       </h1>
       <p className="wp-sub">
-        Public <code>/craft</code> page — engineering notes visitors see. Empty means empty on the
-        site.
+        Public <code>/craft</code> page — engineering notes visitors see. Drafts stay off the public
+        site, including the nav link, until you publish them.
       </p>
 
       <EditorTabs
@@ -280,6 +281,17 @@ export function CraftScreen({
 
           <table className="wp-form-table">
             <tbody>
+              <Field
+                label="Status"
+                hint="Draft hides /craft, the footer and mobile links, and the About link."
+              >
+                <PublishStatusControl
+                  compact
+                  status={craft.status}
+                  label="Craft page publish status"
+                  onChange={(status) => patchCraft({ status })}
+                />
+              </Field>
               <Field label="Kicker">
                 <TextInput
                   value={craft.kicker}
@@ -323,7 +335,7 @@ export function CraftScreen({
             key={`craft_group_${gi}`}
             id={`craft_group_${gi}`}
             title={group.title || "Craft group"}
-            badge={`${group.items.length} ${group.items.length === 1 ? "item" : "items"}`}
+            badge={`${group.status === "draft" ? "Draft · " : ""}${group.items.length} ${group.items.length === 1 ? "item" : "items"}`}
             actions={
               <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
                 <button
@@ -384,7 +396,12 @@ export function CraftScreen({
                     next[gi] = {
                       ...group,
                       intro: intro?.intro ?? group.intro,
-                      items: items?.items ?? group.items,
+                      items: items
+                        ? items.items.map((item, index) => ({
+                            ...item,
+                            status: group.items[index]?.status,
+                          }))
+                        : group.items,
                     };
                     setGroups(next);
                     patchGroupAi(gi, { variants: [], selectedIndex: 0 });
@@ -417,6 +434,21 @@ export function CraftScreen({
 
               <table className="wp-form-table">
                 <tbody>
+                  <Field
+                    label="Status"
+                    hint="Draft groups stay off the public craft page."
+                  >
+                    <PublishStatusControl
+                      compact
+                      status={group.status}
+                      label={`Publish status for ${group.title || "craft group"}`}
+                      onChange={(status) => {
+                        const next = [...groups];
+                        next[gi] = { ...group, status };
+                        setGroups(next);
+                      }}
+                    />
+                  </Field>
                   <Field label="Group title">
                     <TextInput
                       value={group.title}
@@ -454,6 +486,20 @@ export function CraftScreen({
               >
                 <table className="wp-form-table">
                   <tbody>
+                    <Field label="Status" hint="Draft items stay off the public craft page.">
+                      <PublishStatusControl
+                        compact
+                        status={item.status}
+                        label={`Publish status for ${item.title || "craft item"}`}
+                        onChange={(status) => {
+                          const next = [...groups];
+                          const items = [...group.items];
+                          items[ii] = { ...item, status };
+                          next[gi] = { ...group, items };
+                          setGroups(next);
+                        }}
+                      />
+                    </Field>
                     <Field label="Item title">
                       <TextInput
                         value={item.title}
@@ -532,7 +578,7 @@ export function CraftScreen({
                 className="wp-add"
                 onClick={() => {
                   const next = [...groups];
-                  const blank: CraftItem = { title: "New practice", why: "" };
+                  const blank: CraftItem = { title: "New practice", why: "", status: "draft" };
                   next[gi] = { ...group, items: [...group.items, blank] };
                   setGroups(next);
                 }}

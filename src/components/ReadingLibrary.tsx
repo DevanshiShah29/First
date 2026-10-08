@@ -89,7 +89,6 @@ function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: 
         </h3>
         <Meta book={book} />
         <Stars value={book.rating} />
-        {book.shelves ? <p className="reading-shelves">{book.shelves.replace(/,/g, " · ")}</p> : null}
         {book.review ? <blockquote className="reading-review">{book.review}</blockquote> : null}
       </div>
     </article>

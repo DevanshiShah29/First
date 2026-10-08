@@ -15,7 +15,6 @@ import { move, type Screen } from "../types";
 // UI components
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
-import { PublishStatusControl } from "../components/PublishStatusControl";
 import { Field, TextInput } from "../fields";
 import { ShelfPlacementEditor } from "../shelf/ShelfPlacementEditor";
 import {
@@ -195,7 +194,7 @@ export function ArtifactsListScreen({
                 <th>Ornament</th>
                 <th>Placement</th>
                 <th>Size (rem)</th>
-                <th>Status</th>
+                <th>Catalog</th>
                 <th style={{ textAlign: "right" }}>Image</th>
               </tr>
             </thead>
@@ -257,16 +256,6 @@ export function ArtifactsListScreen({
                           <button
                             type="button"
                             onClick={() =>
-                              patchAt(i, {
-                                status: item.status === "draft" ? "published" : "draft",
-                              })
-                            }>
-                            {item.status === "draft" ? "Publish" : "Draft"}
-                          </button>
-                          {" | "}
-                          <button
-                            type="button"
-                            onClick={() =>
                               setCatalog(move(artifactsList, i, -1))
                             }
                             disabled={i === 0}>
@@ -304,26 +293,18 @@ export function ArtifactsListScreen({
                         {item.widthRem.toFixed(2)} × {item.heightRem.toFixed(2)}
                       </td>
                       <td>
-                        <div style={{ display: "grid", gap: 8 }}>
-                          <PublishStatusControl
-                            compact
-                            status={item.status}
-                            label={`Publish status for ${item.name || "ornament"}`}
-                            onChange={(status) => patchAt(i, { status })}
+                        <label
+                          className="wp-shelf-toggle"
+                          style={{ cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={item.enabled}
+                            onChange={(e) =>
+                              patchAt(i, { enabled: e.target.checked })
+                            }
                           />
-                          <label
-                            className="wp-shelf-toggle"
-                            style={{ cursor: "pointer" }}>
-                            <input
-                              type="checkbox"
-                              checked={item.enabled}
-                              onChange={(e) =>
-                                patchAt(i, { enabled: e.target.checked })
-                              }
-                            />
-                            <span>{item.enabled ? "Enabled" : "Disabled"}</span>
-                          </label>
-                        </div>
+                          <span>{item.enabled ? "Enabled" : "Disabled"}</span>
+                        </label>
                       </td>
                       <td style={{ textAlign: "right" }}>
                         <label className="wp-skill-file" style={{ margin: 0 }}>
@@ -637,18 +618,13 @@ export function ArtifactsEditScreen({
 
         <div className="wp-edit-sidebar">
           <Metabox
-            id="artifact_publish"
-            title="Publish"
-            badge={artifact.status === "draft" ? "Draft" : "Published"}>
-            <PublishStatusControl
-              status={artifact.status}
-              onChange={(status) => patchArtifact({ status })}
-              hint="Draft ornaments stay off the public shelf, even when they are placed in the builder."
-            />
+            id="artifact_shelf"
+            title="Shelf"
+            badge={placed ? "On shelf" : "Not placed"}>
             <div style={{ marginBottom: 12 }}>
               <span
                 className={`wp-status ${placed ? "is-publish" : "is-draft"}`}>
-                {placed ? "On shelf" : "Not on shelf"}
+                {placed ? "On shelf" : "Not placed"}
               </span>
             </div>
             <label className="wp-shelf-toggle wp-shelf-toggle-block">

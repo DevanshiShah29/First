@@ -27,13 +27,13 @@ export function ExperienceSection({
           <div className="accent-underline mt-3 h-1 w-28 rounded" />
           <p className="mt-4 max-w-2xl text-muted">{site.experienceIntro}</p>
         </Fade>
-        <div className="relative mt-10 pl-8 sm:pl-12">
-          <div className="timeline-line absolute bottom-0 left-3 top-0 w-px sm:left-4" />
+        <div className="timeline relative mt-10">
+          <div className="timeline-line" aria-hidden="true" />
           <div className="flex flex-col gap-6 sm:gap-8">
             {experience.map((job, i) => (
-              <Fade key={job.id} y={24} delay={0.08 * Math.min(i, 3)} className="w-full">
-                <article className="card-surface card-lift relative rounded-2xl p-6">
-                  <span className="timeline-dot" />
+              <Fade key={job.id} y={24} delay={0.08 * Math.min(i, 3)} className="timeline-item w-full">
+                <span className="timeline-dot" aria-hidden="true" />
+                <article className="card-surface card-lift rounded-2xl p-6">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-xs uppercase tracking-kicker-tight text-accent-text">{job.when}</p>
                     {job.current ? (
@@ -56,7 +56,7 @@ export function ExperienceSection({
                     {job.stack.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full border border-line bg-chip px-3 py-1 text-xs text-muted"
+                        className="rounded-full border border-brand/25 bg-brand/10 px-3 py-1 text-xs text-accent-text"
                       >
                         {tag}
                       </span>

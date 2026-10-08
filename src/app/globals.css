@@ -481,26 +481,42 @@ html:not([data-theme="light"]) .theme-icon-moon {
     color-mix(in srgb, var(--brand-to, #6366f1) 15%, transparent)
   );
 }
+.timeline {
+  --timeline-x: 0.75rem;
+  --timeline-pad: 2rem;
+  padding-left: var(--timeline-pad);
+}
 .timeline-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--timeline-x);
+  width: 1px;
+  transform: translateX(-50%);
   background: linear-gradient(
     to bottom,
     var(--brand-from, #7c3aed),
     var(--brand-to, #6366f1)
   );
 }
+.timeline-item {
+  position: relative;
+}
 .timeline-dot {
   position: absolute;
   top: 2rem;
-  left: -2.2rem;
+  left: calc(var(--timeline-x) - var(--timeline-pad));
   height: 1rem;
   width: 1rem;
+  transform: translateX(-50%);
   border-radius: 9999px;
   background-color: var(--brand-from);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-from) 30%, transparent);
 }
 @media (min-width: 40rem) {
-  .timeline-dot {
-    left: -2.65rem;
+  .timeline {
+    --timeline-x: 1rem;
+    --timeline-pad: 3rem;
   }
 }
 .kicker {

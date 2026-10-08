@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CraftContent, PublicSiteContent } from "@/content/types";
+import { sectionEnabled, type CraftContent, type PublicSiteContent } from "@/content/types";
 import { Fade } from "@/components/Fade";
 import { CountUp } from "./CountUp";
 
@@ -15,9 +15,9 @@ export function AboutSection({
   craft?: CraftContent;
 }) {
   const craftTitle = craft?.title?.trim();
-  const craftPublished = Boolean(
-    craftTitle || craft?.intro?.trim() || (craft?.groups?.length ?? 0) > 0,
-  );
+  const craftPublished =
+    sectionEnabled(site.sections, "craft") &&
+    Boolean(craftTitle || craft?.intro?.trim() || (craft?.groups?.length ?? 0) > 0);
 
   return (
     <section id="about" tabIndex={-1} aria-labelledby="about-heading" className="py-16 sm:py-24">

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { loadContent } from "@/content/store";
-import { toPublicContent } from "@/content/types";
+import { sectionEnabled, toPublicContent } from "@/content/types";
 import { siteOrigin } from "@/lib/site-url";
 
 /** A drafted /craft page must drop out of the sitemap on the next request. */
@@ -26,21 +26,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 1,
     },
-    {
+  ];
+
+  if (sectionEnabled(content.site.sections, "reading")) {
+    entries.push({
       url: `${origin}/reading`,
       lastModified: now,
       changeFrequency: "weekly",
       priority: 0.8,
-    },
-    {
+    });
+  }
+
+  if (sectionEnabled(content.site.sections, "memories")) {
+    entries.push({
       url: `${origin}/memories`,
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.7,
-    },
-  ];
+    });
+  }
 
-  if (craftPublished) {
+  if (craftPublished && sectionEnabled(content.site.sections, "craft")) {
     entries.push({
       url: `${origin}/craft`,
       lastModified: now,

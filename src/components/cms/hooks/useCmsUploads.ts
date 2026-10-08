@@ -23,17 +23,19 @@ export function useCmsUploads(
   setNotice: (message: string) => void,
 ) {
   const [uploading, setUploading] = useState(false);
-  const site = data.site;
 
   /**
    * Merges a patch into site.heroMedia.
    * @example setHeroMedia({ kind: "image" }) // void
    */
   function setHeroMedia(patch: Partial<HeroMedia>) {
-    setData({
-      ...data,
-      site: { ...site, heroMedia: { ...site.heroMedia, ...patch } },
-    });
+    setData((current) => ({
+      ...current,
+      site: {
+        ...current.site,
+        heroMedia: { ...current.site.heroMedia, ...patch },
+      },
+    }));
   }
 
   /**
@@ -43,6 +45,7 @@ export function useCmsUploads(
   async function uploadHeroFile(file: File) {
     setUploading(true);
     setError("");
+    setNotice("");
     const res = await uploadCmsFile(file, "hero");
     setUploading(false);
     if (!res.ok || !res.data?.url) {
@@ -50,6 +53,7 @@ export function useCmsUploads(
       return;
     }
     setHeroMedia({ url: res.data.url, kind: res.data.kind ?? "image" });
+    setNotice("Hero media uploaded. Save changes to publish it.");
   }
 
   /**

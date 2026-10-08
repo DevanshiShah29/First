@@ -59,8 +59,17 @@ export function themeSkin(theme: ThemeContent): CSSProperties {
  * Renders hero media as image/video/iframe.
  * @example <MediaVisual media={heroMedia} compact />
  */
-export function MediaVisual({ media, compact = false }: { media: HeroMedia; compact?: boolean }) {
-  const playable = parsePlayableMedia(media.url, media.kind === "image" ? "image" : "video");
+export function MediaVisual({
+  media,
+  compact = false,
+  title = "Media preview",
+}: {
+  media: HeroMedia;
+  compact?: boolean;
+  title?: string;
+}) {
+  const preferred = media.kind === "video" ? "video" : media.kind === "image" ? "image" : undefined;
+  const playable = parsePlayableMedia(media.url, preferred);
   if (playable.type === "unsupported") {
     return <div className="wp-media-missing">{playable.reason}</div>;
   }
@@ -69,7 +78,7 @@ export function MediaVisual({ media, compact = false }: { media: HeroMedia; comp
     return (
       <iframe
         src={src}
-        title="Hero media preview"
+        title={title}
         allow="autoplay; encrypted-media; picture-in-picture"
         tabIndex={compact ? -1 : undefined}
       />
@@ -153,9 +162,19 @@ export function MediaLayoutPreview({
   const copy = <MediaCopy site={site} template={template} />;
 
   if (media.kind === "none") {
+    if (!media.url.trim()) {
+      return (
+        <div className="wp-media-layout is-empty">
+          <p>No media selected</p>
+        </div>
+      );
+    }
     return (
-      <div className="wp-media-layout is-empty">
-        <p>No media selected</p>
+      <div className="wp-media-layout is-held" style={themeSkin(theme)}>
+        <div className="wp-media-fill">
+          <MediaVisual media={media} compact title="Hidden hero media" />
+        </div>
+        <span className="wp-media-badge">Hidden</span>
       </div>
     );
   }
@@ -168,7 +187,7 @@ export function MediaLayoutPreview({
     );
   }
 
-  const visual = <MediaVisual media={media} compact />;
+  const visual = <MediaVisual media={media} compact title="Hero layout preview" />;
   const placeLabel = media.place === "background" ? "Background" : media.side === "left" ? "Left" : "Right";
   const showOrbs = template !== "minimal";
 
@@ -194,6 +213,34 @@ export function MediaLayoutPreview({
         {media.side === "left" ? copy : mediaPane}
       </div>
       <span className="wp-media-badge">{placeLabel}</span>
+    </div>
+  );
+}
+
+/**
+ * Renders the contact-card media stage. Empty keeps the built-in graphic label.
+ * @example <ContactMediaStage media={previewMedia} />
+ */
+export function ContactMediaStage({ media }: { media: HeroMedia }) {
+  const hasUrl = Boolean(media.url.trim());
+  if (media.kind === "none" || !hasUrl) {
+    return (
+      <div className="wp-media-layout is-empty is-contact">
+        <p>{hasUrl ? "Saved, not shown" : "Built-in graphic"}</p>
+        <span>
+          {hasUrl
+            ? "Choose Image or Video to use this file"
+            : "Shown on the contact card until you add a file"}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className="wp-media-layout is-contact">
+      <div className="wp-media-fill">
+        <MediaVisual media={media} title="Contact media preview" />
+      </div>
+      <span className="wp-media-badge">{media.kind === "image" ? "Image" : "Video"}</span>
     </div>
   );
 }

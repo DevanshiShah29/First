@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["heic-convert", "heic-decode", "libheif-js"],
   images: {
     formats: ["image/avif", "image/webp"],
     qualities: [75, 92],

@@ -98,6 +98,102 @@ export const DEFAULT_HERO_MEDIA: HeroMedia = {
   side: "right",
 };
 
+/** Public areas that can be hidden from the live site without deleting their CMS content. */
+export const SITE_SECTIONS = [
+  { id: "hero", label: "Hero", where: "Homepage" },
+  { id: "about", label: "About", where: "Homepage" },
+  { id: "experience", label: "Experience", where: "Homepage" },
+  { id: "projects", label: "Projects", where: "Homepage" },
+  { id: "skills", label: "Skills", where: "Homepage" },
+  { id: "technologies", label: "Technologies", where: "Homepage" },
+  { id: "contact", label: "Contact", where: "Homepage" },
+  { id: "craft", label: "Craft", where: "Craft page" },
+  { id: "memories", label: "Memories", where: "Memories page" },
+  { id: "reading", label: "Book Nook", where: "Book Nook page" },
+] as const;
+
+export type SiteSectionId = (typeof SITE_SECTIONS)[number]["id"];
+
+/** Missing or unknown keys stay shown so existing sites do not disappear. */
+export type SectionVisibility = Record<SiteSectionId, boolean>;
+
+export const DEFAULT_SECTIONS: SectionVisibility = {
+  hero: true,
+  about: true,
+  experience: true,
+  projects: true,
+  skills: true,
+  technologies: true,
+  contact: true,
+  craft: true,
+  memories: true,
+  reading: true,
+};
+
+/**
+ * Fills a stored visibility map. Only real booleans override the shown default.
+ * @example normalizeSections({ hero: false }) // hero hidden, rest shown
+ */
+export function normalizeSections(value: unknown): SectionVisibility {
+  const raw = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  const next = { ...DEFAULT_SECTIONS };
+  for (const section of SITE_SECTIONS) {
+    const flag = raw[section.id];
+    if (typeof flag === "boolean") next[section.id] = flag;
+  }
+  return next;
+}
+
+/**
+ * True when a section should render on the public site.
+ * @example sectionEnabled({ hero: false }, "hero") // false
+ */
+export function sectionEnabled(
+  sections: Partial<SectionVisibility> | null | undefined,
+  id: SiteSectionId,
+): boolean {
+  return sections?.[id] !== false;
+}
+
+/**
+ * The Skills nav target stays while either skills or technologies is shown.
+ * @example skillsNavEnabled({ skills: false, technologies: true }) // true
+ */
+export function skillsNavEnabled(
+  sections: Partial<SectionVisibility> | null | undefined,
+): boolean {
+  return sectionEnabled(sections, "skills") || sectionEnabled(sections, "technologies");
+}
+
+/**
+ * True when a header or footer href points at a section that is shown.
+ * @example isNavHrefEnabled("/reading", { reading: false }) // false
+ */
+export function isNavHrefEnabled(
+  href: string,
+  sections: Partial<SectionVisibility> | null | undefined,
+): boolean {
+  if (href === "/reading") return sectionEnabled(sections, "reading");
+  if (href === "/memories" || href === "/memory-jar") return sectionEnabled(sections, "memories");
+  if (href === "/craft") return sectionEnabled(sections, "craft");
+  const hashAt = href.indexOf("#");
+  if (hashAt === -1) return true;
+  switch (href.slice(hashAt)) {
+    case "#about":
+      return sectionEnabled(sections, "about");
+    case "#experience":
+      return sectionEnabled(sections, "experience");
+    case "#projects":
+      return sectionEnabled(sections, "projects");
+    case "#skills":
+      return skillsNavEnabled(sections);
+    case "#contact":
+      return sectionEnabled(sections, "contact");
+    default:
+      return true;
+  }
+}
+
 export type ContactMediaKind = "none" | "image" | "video";
 
 /** Image or video shown on the contact card. Empty kind keeps the built-in scene. */
@@ -149,6 +245,8 @@ export type SiteContent = {
   github: string;
   resume: string;
   stats: { value: number; suffix: string; label: string }[];
+  /** Homepage and standalone pages. Missing means every section stays shown. */
+  sections?: SectionVisibility;
 };
 
 /** Public visibility for a CMS entry. Missing means published. */
@@ -485,8 +583,6 @@ export type ShelfArtifactItem = {
   widthRem: number;
   heightRem: number;
   enabled: boolean;
-  /** Missing means published. Draft ornaments stay off the public shelf. */
-  status?: PublishStatus;
 };
 
 export type CraftItem = {
@@ -597,7 +693,7 @@ export function toPublicContent(content: ContentData): PublicContentData {
     technologies: publishedSkillGroups(content.technologies),
     memories: (content.memories ?? []).filter((item) => isPublished(item.status)),
     craft: publishedCraft(content.craft),
-    shelfArtifacts: (content.shelfArtifacts ?? []).filter((item) => isPublished(item.status)),
+    shelfArtifacts: content.shelfArtifacts ?? [],
   };
 }
 

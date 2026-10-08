@@ -1,8 +1,19 @@
 export type SniffedMedia = {
-  ext: "jpg" | "png" | "webp" | "gif" | "avif" | "mp4" | "webm" | "ogv" | "mov" | "pdf";
+  ext: "jpg" | "png" | "webp" | "gif" | "avif" | "heic" | "mp4" | "webm" | "ogv" | "mov" | "pdf";
   contentType: string;
   kind: "image" | "video" | "file";
 };
+
+const HEIC_BRANDS = new Set([
+  "heic",
+  "heix",
+  "hevc",
+  "hevx",
+  "heim",
+  "heis",
+  "hevm",
+  "hevs",
+]);
 
 /**
  * True when buf starts with the given byte sequence.
@@ -26,13 +37,35 @@ function asciiAt(buf: Buffer, offset: number, text: string): boolean {
 }
 
 /**
- * Reads the ISO BMFF major_brand from an ftyp box.
- * @example ftypBrand(buf) // "isom" | null
+ * Reads the ISO BMFF ftyp major brand and compatible brands.
+ * @example ftypInfo(buf) // { brand: "heic", compatible: ["mif1"] } | null
  */
-function ftypBrand(buf: Buffer): string | null {
-  // ISO BMFF: size(4) + 'ftyp'(4) + major_brand(4)
+function ftypInfo(buf: Buffer): { brand: string; compatible: string[] } | null {
+  // ISO BMFF: size(4) + 'ftyp'(4) + major_brand(4) + minor(4) + compatible brands
   if (buf.length < 12 || !asciiAt(buf, 4, "ftyp")) return null;
-  return buf.subarray(8, 12).toString("ascii");
+  const declared = buf.readUInt32BE(0);
+  const end = declared >= 16 && declared <= buf.length ? declared : Math.min(buf.length, 64);
+  const compatible: string[] = [];
+  for (let offset = 16; offset + 4 <= end; offset += 4) {
+    compatible.push(buf.subarray(offset, offset + 4).toString("latin1").toLowerCase());
+  }
+  return {
+    brand: buf.subarray(8, 12).toString("latin1").toLowerCase(),
+    compatible,
+  };
+}
+
+/**
+ * True when an ftyp brand is an Apple/HEIF still photo rather than AVIF.
+ * @example isHeicBrand("heic", ["mif1"]) // true
+ */
+function isHeicBrand(brand: string, compatible: string[]): boolean {
+  if (HEIC_BRANDS.has(brand)) return true;
+  if (brand !== "mif1" && brand !== "msf1") return false;
+  return compatible.some((item) => {
+    const token = item.trim();
+    return HEIC_BRANDS.has(token) || token === "mihe" || token === "mihb";
+  });
 }
 
 /**
@@ -76,19 +109,18 @@ export function sniffUploadMagic(buf: Buffer): SniffedMedia | null {
     return { ext: "ogv", contentType: "video/ogg", kind: "video" };
   }
 
-  const brand = ftypBrand(buf);
-  if (brand) {
-    const b = brand.toLowerCase();
-    // AVIF
-    if (b === "avif" || b === "avis" || b === "mif1") {
-      // mif1 is HEIF family — only accept when 'avif' also appears in compatible brands
-      if (b === "avif" || b === "avis") {
-        return { ext: "avif", contentType: "image/avif", kind: "image" };
-      }
-      const compat = buf.subarray(16, Math.min(buf.length, 64)).toString("ascii");
-      if (compat.includes("avif") || compat.includes("avis")) {
-        return { ext: "avif", contentType: "image/avif", kind: "image" };
-      }
+  const ftyp = ftypInfo(buf);
+  if (ftyp) {
+    const b = ftyp.brand;
+    const hasAvif =
+      b === "avif" ||
+      b === "avis" ||
+      ftyp.compatible.some((item) => item === "avif" || item === "avis");
+    if (hasAvif) {
+      return { ext: "avif", contentType: "image/avif", kind: "image" };
+    }
+    if (isHeicBrand(b, ftyp.compatible)) {
+      return { ext: "heic", contentType: "image/heic", kind: "image" };
     }
     // QuickTime / MOV
     if (b === "qt  " || b === "moov") {

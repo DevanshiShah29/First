@@ -64,7 +64,10 @@ export function Metabox({
   const titleString = typeof title === "string" ? title : "";
 
   return (
-    <section className={`wp-metabox${!open ? " is-collapsed" : ""}${className ? ` ${className}` : ""}`}>
+    <section
+      id={id}
+      className={`wp-metabox${!open ? " is-collapsed" : ""}${className ? ` ${className}` : ""}`}
+    >
       <div className="wp-metabox-h" onClick={toggle}>
         <div className="wp-metabox-h-title">
           <h2 className="wp-metabox-title-text">{title}</h2>

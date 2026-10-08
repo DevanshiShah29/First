@@ -5,7 +5,7 @@ import { useState } from "react";
 import { getImageProps } from "next/image";
 
 // Application services & types
-import type { PublicSiteContent, SiteContent } from "@/content/types";
+import { sectionEnabled, type PublicSiteContent, type SiteContent } from "@/content/types";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { useHeroTilt } from "@/hooks/use-hero-tilt";
 import { usePianoPlayback } from "@/hooks/use-piano-playback";
@@ -182,15 +182,23 @@ export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
               const isJar = spot.id === "jar";
               const on = isPiano ? pianoActive : isBook ? bookActive : active === spot.id;
               const href =
-                isBook && goodreadsId ? "/reading" : isJar ? "/memories" : undefined;
+                isBook && goodreadsId && sectionEnabled(site.sections, "reading")
+                  ? "/reading"
+                  : isJar && sectionEnabled(site.sections, "memories")
+                    ? "/memories"
+                    : undefined;
               const Spot = href ? "a" : "button";
               const tip =
                 isPiano && pianoTip
                   ? pianoTip
-                  : isBook && bookTip
-                    ? bookTip
+                  : isBook
+                    ? href
+                      ? bookTip
+                      : "The books are taking a break 📚"
                     : isJar && on
-                      ? "Open memory jar ✨"
+                      ? href
+                        ? "Open memory jar ✨"
+                        : "The jar is taking a break"
                       : on
                         ? spot.label
                         : null;
@@ -201,11 +209,13 @@ export function NookHero({ site }: { site: PublicSiteContent | SiteContent }) {
                     ? "Play piano music"
                     : "The piano is taking a break"
                 : isBook
-                  ? goodreadsId
+                  ? href
                     ? "Open reading list"
                     : "The books are taking a break"
                   : isJar
-                    ? "Open memory jar"
+                    ? href
+                      ? "Open memory jar"
+                      : "The jar is taking a break"
                     : spot.label;
               return (
                 <Spot

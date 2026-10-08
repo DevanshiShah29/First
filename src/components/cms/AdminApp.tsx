@@ -191,6 +191,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
           {screen === "dashboard" && (
             <DashboardScreen
               data={data}
+              setData={setData}
               go={go}
               addExperience={addExperience}
               addProject={addProject}

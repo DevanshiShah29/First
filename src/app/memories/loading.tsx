@@ -6,7 +6,7 @@ import Image from "next/image";
  */
 export default function MemoryJarLoading() {
   return (
-    <div className="jar-of-stars flex min-h-dvh items-center justify-center px-4">
+    <div className="jar-of-stars flex min-h-dvh items-center justify-center">
       <div className="text-center">
         <p className="font-cormorant text-3xl text-brand-blue sm:text-4xl">
           a little jar of <span className="text-brand-yellow">stars</span>

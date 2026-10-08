@@ -1,4 +1,10 @@
-import { isPublished, type CraftContent, type PublicSiteContent, type SiteContent } from "@/content/types";
+import {
+  isNavHrefEnabled,
+  isPublished,
+  type CraftContent,
+  type PublicSiteContent,
+  type SiteContent,
+} from "@/content/types";
 
 export type SiteLink = {
   href: string;
@@ -34,7 +40,7 @@ export function siteMap(
     explore.push({ href: "/craft", label: craft.title?.trim() || "Notes" });
   }
 
-  return [
+  const groups: SiteMapGroup[] = [
     {
       title: "Explore",
       links: explore,
@@ -53,4 +59,11 @@ export function siteMap(
       links: connect,
     },
   ];
+
+  return groups
+    .map((group) => ({
+      ...group,
+      links: group.links.filter((link) => isNavHrefEnabled(link.href, site.sections)),
+    }))
+    .filter((group) => group.links.length > 0);
 }

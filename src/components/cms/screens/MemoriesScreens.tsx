@@ -58,7 +58,6 @@ export function MemoriesListScreen({
         <thead>
           <tr>
             <th>Memory</th>
-            <th>Category</th>
             <th>When</th>
             <th>Photo</th>
           </tr>
@@ -66,7 +65,7 @@ export function MemoriesListScreen({
         <tbody>
           {memoriesList.length === 0 ? (
             <tr>
-              <td colSpan={4} style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
+              <td colSpan={3} style={{ textAlign: "center", padding: "2rem", color: "#666" }}>
                 No memories in the jar yet.{" "}
                 <button type="button" className="wp-btn wp-btn-primary" onClick={addMemory}>
                   Add your first memory
@@ -129,15 +128,6 @@ export function MemoriesListScreen({
                       Trash
                     </button>
                   </div>
-                </td>
-                <td>
-                  {item.category ? (
-                    <span className="wp-status is-publish" style={{ fontSize: "0.75rem" }}>
-                      {item.category}
-                    </span>
-                  ) : (
-                    "—"
-                  )}
                 </td>
                 <td>{item.date || "—"}</td>
                 <td>
@@ -227,8 +217,7 @@ export function MemoriesEditScreen({
 
   const hasTitle = Boolean(memory.title?.trim()) && memory.title !== "New memory";
   const hasNote = Boolean(memory.note?.trim());
-  const hasCategory = Boolean(memory.category?.trim());
-  const hasDraft = hasTitle || hasNote || hasCategory;
+  const hasDraft = hasTitle || hasNote;
 
   /**
    * Patches the active memory in document state.
@@ -248,14 +237,14 @@ export function MemoriesEditScreen({
     if (generating) return;
     setGenerateError(null);
     if (!hasDraft) {
-      setGenerateError("Add a title, note, or category first, then generate.");
+      setGenerateError("Add a title or note first, then generate.");
       return;
     }
     setGenerating(true);
     const result = await generateMemoryCopy({
       title: memory.title ?? "",
       note: memory.note,
-      category: memory.category ?? "",
+      category: "",
       date: memory.date ?? "",
       color: memory.color ?? "#A78BFA",
     });
@@ -276,13 +265,11 @@ export function MemoriesEditScreen({
     const pick = (key: string) => variants[fieldSources[key] ?? selectedIndex];
     const title = pick("title");
     const note = pick("note");
-    const category = pick("category");
     const color = pick("color");
-    if (!title && !note && !category && !color) return;
+    if (!title && !note && !color) return;
     patchMemory({
       title: title?.title ?? memory.title,
       note: note?.note ?? memory.note,
-      category: category?.category ?? memory.category,
       color: color?.color ?? memory.color,
     });
     setVariants([]);
@@ -305,12 +292,12 @@ export function MemoriesEditScreen({
             placeholder="Enter memory title (optional)"
             onChange={(e) => patchMemory({ title: e.target.value })}
           />
-          <Metabox id="mem_details" title="Memory Content" badge={memory.category || undefined}>
+          <Metabox id="mem_details" title="Memory Content">
             <div className="wp-ai-stack">
               <AiFormSection
                 step={1}
                 title="Sources for AI"
-                description="Uses your current title, note, category, and date. Date stays yours; color is suggested."
+                description="Uses your current title, note, and date. Date stays yours; color is suggested."
               >
                 <ul className="wp-ai-source-summary">
                   <li>
@@ -322,10 +309,6 @@ export function MemoriesEditScreen({
                     <span>{hasNote ? "Present" : "Empty"}</span>
                   </li>
                   <li>
-                    <strong>Category</strong>
-                    <span>{hasCategory ? memory.category : "Empty"}</span>
-                  </li>
-                  <li>
                     <strong>Date</strong>
                     <span>{memory.date?.trim() || "Empty"}</span>
                   </li>
@@ -335,11 +318,10 @@ export function MemoriesEditScreen({
               <AiGeneratePanel
                 basisItems={[
                   { label: "Title", ready: hasTitle, optional: true },
-                  { label: "Note", ready: hasNote, optional: hasTitle || hasCategory },
-                  { label: "Category", ready: hasCategory, optional: true },
+                  { label: "Note", ready: hasNote, optional: hasTitle },
                   { label: "Date", ready: Boolean(memory.date?.trim()), optional: true },
                 ]}
-                fills="Title, Note, Category, and Color"
+                fills="Title, Note, and Color"
                 generating={generating}
                 error={generateError}
                 onGenerate={() => void onGenerate()}
@@ -368,11 +350,6 @@ export function MemoriesEditScreen({
                         key: "note",
                         label: "Note",
                         render: (variant) => variant.note,
-                      },
-                      {
-                        key: "category",
-                        label: "Category",
-                        render: (variant) => variant.category,
                       },
                       {
                         key: "color",
@@ -410,35 +387,13 @@ export function MemoriesEditScreen({
                     onChange={(date) => patchMemory({ date })}
                   />
                 </Field>
-                <Field label="Category">
-                  <div>
-                    <TextInput
-                      value={memory.category ?? ""}
-                      placeholder="e.g. Milestone, Tiny Joy, Craft, Life"
-                      onChange={(category) => patchMemory({ category })}
-                    />
-                    <div style={{ marginTop: 6, display: "flex", gap: 4, flexWrap: "wrap" }}>
-                      {["Milestone", "Tiny Joy", "Craft", "Discovery", "Learning", "Life"].map((cat) => (
-                        <button
-                          key={cat}
-                          type="button"
-                          className="wp-btn"
-                          style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                          onClick={() => patchMemory({ category: cat })}
-                        >
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </Field>
                 <Field label="Glow Accent Color" hint="Custom glow/highlight color for this memory card">
                   <HexColorInput
                     value={memory.color ?? "#A78BFA"}
                     onChange={(color) => patchMemory({ color })}
                   />
                 </Field>
-                <Field label="Photo Attachment" hint="Upload a photo (JPG, PNG, WebP, GIF, SVG) or paste an image URL.">
+                <Field label="Photo Attachment" hint="Upload a photo (JPG, PNG, WebP, GIF, HEIC, SVG) or paste an image URL.">
                   <div>
                     <div className="wp-skill-icon-source" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                       <label className="wp-skill-file">

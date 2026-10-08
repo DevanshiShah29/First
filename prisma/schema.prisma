@@ -50,6 +50,8 @@ model SiteSettings {
   linkedin         String   @default("")
   github           String   @default("")
   resume           String   @default("")
+  /// Homepage and page visibility. Missing keys stay shown.
+  sections         Json     @default("{}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -167,7 +169,7 @@ model ShelfArtifact {
   widthRem  Float   @default(1.85)
   heightRem Float   @default(5.4)
   enabled   Boolean @default(true)
-  /// "published" | "draft". Drafts stay off the public shelf.
+  /// Unused. Ornaments use placement (on shelf) plus enabled. Writes stay "published".
   status    String  @default("published")
   /// Legacy free-% placement columns (unused; cleared on save).
   xPercent  Float?

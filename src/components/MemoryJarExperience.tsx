@@ -120,27 +120,25 @@ export function MemoryJarExperience({ content }: { content: PublicContentData })
   return (
     <div className="jar-of-stars">
       <div className="flex min-h-screen flex-col overflow-x-hidden pb-12 sm:pb-16">
-        <div className="relative z-20 flex items-start justify-between gap-2 px-3 pb-1 pt-3 sm:items-center sm:px-6 sm:pt-4">
-          <Link href="/" className="jar-chip">
+        <div className="section-shell relative z-20 flex flex-wrap items-center justify-between gap-2 pb-1 pt-3 sm:pt-4">
+          <Link href="/" className="jar-site-btn">
             <span aria-hidden>←</span>
             <span>studio</span>
           </Link>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <button
-              type="button"
-              className="jar-chip"
-              onClick={toggleSound}
-              aria-pressed={soundOn}
-              aria-label={soundOn ? "Mute sound" : "Unmute sound"}
-            >
-              <span aria-hidden>{soundOn ? "♪" : "✕"}</span>
-              <span>{soundOn ? "sound on" : "muted"}</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            className="jar-site-btn"
+            onClick={toggleSound}
+            aria-pressed={soundOn}
+            aria-label={soundOn ? "Mute sound" : "Unmute sound"}
+          >
+            <span aria-hidden>{soundOn ? "♪" : "✕"}</span>
+            <span>{soundOn ? "sound on" : "muted"}</span>
+          </button>
         </div>
 
-        <section className="relative flex min-h-0 flex-1 flex-col items-center justify-center px-1 pb-1 pt-0 text-center sm:justify-start sm:px-6 sm:pb-8 sm:pt-3">
-          <div className="jar-title-block absolute top-2 left-0 right-0 z-10 px-1 sm:static sm:top-auto sm:z-auto">
+        <section className="relative flex min-h-0 flex-1 flex-col items-center justify-center pb-1 pt-0 text-center sm:justify-start sm:pb-8 sm:pt-3">
+          <div className="jar-title-block absolute top-2 left-0 right-0 z-10 sm:static sm:top-auto sm:z-auto">
             <h1 className="shrink-0 text-2xl leading-none sm:text-5xl">
               {totalStars === 0 ? (
                 <>

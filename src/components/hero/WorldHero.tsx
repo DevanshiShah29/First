@@ -5,7 +5,7 @@ import { useState } from "react";
 import Image from "next/image";
 
 // Application services & types
-import type { PublicSiteContent, SiteContent } from "@/content/types";
+import { sectionEnabled, type PublicSiteContent, type SiteContent } from "@/content/types";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { useHeroTilt } from "@/hooks/use-hero-tilt";
 import { usePianoPlayback } from "@/hooks/use-piano-playback";
@@ -131,8 +131,10 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
           const isBook = spot.id === "book";
           const isJar = spot.id === "jar";
           const on = isPiano ? pianoActive : isBook ? bookActive : active === spot.id;
-          const bookHref = isBook && goodreadsId ? "/reading" : undefined;
-          const href = bookHref ?? (isJar ? "/memories" : undefined);
+          const bookHref =
+            isBook && goodreadsId && sectionEnabled(site.sections, "reading") ? "/reading" : undefined;
+          const href =
+            bookHref ?? (isJar && sectionEnabled(site.sections, "memories") ? "/memories" : undefined);
           const Spot = href ? "a" : "button";
           const label = isPiano
             ? pianoPlaying
@@ -141,11 +143,13 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
                 ? "Play piano music"
                 : "The piano is taking a break"
             : isBook
-              ? goodreadsId
+              ? href
                 ? "Open reading list"
                 : "The books are taking a break"
               : isJar
-                ? "Open jar of stars"
+                ? href
+                  ? "Open jar of stars"
+                  : "The jar is taking a break"
                 : spot.label;
           return (
             <Spot
@@ -190,13 +194,19 @@ export function WorldHero({ site }: { site: PublicSiteContent | SiteContent }) {
                   {spot.id === "jar" ? (
                     <>
                       {reduce ? null : <JarStars />}
-                      <span className="world-tip">Open jar of stars ✨</span>
+                      <span className="world-tip">
+                        {href ? "Open jar of stars ✨" : "The jar is taking a break"}
+                      </span>
                     </>
                   ) : null}
                   {spot.id === "laptop" ? <MiniUi /> : null}
                   {spot.id === "cook" ? <Ingredients /> : null}
                   {spot.id === "travel" ? <span className="world-plane" aria-hidden /> : null}
-                  {spot.id === "book" && bookTip ? <span className="world-tip">{bookTip}</span> : null}
+                  {spot.id === "book" ? (
+                    <span className="world-tip">
+                      {href ? bookTip : "The books are taking a break 📚"}
+                    </span>
+                  ) : null}
                   {spot.id !== "book" && spot.id !== "piano" && spot.id !== "jar" ? (
                     <span className="world-tag">{spot.label}</span>
                   ) : null}

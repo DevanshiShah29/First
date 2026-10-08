@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { ReadingLibrary } from "@/components/ReadingLibrary";
 import { loadContent } from "@/content/store";
-import { EMPTY_SHELF_LAYOUT, toPublicContent } from "@/content/types";
+import { EMPTY_SHELF_LAYOUT, sectionEnabled, toPublicContent } from "@/content/types";
 import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
 import { buildPageMetadata } from "@/lib/seo";
 
@@ -15,6 +16,7 @@ export const dynamic = "force-dynamic";
  */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
+  if (!sectionEnabled(content.site.sections, "reading")) notFound();
   return buildPageMetadata({
     title: `Book Nook | ${content.site.name}`,
     description: `Books ${content.site.name} is reading, has read, and wants to read — with notes from Goodreads.`,
@@ -29,6 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function ReadingPage() {
   const full = await loadContent();
+  if (!sectionEnabled(full.site.sections, "reading")) notFound();
   const content = toPublicContent(full);
   const name = full.site.name.split(" ")[0] || full.site.name;
   let library = emptyLibrary(full.site.goodreadsUrl);

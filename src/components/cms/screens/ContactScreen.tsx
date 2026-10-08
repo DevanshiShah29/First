@@ -11,7 +11,8 @@ import { resumeFileLabel } from "@/lib/resume";
 
 // UI components
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
-import { MediaVisual } from "../components/MediaPreview";
+import { MediaEditor } from "../components/MediaEditor";
+import { ContactMediaStage } from "../components/MediaPreview";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -67,100 +68,30 @@ export function ContactScreen({
         title="Media"
         badge={hasFile && contactMedia.kind !== "none" ? contactMedia.kind : "graphic"}
       >
-        <p className="wp-description" style={{ marginTop: 0 }}>
-          The current graphic stays on the contact card until you upload an image or video and save.
-          Remove the file, or choose Current graphic, to bring that graphic back.
-        </p>
-        <table className="wp-form-table">
-          <tbody>
-            <tr>
-              <th scope="row">Type</th>
-              <td>
-                {(["none", "image", "video"] as const).map((kind) => (
-                  <label key={kind} className="wp-check">
-                    <input
-                      type="radio"
-                      name="contactMediaKind"
-                      checked={contactMedia.kind === kind}
-                      onChange={() => setContactMedia({ kind })}
-                    />
-                    {kind === "none" ? "Current graphic" : kind === "image" ? "Image" : "Video"}
-                  </label>
-                ))}
-              </td>
-            </tr>
-            {contactMedia.kind !== "none" ? (
-              <>
-                <Field
-                  label="File"
-                  hint={
-                    hasFile
-                      ? "JPG, PNG, WebP, GIF, AVIF, MP4, or WebM. Max 25MB. Change replaces the current file. Save to publish."
-                      : "JPG, PNG, WebP, GIF, AVIF, MP4, or WebM. Max 25MB."
-                  }
-                  wide
-                >
-                  <div className="wp-skill-icon-source">
-                    <label className="wp-skill-file">
-                      <span className="wp-btn">
-                        {uploading ? "Uploading…" : hasFile ? "Change" : "Upload"}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/jpeg,image/png,image/webp,image/gif,image/avif,video/mp4,video/webm,video/ogg"
-                        disabled={uploading}
-                        aria-label={hasFile ? "Change contact media" : "Upload contact media"}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) void uploadContactFile(file);
-                          e.target.value = "";
-                        }}
-                      />
-                    </label>
-                  </div>
-                </Field>
-                <Field
-                  label="URL"
-                  hint="Paste a new image or video URL to replace the uploaded file. YouTube and Vimeo links embed on the card."
-                >
-                  <TextInput
-                    value={contactMedia.url}
-                    onChange={(url) => setContactMedia({ url })}
-                    placeholder="https://…"
-                  />
-                </Field>
-                <Field
-                  label="Alt text"
-                  hint="Describe the image for screen readers. Leave this blank when the media is decorative."
-                >
-                  <TextInput
-                    value={contactMedia.alt}
-                    onChange={(alt) => setContactMedia({ alt })}
-                  />
-                </Field>
-                {hasFile ? (
-                  <tr>
-                    <th scope="row">Preview</th>
-                    <td>
-                      <div className="wp-media-preview">
-                        <MediaVisual media={previewMedia} />
-                      </div>
-                      <p style={{ marginTop: 8 }}>
-                        <button
-                          type="button"
-                          className="wp-btn-link"
-                          onClick={() => setContactMedia({ kind: "none", url: "", alt: "" })}
-                        >
-                          Remove media
-                        </button>
-                      </p>
-                    </td>
-                  </tr>
-                ) : null}
-              </>
-            ) : null}
-          </tbody>
-        </table>
+        <MediaEditor
+          surface="contact"
+          kind={contactMedia.kind}
+          kindOptions={[
+            { value: "none", label: "Current graphic" },
+            { value: "image", label: "Image" },
+            { value: "video", label: "Video" },
+          ]}
+          url={contactMedia.url}
+          alt={contactMedia.alt}
+          onAlt={(alt) => setContactMedia({ alt })}
+          onKind={(kind) => setContactMedia({ kind })}
+          onUrl={(url) => setContactMedia({ url })}
+          onFile={(file) => void uploadContactFile(file)}
+          onClear={() => setContactMedia({ kind: "none", url: "", alt: "" })}
+          uploading={uploading}
+          clearLabel="Use graphic"
+          preview={<ContactMediaStage media={previewMedia} />}
+          note={
+            hasFile && contactMedia.kind !== "none"
+              ? "Save to publish. Use graphic brings the built-in scene back."
+              : "The built-in graphic stays on the card until you add an image or video and save."
+          }
+        />
       </Metabox>
 
       <Metabox id="contact_details" title="Contact">

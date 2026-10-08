@@ -4,7 +4,7 @@
 import { useEffect, type MouseEvent } from "react";
 
 // Application services & types
-import type { PublicContentData } from "@/content/types";
+import { sectionEnabled, type PublicContentData } from "@/content/types";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 
@@ -34,6 +34,9 @@ export function Site({ content }: { content: PublicContentData }) {
     craft,
   } = content;
   const reduce = useReducedMotion();
+  const sections = site.sections;
+  const showSkills = sectionEnabled(sections, "skills");
+  const showTechnologies = sectionEnabled(sections, "technologies");
 
   useEffect(() => {
     if (!window.location.hash) return;
@@ -89,12 +92,21 @@ export function Site({ content }: { content: PublicContentData }) {
       />
 
       <main id="main-content" tabIndex={-1}>
-        <Hero site={site} onProjects={(e) => onSectionLink(e, "#projects")} />
-        <AboutSection site={site} craft={craft} />
-        <ExperienceSection site={site} experience={experience} />
-        <ProjectsSection projects={projects} />
-        <SkillsSection skillGroups={skillGroups} techGroups={techGroups} />
-        <ContactSection site={site} />
+        {sectionEnabled(sections, "hero") ? (
+          <Hero site={site} onProjects={(e) => onSectionLink(e, "#projects")} />
+        ) : null}
+        {sectionEnabled(sections, "about") ? <AboutSection site={site} craft={craft} /> : null}
+        {sectionEnabled(sections, "experience") ? (
+          <ExperienceSection site={site} experience={experience} />
+        ) : null}
+        {sectionEnabled(sections, "projects") ? <ProjectsSection projects={projects} /> : null}
+        {showSkills || showTechnologies ? (
+          <SkillsSection
+            skillGroups={showSkills ? skillGroups : []}
+            techGroups={showTechnologies ? techGroups : []}
+          />
+        ) : null}
+        {sectionEnabled(sections, "contact") ? <ContactSection site={site} /> : null}
       </main>
 
       <SiteFooter

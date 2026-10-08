@@ -12,7 +12,7 @@ import {
 import { getImageProps } from "next/image";
 
 // Application services & types
-import type { PublicSiteContent, SiteContent } from "@/content/types";
+import { sectionEnabled, type PublicSiteContent, type SiteContent } from "@/content/types";
 import { createVisibilityGate } from "@/hooks/active-loop";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { usePianoPlayback } from "@/hooks/use-piano-playback";
@@ -443,14 +443,23 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
           const isFrames = spot.id === "frames";
           const isLaptop = spot.id === "laptop";
           const on = isPiano ? pianoActive : isBook ? bookActive : active === spot.id;
-          const href = isBook && goodreadsId ? "/reading" : isJar ? "/memories" : undefined;
+          const href =
+            isBook && goodreadsId && sectionEnabled(site.sections, "reading")
+              ? "/reading"
+              : isJar && sectionEnabled(site.sections, "memories")
+                ? "/memories"
+                : undefined;
           const Spot = href ? "a" : "button";
           const tip = isPiano
             ? pianoTip
             : isBook
-              ? bookTip
+              ? href
+                ? bookTip
+                : "The books are taking a break 📚"
               : isJar && on
-                ? "Open memory jar ✨"
+                ? href
+                  ? "Open memory jar ✨"
+                  : "The jar is taking a break"
                 : isLaptop && on
                   ? deskTip
                   : isFrames && on
@@ -465,11 +474,13 @@ export function StudioHero({ site }: { site: PublicSiteContent | SiteContent }) 
                 ? "Play piano music"
                 : "The piano is taking a break"
             : isBook
-              ? goodreadsId
+              ? href
                 ? "Open reading list"
                 : "The books are taking a break"
               : isJar
-                ? "Open memory jar"
+                ? href
+                  ? "Open memory jar"
+                  : "The jar is taking a break"
                 : isLaptop
                   ? "Coding setup"
                   : isFrames

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { CraftView } from "@/components/craft/CraftView";
 import { loadContent } from "@/content/store";
-import { EMPTY_CRAFT, isPublished, toPublicContent } from "@/content/types";
+import { EMPTY_CRAFT, isPublished, sectionEnabled, toPublicContent } from "@/content/types";
 import { buildPageMetadata } from "@/lib/seo";
 
 /** Saved drafts must leave /craft on the next request. */
@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
  */
 export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
+  if (!sectionEnabled(content.site.sections, "craft")) notFound();
   if (content.craft && !isPublished(content.craft.status)) notFound();
   const craft = content.craft ?? EMPTY_CRAFT;
   const title = craft.title.trim() || "Craft";
@@ -36,13 +37,18 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function CraftPage() {
   const full = await loadContent();
+  if (!sectionEnabled(full.site.sections, "craft")) notFound();
   if (full.craft && !isPublished(full.craft.status)) notFound();
   const content = toPublicContent(full);
   const craft = content.craft ?? EMPTY_CRAFT;
 
   return (
     <PageShell content={content}>
-      <CraftView craft={craft} />
+      <CraftView
+        craft={craft}
+        showAboutLink={sectionEnabled(content.site.sections, "about")}
+        showContactLink={sectionEnabled(content.site.sections, "contact")}
+      />
     </PageShell>
   );
 }

@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   HERO_TEMPLATES,
   SKILL_ICONS,
+  normalizeSections,
   type ContentData,
   type HeroTemplateId,
   type SkillIcon,
@@ -40,6 +41,22 @@ const contactMediaSchema = z.object({
   alt: z.string(),
 });
 
+const sectionVisibilitySchema = z
+  .object({
+    hero: z.boolean().optional(),
+    about: z.boolean().optional(),
+    experience: z.boolean().optional(),
+    projects: z.boolean().optional(),
+    skills: z.boolean().optional(),
+    technologies: z.boolean().optional(),
+    contact: z.boolean().optional(),
+    craft: z.boolean().optional(),
+    memories: z.boolean().optional(),
+    reading: z.boolean().optional(),
+  })
+  .optional()
+  .transform((value) => normalizeSections(value));
+
 const siteSchema = z.object({
   name: nonEmpty("Site name"),
   initials: nonEmpty("Initials").max(4),
@@ -68,6 +85,7 @@ const siteSchema = z.object({
   linkedin: z.string(),
   github: z.string(),
   resume: z.string(),
+  sections: sectionVisibilitySchema,
   stats: z.array(
     z.object({
       value: z.number().finite().nonnegative(),
@@ -176,7 +194,6 @@ const shelfArtifactSchema = z.object({
   widthRem: z.number().finite().positive(),
   heightRem: z.number().finite().positive(),
   enabled: z.boolean(),
-  status: publishStatusSchema,
 });
 
 const shelfBookStackSchema = z.object({

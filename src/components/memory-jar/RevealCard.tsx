@@ -47,6 +47,9 @@ export function RevealCard({
    */
   const handleClose = useCallback(() => {
     jarAudio.playPop();
+    // Leave the close control before it unmounts. Removing a focused node scrolls the page to the top.
+    const main = document.getElementById("main-content");
+    if (main instanceof HTMLElement) main.focus({ preventScroll: true });
     onClose();
   }, [onClose]);
 
@@ -249,26 +252,16 @@ export function RevealCard({
             </div>
 
             <div className="star-paper-sheet__footer mt-7 flex flex-wrap items-center justify-center gap-3">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="jar-action-btn jar-action-btn--tuck group"
-                style={
-                  {
-                    "--btn-ink": theme.ink,
-                  } as CSSProperties
-                }
-              >
+              <button type="button" onClick={handleClose} className="jar-site-btn">
                 <svg
                   viewBox="0 0 24 24"
-                  width="14"
-                  height="14"
+                  width="16"
+                  height="16"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.2"
+                  strokeWidth="1.8"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="transition-transform duration-200 group-hover:-translate-x-0.5"
                   aria-hidden
                 >
                   <path d="M19 12H5M12 19l-7-7 7-7" />
@@ -276,23 +269,8 @@ export function RevealCard({
                 <span>tuck it back</span>
               </button>
 
-              <button
-                type="button"
-                onClick={onPullAnother}
-                className="jar-action-btn jar-action-btn--unfold group"
-                style={
-                  {
-                    "--btn-ink": theme.ink,
-                    "--btn-accent": theme.paperDeep,
-                  } as CSSProperties
-                }
-              >
-                <span
-                  aria-hidden
-                  className="text-xs transition-transform duration-300 group-hover:rotate-45 select-none"
-                >
-                  ✦
-                </span>
+              <button type="button" onClick={onPullAnother} className="jar-site-btn jar-site-btn--primary">
+                <span aria-hidden>✦</span>
                 <span>unfold another</span>
               </button>
             </div>

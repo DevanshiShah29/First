@@ -102,7 +102,7 @@ export function useCmsNavigation(
           title: "New memory",
           note: "",
           date: "",
-          category: "Tiny Joy",
+          category: "",
           photoUrl: "",
           color: "#A78BFA",
           status: "draft",
@@ -129,7 +129,6 @@ export function useCmsNavigation(
           widthRem: 1.85,
           heightRem: 5.4,
           enabled: true,
-          status: "draft",
         },
       ],
     }));

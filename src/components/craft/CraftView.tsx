@@ -8,9 +8,13 @@ import { EMPTY_CRAFT, type CraftContent } from "@/content/types";
 export function CraftView({
   craft = EMPTY_CRAFT,
   showFooterLinks = true,
+  showAboutLink = true,
+  showContactLink = true,
 }: {
   craft?: CraftContent;
   showFooterLinks?: boolean;
+  showAboutLink?: boolean;
+  showContactLink?: boolean;
 }) {
   const hasPageCopy = Boolean(craft.title.trim() || craft.intro.trim() || craft.kicker.trim());
   const hasGroups = craft.groups.length > 0;
@@ -73,17 +77,34 @@ export function CraftView({
         </div>
       )}
 
-      {showFooterLinks ? (
+      {showFooterLinks && (showAboutLink || showContactLink) ? (
         <p className="mt-16 max-w-2xl text-sm text-muted">
-          Want the product story instead?{" "}
-          <Link href="/#about" className="underline underline-offset-4 hover:text-accent-text">
-            Read About
-          </Link>{" "}
-          or{" "}
-          <Link href="/#contact" className="underline underline-offset-4 hover:text-accent-text">
-            say hello
-          </Link>
-          .
+          {showAboutLink ? (
+            <>
+              Want the product story instead?{" "}
+              <Link href="/#about" className="underline underline-offset-4 hover:text-accent-text">
+                Read About
+              </Link>
+              {showContactLink ? (
+                <>
+                  {" "}
+                  or{" "}
+                  <Link href="/#contact" className="underline underline-offset-4 hover:text-accent-text">
+                    say hello
+                  </Link>
+                </>
+              ) : null}
+              .
+            </>
+          ) : (
+            <>
+              Want to get in touch?{" "}
+              <Link href="/#contact" className="underline underline-offset-4 hover:text-accent-text">
+                Say hello
+              </Link>
+              .
+            </>
+          )}
         </p>
       ) : null}
     </article>

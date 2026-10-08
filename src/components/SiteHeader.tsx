@@ -4,7 +4,13 @@
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import Link from "next/link";
 
-import { isPublished, type CraftContent, type PublicSiteContent, type SiteContent } from "@/content/types";
+import {
+  isNavHrefEnabled,
+  isPublished,
+  type CraftContent,
+  type PublicSiteContent,
+  type SiteContent,
+} from "@/content/types";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 
@@ -49,7 +55,9 @@ export function SiteHeader({
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const menuId = useId();
-  const nav = variant === "home" ? homeNav : pageNav;
+  const nav = (variant === "home" ? homeNav : pageNav).filter((item) =>
+    isNavHrefEnabled(item.href, site?.sections),
+  );
   const displayName = site?.name || name;
   const notesLabel = craft?.title?.trim() || "Notes";
 
@@ -57,7 +65,7 @@ export function SiteHeader({
     { href: "/reading", label: "Book Nook" },
     { href: "/memories", label: "Memories" },
     ...(craft && isPublished(craft.status) ? [{ href: "/craft", label: notesLabel }] : []),
-  ];
+  ].filter((item) => isNavHrefEnabled(item.href, site?.sections));
 
   useEffect(() => {
     /**
@@ -137,19 +145,21 @@ export function SiteHeader({
           </Link>
         )}
         <div className="flex items-center gap-3">
-          <ul className="hidden items-center gap-8 md:flex">
-            {nav.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  className="nav-link text-sm"
-                  onClick={(e) => onHashLink(e, item.href)}
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
+          {nav.length ? (
+            <ul className="hidden items-center gap-8 md:flex">
+              {nav.map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    className="nav-link text-sm"
+                    onClick={(e) => onHashLink(e, item.href)}
+                  >
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {allowToggle ? <ThemeToggle /> : null}
           <button
             type="button"
@@ -205,33 +215,37 @@ export function SiteHeader({
 
         <div className="section-shell flex flex-1 flex-col justify-between overflow-y-auto py-8">
           <nav aria-label="Mobile navigation">
-            <ul className="space-y-1">
-              {nav.map((item) => (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    className="block rounded-lg px-3 py-2.5 text-base font-medium text-muted transition hover:bg-brand/10 hover:text-accent-hover"
-                    onClick={(e) => onHashLink(e, item.href)}
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-            <div className="my-4 border-t border-line" />
-            <ul className="space-y-1">
-              {mobilePages.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block rounded-lg px-3 py-2.5 text-base font-medium text-muted transition hover:bg-brand/10 hover:text-accent-hover"
-                    onClick={() => setOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            {nav.length ? (
+              <ul className="space-y-1">
+                {nav.map((item) => (
+                  <li key={item.href}>
+                    <a
+                      href={item.href}
+                      className="block rounded-lg px-3 py-2.5 text-base font-medium text-muted transition hover:bg-brand/10 hover:text-accent-hover"
+                      onClick={(e) => onHashLink(e, item.href)}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {nav.length && mobilePages.length ? <div className="my-4 border-t border-line" /> : null}
+            {mobilePages.length ? (
+              <ul className="space-y-1">
+                {mobilePages.map((item) => (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className="block rounded-lg px-3 py-2.5 text-base font-medium text-muted transition hover:bg-brand/10 hover:text-accent-hover"
+                      onClick={() => setOpen(false)}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </nav>
 
           {allowToggle ? (

@@ -13,6 +13,7 @@ interface HeroCtasProps {
   resume: string;
   name: string;
   align?: "start" | "center";
+  showProjects?: boolean;
   onProjects: (e: MouseEvent<HTMLAnchorElement>) => void;
 }
 
@@ -24,21 +25,25 @@ export function HeroCtas({
   resume,
   name,
   align = "start",
+  showProjects = true,
   onProjects,
 }: HeroCtasProps) {
   const download = resumeDownloadProps(resume, name);
+  if (!showProjects && !download) return null;
   return (
     <div
       className={`mt-9 flex flex-col gap-4 sm:flex-row ${align === "center" ? "items-center justify-center" : ""}`}
     >
-      <a
-        href="#projects"
-        onClick={onProjects}
-        className="btn-primary inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-foreground hover:-translate-y-0.5"
-      >
-        View My Work
-        <IconArrowRight />
-      </a>
+      {showProjects ? (
+        <a
+          href="#projects"
+          onClick={onProjects}
+          className="btn-primary inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-foreground hover:-translate-y-0.5"
+        >
+          View My Work
+          <IconArrowRight />
+        </a>
+      ) : null}
       {download ? (
         <a
           href={download.href}

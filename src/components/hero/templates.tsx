@@ -4,7 +4,7 @@
 import type { MouseEvent, ReactNode } from "react";
 
 // Application services & types
-import type { HeroTemplateId, PublicSiteContent, SiteContent } from "@/content/types";
+import { sectionEnabled, type HeroTemplateId, type PublicSiteContent, type SiteContent } from "@/content/types";
 
 // UI components
 import { Fade } from "@/components/Fade";
@@ -43,7 +43,7 @@ export function HeroCopy({
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} name={site.name} align="center" onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} align="center" showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
         </Fade>
       </div>
     );
@@ -65,7 +65,7 @@ export function HeroCopy({
           <p className="mt-4 max-w-xl text-base leading-7 text-muted">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
         </Fade>
       </div>
     );
@@ -93,7 +93,7 @@ export function HeroCopy({
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{site.line}</p>
         </Fade>
         <Fade delay={0.24}>
-          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
         </Fade>
       </div>
     );
@@ -116,7 +116,7 @@ export function HeroCopy({
         <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
       </Fade>
       <Fade delay={0.22}>
-        <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
+        <HeroCtas resume={site.resume} name={site.name} showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
       </Fade>
     </div>
   );
@@ -147,7 +147,7 @@ export function ClassicHero({ site, onProjects }: HeroProps) {
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
         </Fade>
       </div>
     </section>
@@ -179,7 +179,7 @@ export function CenteredHero({ site, onProjects }: HeroProps) {
           <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-muted sm:text-lg">{site.line}</p>
         </Fade>
         <Fade delay={0.22}>
-          <HeroCtas resume={site.resume} name={site.name} align="center" onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} align="center" showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
         </Fade>
       </div>
     </section>
@@ -207,7 +207,7 @@ export function SplitHero({ site, onProjects }: HeroProps) {
             <p className="mt-5 text-base leading-7 text-muted sm:text-lg">{site.line}</p>
           </Fade>
           <Fade delay={0.2}>
-            <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
+            <HeroCtas resume={site.resume} name={site.name} showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
           </Fade>
         </div>
         <Fade delay={0.1}>
@@ -265,7 +265,7 @@ export function MinimalHero({ site, onProjects }: HeroProps) {
             <p className="mt-4 max-w-xl text-base leading-7 text-muted">{site.line}</p>
           </Fade>
           <Fade delay={0.22}>
-            <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
+            <HeroCtas resume={site.resume} name={site.name} showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
           </Fade>
         </div>
       </div>
@@ -302,7 +302,7 @@ export function SpotlightHero({ site, onProjects }: HeroProps) {
           <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">{site.line}</p>
         </Fade>
         <Fade delay={0.24}>
-          <HeroCtas resume={site.resume} name={site.name} onProjects={onProjects} />
+          <HeroCtas resume={site.resume} name={site.name} showProjects={sectionEnabled(site.sections, "projects")} onProjects={onProjects} />
         </Fade>
         {site.stats.length ? (
           <Fade delay={0.3}>

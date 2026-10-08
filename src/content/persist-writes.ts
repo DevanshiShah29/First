@@ -205,7 +205,7 @@ export async function replaceShelfArtifacts(db: DbClient, rows: ShelfArtifactIte
   const values = Prisma.join(
     rows.map(
       (item, i) =>
-        Prisma.sql`(${item.id}::text, ${i}::int, ${item.name}::text, ${item.imageUrl}::text, ${item.widthRem}::float8, ${item.heightRem}::float8, ${item.enabled}::boolean, ${publishStatusOf(item.status)}::text)`,
+        Prisma.sql`(${item.id}::text, ${i}::int, ${item.name}::text, ${item.imageUrl}::text, ${item.widthRem}::float8, ${item.heightRem}::float8, ${item.enabled}::boolean, ${"published"}::text)`,
     ),
   );
   await upsertReplacing(

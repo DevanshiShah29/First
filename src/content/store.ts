@@ -29,6 +29,7 @@ import {
   isBookOrientation,
   isHeroTemplate,
   isSkillIcon,
+  normalizeSections,
   publishStatusOf,
   type BookOrientation,
   type ContactMediaKind,
@@ -177,6 +178,7 @@ function parseSite(value: unknown): SiteContent {
     linkedin: str(s.linkedin),
     github: str(s.github),
     resume: str(s.resume),
+    sections: normalizeSections(s.sections),
     stats: statsRaw.map((item) => {
       const row = asRecord(item);
       return {
@@ -380,7 +382,6 @@ function parseShelfArtifacts(value: unknown): ShelfArtifactItem[] {
       widthRem: parsePositiveRem(row.widthRem, 1.85),
       heightRem: parsePositiveRem(row.heightRem, 5.4),
       enabled: row.enabled !== false,
-      status: publishStatusOf(row.status),
     };
   });
 }
@@ -749,6 +750,7 @@ async function siteCoreData(site: SiteContent) {
     linkedin: site.linkedin,
     github: site.github,
     resume: site.resume,
+    sections: normalizeSections(site.sections) as unknown as Prisma.InputJsonValue,
   };
 }
 
@@ -841,6 +843,7 @@ export async function persistContent(
       linkedin: data.site.linkedin,
       github: data.site.github,
       resume: data.site.resume,
+      sections: normalizeSections(data.site.sections),
     }) !==
       fingerprint({
         name: previous.site.name,
@@ -866,6 +869,7 @@ export async function persistContent(
         linkedin: previous.site.linkedin,
         github: previous.site.github,
         resume: previous.site.resume,
+        sections: normalizeSections(previous.site.sections),
       });
 
   const heroChanged =
@@ -1103,6 +1107,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
       linkedin: site.linkedin,
       github: site.github,
       resume: site.resume,
+      sections: site.sections,
       stats: site.stats.map((s) => ({
         value: s.value,
         suffix: s.suffix,
@@ -1169,7 +1174,6 @@ async function fetchContentFromDb(): Promise<ContentData> {
       widthRem: item.widthRem,
       heightRem: item.heightRem,
       enabled: item.enabled,
-      status: publishStatusOf(item.status),
     })),
     shelfLayout: shelfLayoutRow
       ? parseShelfLayout({
@@ -1181,7 +1185,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
   });
 }
 
-const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v8"], {
+const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v9"], {
   tags: [CMS_CONTENT_TAG],
   // Fallback if a save misses tag expiration. Saves pass revalidateTag(..., { expire: 0 }).
   revalidate: 3600,

@@ -6,7 +6,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Bump when the generated client must replace the dev singleton. */
-const SCHEMA_STAMP = "publish-status-v1";
+const SCHEMA_STAMP = "section-visibility-v1";
 
 // Use DIRECT_URL for the app client so Prisma interactive transactions work
 // with Neon (the pooler URL is still used by `prisma db push` via schema).

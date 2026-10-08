@@ -1,11 +1,32 @@
 "use client";
 
 // Application services & types
-import type { ContentData, PublishStatus, SkillGroup } from "@/content/types";
+import {
+  SITE_SECTIONS,
+  normalizeSections,
+  sectionEnabled,
+  type ContentData,
+  type PublishStatus,
+  type SiteSectionId,
+  type SkillGroup,
+} from "@/content/types";
 import type { Screen } from "../types";
 
 // UI components
 import { Metabox } from "../components/Metabox";
+
+const SECTION_SCREEN: Record<SiteSectionId, Screen> = {
+  hero: "hero",
+  about: "about",
+  experience: "experience",
+  projects: "projects",
+  skills: "skills",
+  technologies: "technologies",
+  contact: "contact",
+  craft: "craft",
+  memories: "memories",
+  reading: "artifacts",
+};
 
 /**
  * Counts entries whose status is draft.
@@ -36,7 +57,9 @@ function draftCraftCount(craft: ContentData["craft"]) {
 function draftSkillCount(groups: SkillGroup[]) {
   return groups.reduce((total, group) => {
     const groupDraft = group.status === "draft" ? 1 : 0;
-    const itemDrafts = group.items.filter((item) => item.status === "draft").length;
+    const itemDrafts = group.items.filter(
+      (item) => item.status === "draft",
+    ).length;
     return total + groupDraft + itemDrafts;
   }, 0);
 }
@@ -52,6 +75,7 @@ function withDrafts(label: string, drafts: number) {
 
 interface DashboardScreenProps {
   data: ContentData;
+  setData: (data: ContentData) => void;
   go: (screen: Screen) => void;
   addExperience: () => void;
   addProject: () => void;
@@ -64,6 +88,7 @@ interface DashboardScreenProps {
  */
 export function DashboardScreen({
   data,
+  setData,
   go,
   addExperience,
   addProject,
@@ -71,6 +96,24 @@ export function DashboardScreen({
 }: DashboardScreenProps) {
   const site = data.site;
   const memoriesList = data.memories ?? [];
+  const sections = normalizeSections(site.sections);
+  const shownCount = SITE_SECTIONS.filter(
+    (section) => sections[section.id],
+  ).length;
+
+  /**
+   * Flips one live-site section. The admin bar Save applies it.
+   * @example setShown("hero", false) // hero hidden locally
+   */
+  function setShown(id: SiteSectionId, shown: boolean) {
+    setData({
+      ...data,
+      site: {
+        ...site,
+        sections: { ...sections, [id]: shown },
+      },
+    });
+  }
 
   return (
     <>
@@ -96,12 +139,18 @@ export function DashboardScreen({
             </li>
             <li>
               <button type="button" onClick={() => go("experience")}>
-                {withDrafts(`${data.experience.length} Experience`, draftCount(data.experience))}
+                {withDrafts(
+                  `${data.experience.length} Experience`,
+                  draftCount(data.experience),
+                )}
               </button>
             </li>
             <li>
               <button type="button" onClick={() => go("projects")}>
-                {withDrafts(`${data.projects.length} Projects`, draftCount(data.projects))}
+                {withDrafts(
+                  `${data.projects.length} Projects`,
+                  draftCount(data.projects),
+                )}
               </button>
             </li>
             <li>
@@ -135,7 +184,10 @@ export function DashboardScreen({
             </li>
             <li>
               <button type="button" onClick={() => go("memories")}>
-                {withDrafts(`${memoriesList.length} Memories`, draftCount(memoriesList))}
+                {withDrafts(
+                  `${memoriesList.length} Memories`,
+                  draftCount(memoriesList),
+                )}
               </button>
             </li>
             <li>
@@ -153,7 +205,10 @@ export function DashboardScreen({
             {site.title}
           </p>
           <p style={{ marginTop: 12 }}>
-            <button type="button" className="wp-btn wp-btn-primary" onClick={() => go("site")}>
+            <button
+              type="button"
+              className="wp-btn wp-btn-primary"
+              onClick={() => go("site")}>
               Edit settings
             </button>
           </p>
@@ -163,15 +218,63 @@ export function DashboardScreen({
           <p className="wp-sub" style={{ marginBottom: 12 }}>
             Add a new role, project, or memory without leaving the dashboard.
           </p>
-          <button type="button" className="wp-btn" onClick={addExperience} style={{ marginRight: 8 }}>
+          <button
+            type="button"
+            className="wp-btn"
+            onClick={addExperience}
+            style={{ marginRight: 8 }}>
             Add experience
           </button>
-          <button type="button" className="wp-btn" onClick={addProject} style={{ marginRight: 8 }}>
+          <button
+            type="button"
+            className="wp-btn"
+            onClick={addProject}
+            style={{ marginRight: 8 }}>
             Add project
           </button>
           <button type="button" className="wp-btn" onClick={addMemory}>
             Add memory
           </button>
+        </Metabox>
+
+        <Metabox
+          id="dash_sections"
+          className="wp-widget-wide"
+          title="Live website"
+          badge={`${shownCount} of ${SITE_SECTIONS.length} shown`}>
+          <p className="wp-sub" style={{ marginTop: 0 }}>
+            Turn a section off to hide it on the live site. It stays editable
+            here. Save to apply.
+          </p>
+          <ul className="wp-section-list">
+            {SITE_SECTIONS.map((section) => {
+              const shown = sectionEnabled(sections, section.id);
+              return (
+                <li key={section.id} className="wp-section-row">
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => go(SECTION_SCREEN[section.id])}>
+                      {section.label}
+                    </button>
+                    <span className="wp-section-where">{section.where}</span>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    className={`wp-switch${shown ? " is-on" : ""}`}
+                    aria-checked={shown}
+                    aria-label={`${shown ? "Hide" : "Show"} ${section.label} on the live site`}
+                    onClick={() => setShown(section.id, !shown)}>
+                    <span className="wp-switch-track" aria-hidden="true">
+                      <span className="wp-switch-knob" />
+                    </span>
+                    {shown ? "Shown" : "Hidden"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
         </Metabox>
       </div>
     </>

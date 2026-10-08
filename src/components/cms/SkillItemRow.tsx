@@ -74,7 +74,7 @@ export function SkillItemRow({
             <span className="wp-btn">{uploading ? "Uploading…" : "Upload icon"}</span>
             <input
               type="file"
-              accept="image/png,image/jpeg,image/webp,image/gif,.png,.jpg,.jpeg,.webp,.gif"
+              accept="image/png,image/jpeg,image/webp,image/gif,image/heic,image/heif,.png,.jpg,.jpeg,.webp,.gif,.heic,.heif"
               disabled={uploading}
               aria-label={`Upload icon image for ${item.name || noun}`}
               onChange={(e) => {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cmsUploadRateLimited, requireCmsMutation } from "@/server/cms-auth";
 import { storeCmsUpload, type UploadFolder } from "@/server/cms-upload-storage";
 import { clientIp } from "@/server/contact";
+import { heicToJpeg } from "@/server/heic-jpeg";
 import { sniffUploadMagic } from "@/server/upload-magic";
 
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ const FOLDERS = new Set<UploadFolder>(["hero", "skills", "memories", "resume", "
 const MAX_BYTES = 25 * 1024 * 1024;
 const MAX_RESUME_BYTES = 10 * 1024 * 1024;
 
-const MEDIA_EXTS = new Set(["jpg", "png", "webp", "gif", "avif", "mp4", "webm", "ogv", "mov"]);
+const MEDIA_EXTS = new Set(["jpg", "png", "webp", "gif", "avif", "heic", "mp4", "webm", "ogv", "mov"]);
 
 /**
  * Reads upload folder from FormData.
@@ -66,9 +67,26 @@ export async function POST(req: Request) {
   const sniffed = sniffUploadMagic(buf);
   if (!sniffed || !MEDIA_EXTS.has(sniffed.ext)) {
     return NextResponse.json(
-      { error: "File content is not a supported JPG, PNG, WebP, GIF, AVIF, MP4, WebM, or MOV." },
+      { error: "File content is not a supported JPG, PNG, WebP, GIF, AVIF, HEIC, MP4, WebM, or MOV." },
       { status: 400 },
     );
+  }
+
+  let body: Buffer = buf;
+  let ext = sniffed.ext;
+  let contentType = sniffed.contentType;
+  if (sniffed.ext === "heic") {
+    try {
+      body = await heicToJpeg(buf);
+      ext = "jpg";
+      contentType = "image/jpeg";
+    } catch (err) {
+      console.error("HEIC conversion failed", err);
+      return NextResponse.json(
+        { error: "Could not read that HEIC photo. Export it as JPG and try again." },
+        { status: 400 },
+      );
+    }
   }
 
   const rawName = file.name
@@ -76,14 +94,14 @@ export async function POST(req: Request) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
-  const filename = `${Date.now()}-${rawName || folder}.${sniffed.ext}`;
+  const filename = `${Date.now()}-${rawName || folder}.${ext}`;
 
   try {
     const stored = await storeCmsUpload({
       folder,
       filename,
-      body: buf,
-      contentType: sniffed.contentType,
+      body,
+      contentType,
     });
     return NextResponse.json({ url: stored.url, kind: sniffed.kind === "video" ? "video" : "image" });
   } catch (err) {

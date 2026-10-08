@@ -23,6 +23,24 @@ function focusableIn(root: HTMLElement): HTMLElement[] {
 }
 
 /**
+ * Moves focus without letting the browser scroll the viewport.
+ * @example focusWithoutScroll(button) // void
+ */
+function focusWithoutScroll(el: HTMLElement | null | undefined) {
+  if (!el?.isConnected) return;
+  el.focus({ preventScroll: true });
+}
+
+/**
+ * Puts the viewport back after a focus change tries to scroll it.
+ * @example pinScroll(0, 480) // void
+ */
+function pinScroll(x: number, y: number) {
+  window.scrollTo(x, y);
+  requestAnimationFrame(() => window.scrollTo(x, y));
+}
+
+/**
  * Dialog focus trap, restore, and body-scroll lock.
  * @example useDialogFocus(true) // dialogRef
  */
@@ -33,6 +51,21 @@ export function useDialogFocus<T extends HTMLElement = HTMLElement>(
   const dialogRef = useRef<T | null>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
   const savedFocusForSession = useRef(false);
+  const scrollLock = useRef<{ x: number; y: number } | null>(null);
+
+  /**
+   * Returns focus and scroll to where the page was when the dialog opened.
+   * @example restorePage() // void
+   */
+  function restorePage() {
+    const scroll = scrollLock.current;
+    const target = previousFocus.current;
+    previousFocus.current = null;
+    scrollLock.current = null;
+    savedFocusForSession.current = false;
+    focusWithoutScroll(target);
+    if (scroll) pinScroll(scroll.x, scroll.y);
+  }
 
   useEffect(() => {
     if (!active) {
@@ -43,12 +76,15 @@ export function useDialogFocus<T extends HTMLElement = HTMLElement>(
     if (!root) return;
     const node: HTMLElement = root;
 
-    // Save the page focus only once per open session (not on each content swap).
+    // Save the page focus and scroll only once per open session (not on each content swap).
     if (!savedFocusForSession.current) {
       previousFocus.current =
         document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      scrollLock.current = { x: window.scrollX, y: window.scrollY };
       savedFocusForSession.current = true;
     }
+
+    const heldScroll = scrollLock.current;
 
     /**
      * Focuses the first focusable control in the dialog.
@@ -56,7 +92,8 @@ export function useDialogFocus<T extends HTMLElement = HTMLElement>(
      */
     const focusFirst = () => {
       const list = focusableIn(node);
-      list[0]?.focus();
+      focusWithoutScroll(list[0]);
+      if (heldScroll) window.scrollTo(heldScroll.x, heldScroll.y);
     };
     // After paint so the dialog nodes exist and are focusable.
     const raf = requestAnimationFrame(focusFirst);
@@ -76,10 +113,10 @@ export function useDialogFocus<T extends HTMLElement = HTMLElement>(
       const last = list[list.length - 1];
       if (e.shiftKey && document.activeElement === first) {
         e.preventDefault();
-        last.focus();
+        focusWithoutScroll(last);
       } else if (!e.shiftKey && document.activeElement === last) {
         e.preventDefault();
-        first.focus();
+        focusWithoutScroll(first);
       }
     }
 
@@ -96,16 +133,14 @@ export function useDialogFocus<T extends HTMLElement = HTMLElement>(
 
   useEffect(() => {
     if (active) return;
-    // Restore when the dialog fully closes (component unmount or active→false).
-    previousFocus.current?.focus?.();
-    previousFocus.current = null;
-    savedFocusForSession.current = false;
+    // Restore when the dialog fully closes (active→false while this hook stays mounted).
+    restorePage();
   }, [active]);
 
   useEffect(() => {
     return () => {
       // Unmount while still active (RevealCard removed from tree).
-      previousFocus.current?.focus?.();
+      restorePage();
     };
   }, []);
 

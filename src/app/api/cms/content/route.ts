@@ -16,7 +16,7 @@ function saveErrorMessage(err: unknown) {
   if (/Can't reach database server|P1001|timed out/i.test(message)) {
     return "Could not reach the database. Check DATABASE_URL and try again.";
   }
-  if (/Unknown argument `contactMedia|contactMediaKind|P2022/i.test(message)) {
+  if (/Unknown argument `(contactMedia|sections)`|contactMediaKind|P2022/i.test(message)) {
     return "The database client is out of date. Restart the dev server, then save again.";
   }
   return "Could not save content to the database. Check DATABASE_URL and try again.";

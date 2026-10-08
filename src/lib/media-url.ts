@@ -4,7 +4,7 @@ export type PlayableMedia =
   | { type: "unsupported"; reason: string };
 
 const FILE_EXT = /\.(mp4|webm|ogg|ogv|mov|m4v)(?:\?|#|$)/i;
-const IMAGE_EXT = /\.(png|jpe?g|gif|webp|avif|svg)(?:\?|#|$)/i;
+const IMAGE_EXT = /\.(png|jpe?g|gif|webp|avif|heic|heif|svg)(?:\?|#|$)/i;
 
 /**
  * Extracts a YouTube video id from a URL or bare id.

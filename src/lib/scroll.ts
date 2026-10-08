@@ -1,15 +1,21 @@
 /**
- * Document Y offset of an element via offsetParents.
- * @example sectionTop(sectionEl) // 840
+ * Document Y of an element. getBoundingClientRect stays correct when an
+ * ancestor uses transform, which breaks the offsetParent walk.
+ * @example documentTop(sectionEl) // 840
  */
-export function sectionTop(el: HTMLElement) {
-  let y = 0;
-  let node: HTMLElement | null = el;
-  while (node) {
-    y += node.offsetTop;
-    node = node.offsetParent as HTMLElement | null;
-  }
-  return y;
+export function documentTop(el: HTMLElement) {
+  return el.getBoundingClientRect().top + window.scrollY;
+}
+
+/**
+ * Content start inside a homepage section. Section padding is the gap
+ * between sections; the nav should land on the heading, not that gap.
+ * @example contentStart(aboutSection) // the .section-shell
+ */
+function contentStart(el: HTMLElement) {
+  if (el.tagName !== "SECTION") return el;
+  const shell = el.querySelector(":scope > .section-shell");
+  return shell instanceof HTMLElement ? shell : el;
 }
 
 /**
@@ -31,7 +37,7 @@ export function scrollToHash(hash: string, instant = false) {
   const header = document.getElementById("site-header");
   const offset = (header?.getBoundingClientRect().height ?? 72) + 12;
   window.scrollTo({
-    top: Math.max(0, sectionTop(el) - offset),
+    top: Math.max(0, documentTop(contentStart(el)) - offset),
     behavior: instant ? "auto" : "smooth",
   });
 }

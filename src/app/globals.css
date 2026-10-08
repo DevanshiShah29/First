@@ -75,6 +75,25 @@
   --header-offset: calc(var(--header-h) + 0.75rem);
 }
 
+/* Section padding is the gap between sections. Hash scrolling should clear
+   that padding so the heading sits under the sticky header. py-16 / sm:py-24. */
+#about,
+#experience,
+#projects,
+#skills,
+#contact {
+  scroll-margin-top: -4rem;
+}
+@media (min-width: 40rem) {
+  #about,
+  #experience,
+  #projects,
+  #skills,
+  #contact {
+    scroll-margin-top: -6rem;
+  }
+}
+
 html,
 body {
   min-height: 100%;

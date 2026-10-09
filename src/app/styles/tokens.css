@@ -1,0 +1,218 @@
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+  --brand-from: #7c3aed;
+  --brand-to: #6366f1;
+  --background: #080808;
+  --foreground: #f8f8f8;
+  --muted: rgba(248, 248, 248, 0.55);
+  --muted-soft: rgba(248, 248, 248, 0.35);
+  --card: #0f0f0f;
+  --card-hover: #141414;
+  --border: rgba(255, 255, 255, 0.06);
+  --header: rgba(8, 8, 8, 0.94);
+  --inset: rgba(8, 8, 8, 0.6);
+  --chip: #0f0f0f;
+  --accent-text: #a78bfa;
+  --accent-hover: #a78bfa;
+  --badge: #c4b5fd;
+  --company-from: #a78bfa;
+  --company-to: #818cf8;
+  --skill-mono: #ffffff;
+  --orb-a: rgb(124 58 237 / 0.25);
+  --orb-b: rgb(79 70 229 / 0.15);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --background: #f7f7fb;
+  --foreground: #121218;
+  --muted: rgba(18, 18, 24, 0.62);
+  --muted-soft: rgba(18, 18, 24, 0.42);
+  --card: #ffffff;
+  --card-hover: #f3f1ff;
+  --border: rgba(18, 18, 24, 0.08);
+  --header: rgba(247, 247, 251, 0.96);
+  --inset: rgba(255, 255, 255, 0.72);
+  --chip: #f4f3fa;
+  --accent-text: #6d28d9;
+  --accent-hover: #5b21b6;
+  --badge: #6d28d9;
+  --company-from: #6d28d9;
+  --company-to: #4f46e5;
+  --skill-mono: #121218;
+  --orb-a: rgb(124 58 237 / 0.16);
+  --orb-b: rgb(79 70 229 / 0.1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-soft: var(--muted-soft);
+  --color-card: var(--card);
+  --color-card-hover: var(--card-hover);
+  --color-line: var(--border);
+  --color-header: var(--header);
+  --color-inset: var(--inset);
+  --color-chip: var(--chip);
+  --color-accent-text: var(--accent-text);
+  --color-accent-hover: var(--accent-hover);
+  --color-badge: var(--badge);
+  /* Maps Tailwind `brand` utilities to the CMS brand-from token. */
+  --color-brand: var(--brand-from);
+  --font-sans: var(--font-outfit);
+  --text-2xs: 0.7rem;
+  --tracking-kicker: 0.2em;
+  --tracking-kicker-tight: 0.18em;
+  --leading-flat: 1.05;
+}
+
+:root {
+  --header-h: 4.5rem;
+  --header-offset: calc(var(--header-h) + 0.75rem);
+}
+
+/* Section padding is the gap between sections. Hash scrolling should clear
+   that padding so the heading sits under the sticky header. py-16 / sm:py-24. */
+#about,
+#experience,
+#projects,
+#skills,
+#contact {
+  scroll-margin-top: -4rem;
+}
+@media (min-width: 40rem) {
+  #about,
+  #experience,
+  #projects,
+  #skills,
+  #contact {
+    scroll-margin-top: -6rem;
+  }
+}
+
+html,
+body {
+  min-height: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  scroll-padding-top: var(--header-offset);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:focus-within {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-outfit), Arial, Helvetica, sans-serif;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+  text-rendering: optimizeLegibility;
+}
+
+#about,
+#experience,
+#projects,
+#skills,
+#contact,
+.site-footer {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 720px;
+}
+
+::selection {
+  background: var(--accent-text);
+  color: #ffffff;
+}
+::-moz-selection {
+  background: var(--accent-text);
+  color: #ffffff;
+}
+
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none !important;
+}
+html.has-custom-cursor.cursor-text-field,
+html.has-custom-cursor.cursor-text-field * {
+  cursor: text !important;
+}
+
+.cursor-pointer,
+.cursor-trail {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 200;
+}
+html.has-custom-cursor .cursor-pointer,
+html.has-custom-cursor .cursor-trail {
+  display: block;
+}
+.cursor-pointer {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(
+    0 2px 6px color-mix(in srgb, var(--brand-from, #7c3aed) 45%, transparent)
+  );
+}
+.cursor-pointer.is-jar {
+  width: 24px;
+  height: 24px;
+  filter: drop-shadow(0 0 8px color-mix(in srgb, #fbbf24 45%, transparent))
+    drop-shadow(
+      0 2px 8px color-mix(in srgb, var(--brand-from, #7c3aed) 35%, transparent)
+    );
+}
+.cursor-pointer svg {
+  display: block;
+}
+.cursor-trail {
+  width: 18px;
+  height: 18px;
+  margin: 6px 0 0 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-from, #7c3aed) 35%, transparent);
+  filter: blur(4px);
+}
+.cursor-trail.is-jar {
+  width: 14px;
+  height: 14px;
+  margin: 4px 0 0 4px;
+  background: color-mix(in srgb, #fbbf24 30%, transparent);
+}
+
+.site-header {
+  background: var(--header);
+}
+
+html.jar-stars-active,
+html.jar-stars-active body {
+  background: var(--background);
+}
+
+html.jar-stars-active.has-custom-cursor,
+html.jar-stars-active.has-custom-cursor * {
+  cursor:
+    url(/memory-jar/cursor-star.png) 16 16,
+    auto !important;
+}
+
+.section-shell {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+@media (min-width: 40rem) {
+  .section-shell {
+    padding-inline: 2.5rem;
+  }
+}

@@ -1,6 +1,8 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import { displayFallback } from "@/content/display-fallback";
+import { sectionTitle, type SectionTitles } from "@/content/section-titles";
 import type { ProjectItem } from "@/content/types";
 import { NewTabHint } from "@/components/a11y";
 import { Fade } from "@/components/Fade";
@@ -8,9 +10,15 @@ import { IconCode, IconExternal } from "@/components/icons";
 
 /**
  * Renders the projects grid with GitHub/demo links.
- * @example <ProjectsSection projects={items} />
+ * @example <ProjectsSection projects={items} titles={site.titles} />
  */
-export function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
+export function ProjectsSection({
+  projects,
+  titles,
+}: {
+  projects: ProjectItem[];
+  titles?: Partial<SectionTitles> | null;
+}) {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -55,15 +63,17 @@ export function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
       <div className="section-shell">
         <Fade y={24}>
           <h2 id="projects-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
-            Projects
+            {sectionTitle(titles, "projects")}
           </h2>
           <div className="accent-underline mt-3 h-1 w-28 rounded" />
         </Fade>
         <div ref={gridRef} className="mt-10 grid grid-cols-1 items-stretch gap-6 lg:grid-cols-3">
-          {projects.map((project, i) => (
+          {projects.map((project, i) => {
+            const name = displayFallback(project.name, "Untitled");
+            return (
             <Fade key={project.id} y={28} delay={0.08 * (i % 3)} className="h-full">
               <article className="project-card card-surface card-lift group flex h-full flex-col rounded-2xl p-6">
-                <h3 className="text-xl font-semibold text-foreground">{project.name}</h3>
+                <h3 className="text-xl font-semibold text-foreground">{name}</h3>
                 <p className="mt-3 min-h-12 text-sm leading-6 text-muted">{project.blurb}</p>
                 <div className="mt-auto pt-5">
                   <div className="flex flex-wrap gap-2">
@@ -85,7 +95,7 @@ export function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
                     >
                       <IconCode />
                       GitHub
-                      <span className="sr-only"> source for {project.name}</span>
+                      <span className="sr-only"> source for {name}</span>
                       <NewTabHint />
                     </a>
                     {project.demo ? (
@@ -97,7 +107,7 @@ export function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
                       >
                         <IconExternal />
                         Live Demo
-                        <span className="sr-only"> of {project.name}</span>
+                        <span className="sr-only"> of {name}</span>
                         <NewTabHint />
                       </a>
                     ) : null}
@@ -105,7 +115,8 @@ export function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
                 </div>
               </article>
             </Fade>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

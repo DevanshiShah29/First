@@ -11,6 +11,7 @@ import { move, type Screen } from "../types";
 // UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -100,13 +101,14 @@ export function ProjectsListScreen({
                       {" | "}
                     </>
                   ) : null}
-                  <button
-                    type="button"
+                  <ConfirmButton
                     className="trash"
-                    onClick={() => setData({ ...data, projects: data.projects.filter((_, j) => j !== i) })}
+                    title={`Move “${item.name || "this project"}” to trash?`}
+                    confirmLabel="Move to trash"
+                    onConfirm={() => setData({ ...data, projects: data.projects.filter((_, j) => j !== i) })}
                   >
                     Trash
-                  </button>
+                  </ConfirmButton>
                 </div>
               </td>
               <td>{item.tags.join(", ")}</td>
@@ -357,16 +359,17 @@ function ProjectsEditForm({
             )}
           </div>
           <div className="wp-publish-actions">
-            <button
-              type="button"
+            <ConfirmButton
               className="wp-btn-link"
-              onClick={() => {
+              title={`Move “${project.name || "this project"}” to trash?`}
+              confirmLabel="Move to trash"
+              onConfirm={() => {
                 setData({ ...data, projects: data.projects.filter((p) => p.id !== project.id) });
                 go("projects");
               }}
             >
               Move to Trash
-            </button>
+            </ConfirmButton>
             <CmsSaveButton
               save={save}
               dirty={dirty}

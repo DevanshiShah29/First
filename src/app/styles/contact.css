@@ -1,0 +1,325 @@
+/* Name, email, and message already show focus with a border color change. */
+#contact input:focus,
+#contact input:focus-visible,
+#contact textarea:focus,
+#contact textarea:focus-visible {
+  outline: none;
+}
+
+.contact-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 18.5rem;
+  flex: 1 1 auto;
+  perspective: 920px;
+  touch-action: pan-y;
+}
+
+.contact-media {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: 18.5rem;
+  flex: 0 0 18.5rem;
+  background: transparent;
+}
+
+.contact-media-frame {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  border: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+.contact-scene-glow {
+  pointer-events: none;
+  position: absolute;
+  left: 12%;
+  top: 8%;
+  z-index: 0;
+  height: 11rem;
+  width: 11rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, var(--orb-a), transparent 70%);
+  opacity: 0.9;
+}
+
+.contact-scene-glow.is-alt {
+  left: auto;
+  right: 6%;
+  top: auto;
+  bottom: 10%;
+  height: 9rem;
+  width: 9rem;
+  background: var(--orb-b);
+}
+
+.contact-scene-rig {
+  position: absolute;
+  inset: 6% 0 4%;
+  margin: auto;
+  width: 14.5rem;
+  height: 15.5rem;
+  transform-style: preserve-3d;
+}
+.contact-scene-rig.is-tilting {
+  will-change: transform;
+}
+
+.contact-floor {
+  position: absolute;
+  left: 50%;
+  top: 78%;
+  width: 9.5rem;
+  height: 2.4rem;
+  transform: translateX(-50%) rotateX(78deg) translateZ(-28px);
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse,
+    color-mix(in srgb, var(--foreground) 18%, transparent),
+    transparent 72%
+  );
+}
+
+.contact-ring {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  border: 1.5px solid color-mix(in srgb, var(--accent-text) 42%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 24px color-mix(in srgb, var(--brand-from) 18%, transparent);
+  transform-style: preserve-3d;
+}
+
+.contact-ring-a {
+  width: 15.4rem;
+  height: 15.4rem;
+  margin: -7.7rem 0 0 -7.7rem;
+  transform: rotateX(68deg) rotateZ(18deg);
+  animation: contact-spin 22s linear infinite;
+  animation-play-state: paused;
+}
+
+.contact-ring-b {
+  width: 11.6rem;
+  height: 11.6rem;
+  margin: -5.8rem 0 0 -5.8rem;
+  border-color: color-mix(in srgb, var(--brand-to) 55%, transparent);
+  transform: rotateX(74deg) rotateY(12deg) rotateZ(-28deg);
+  animation: contact-spin-rev 28s linear infinite;
+  animation-play-state: paused;
+}
+
+.contact-scene.is-live .contact-ring-a,
+.contact-scene.is-live .contact-ring-b {
+  animation-play-state: running;
+}
+
+.contact-sheet {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 8.1rem;
+  height: 10.6rem;
+  margin: -5.3rem 0 0 -4.05rem;
+  border-radius: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  background: color-mix(in srgb, var(--card) 88%, var(--foreground) 6%);
+  box-shadow:
+    0 16px 32px rgb(0 0 0 / 0.18),
+    0 0 0 1px color-mix(in srgb, var(--brand-from) 16%, transparent);
+  transform-style: preserve-3d;
+}
+
+.contact-sheet-back {
+  transform: translate3d(16px, 10px, 2px) rotateX(-8deg) rotateY(-6deg);
+  opacity: 0.55;
+}
+
+.contact-sheet-mid {
+  transform: translate3d(8px, 5px, 16px) rotateX(-8deg) rotateY(-12deg);
+  opacity: 0.78;
+}
+
+.contact-sheet-front {
+  display: flex;
+  flex-direction: column;
+  gap: 0.42rem;
+  padding: 0.85rem 0.8rem 0.9rem;
+  transform: translateZ(32px) rotateX(-8deg) rotateY(-18deg);
+  transition: transform 0.45s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .contact-scene:hover .contact-sheet-front {
+    transform: translateZ(46px) rotateX(-10deg) rotateY(-22deg) translateY(-6px);
+  }
+}
+
+.contact-sheet-brand {
+  display: block;
+  height: 0.28rem;
+  width: 42%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--brand-from), var(--brand-to));
+}
+
+.contact-sheet-chip {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  margin-bottom: 0.2rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--brand-from) 16%, transparent);
+  color: var(--accent-text);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  padding: 0.12rem 0.4rem;
+}
+
+.contact-sheet-line {
+  display: block;
+  height: 0.22rem;
+  width: 100%;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+}
+
+.contact-sheet-line.is-short {
+  width: 58%;
+}
+
+.contact-sheet-line.is-mid {
+  width: 76%;
+}
+
+.contact-node {
+  position: absolute;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: var(--accent-text);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--accent-text) 70%, transparent);
+}
+
+.contact-node-a {
+  left: 6%;
+  top: 22%;
+  transform: translateZ(54px);
+  animation: contact-pulse 3.4s ease-in-out infinite;
+  animation-play-state: paused;
+}
+
+.contact-node-b {
+  right: 10%;
+  top: 28%;
+  width: 0.32rem;
+  height: 0.32rem;
+  transform: translateZ(36px);
+  animation: contact-pulse 4.2s ease-in-out infinite 0.4s;
+  animation-play-state: paused;
+}
+
+.contact-node-c {
+  left: 18%;
+  bottom: 16%;
+  width: 0.28rem;
+  height: 0.28rem;
+  transform: translateZ(44px);
+  animation: contact-pulse 3.8s ease-in-out infinite 0.8s;
+  animation-play-state: paused;
+}
+
+.contact-scene.is-live .contact-node-a,
+.contact-scene.is-live .contact-node-b,
+.contact-scene.is-live .contact-node-c {
+  animation-play-state: running;
+}
+
+@keyframes contact-spin {
+  from {
+    transform: rotateX(68deg) rotateZ(0deg);
+  }
+  to {
+    transform: rotateX(68deg) rotateZ(360deg);
+  }
+}
+
+@keyframes contact-spin-rev {
+  from {
+    transform: rotateX(74deg) rotateY(12deg) rotateZ(0deg);
+  }
+  to {
+    transform: rotateX(74deg) rotateY(12deg) rotateZ(-360deg);
+  }
+}
+
+@keyframes contact-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: translateZ(40px) scale(0.92);
+  }
+  50% {
+    opacity: 1;
+    transform: translateZ(56px) scale(1.12);
+  }
+}
+
+@media (max-width: 640px) {
+  .contact-scene {
+    min-height: 14.5rem;
+  }
+
+  .contact-media {
+    height: 14.5rem;
+    flex-basis: 14.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .world-stage {
+    transition: none;
+  }
+  .world-note,
+  .world-jar-star,
+  .world-eq span,
+  .world-bits i,
+  .world-plane,
+  .world-flash,
+  .world-hero.is-playing::after,
+  .studio-paper-star,
+  .studio-steam i,
+  .studio-breath,
+  .studio-sparks i,
+  .studio-leaves i,
+  .animate-float-gentle,
+  .animate-jar-stir,
+  .animate-orb-rise,
+  .animate-paper-unfold,
+  .animate-paper-drift-a,
+  .animate-paper-drift-b,
+  .animate-paper-drift-c,
+  .animate-twinkle-slow,
+  .contact-ring,
+  .contact-node {
+    animation: none !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

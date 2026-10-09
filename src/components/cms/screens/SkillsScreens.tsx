@@ -16,6 +16,7 @@ import { move } from "../types";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { AiSuggestPreview } from "../components/AiVariantPicker";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -488,15 +489,17 @@ export function SkillGroupsScreen({
               Move down
             </button>
             {" · "}
-            <button
-              type="button"
+            <ConfirmButton
               className="wp-btn-link"
-              onClick={() =>
+              title={`Trash “${group.title || `this ${noun} group`}”?`}
+              message="This removes the group and everything in it. Save to update the live site."
+              confirmLabel="Trash group"
+              onConfirm={() =>
                 setData({ ...data, [kind]: groups.filter((_, j) => j !== gi) })
               }
             >
               Trash group
-            </button>
+            </ConfirmButton>
           </p>
         </Metabox>
       ))}

@@ -10,6 +10,8 @@ import {
   type ReactNode,
 } from "react";
 
+import { ConfirmButton } from "./components/ConfirmDialog";
+
 type FieldControlProps = {
   id?: string;
   "aria-describedby"?: string;
@@ -83,6 +85,7 @@ export function TextInput({
   placeholder,
   type = "text",
   small,
+  autoFocus,
   "aria-describedby": ariaDescribedBy,
   "aria-label": ariaLabel,
 }: {
@@ -92,6 +95,7 @@ export function TextInput({
   placeholder?: string;
   type?: string;
   small?: boolean;
+  autoFocus?: boolean;
   "aria-describedby"?: string;
   "aria-label"?: string;
 }) {
@@ -101,6 +105,7 @@ export function TextInput({
       type={type}
       value={value}
       placeholder={placeholder}
+      autoFocus={autoFocus}
       onChange={(e) => onChange(e.target.value)}
       className={small ? "wp-input wp-input-small" : "wp-input"}
       aria-describedby={ariaDescribedBy}
@@ -412,14 +417,15 @@ export function StringList({
           >
             ↓
           </button>
-          <button
-            type="button"
+          <ConfirmButton
             className="wp-btn"
-            aria-label={`Remove item ${i + 1}`}
-            onClick={() => onChange(values.filter((_, j) => j !== i))}
+            ariaLabel={`Remove item ${i + 1}`}
+            title={`Remove this ${addLabel.toLowerCase()}?`}
+            confirmLabel="Remove"
+            onConfirm={() => onChange(values.filter((_, j) => j !== i))}
           >
             Remove
-          </button>
+          </ConfirmButton>
         </div>
       ))}
       <button type="button" className="wp-add" onClick={() => onChange([...values, ""])}>

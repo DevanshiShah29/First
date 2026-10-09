@@ -230,12 +230,14 @@ export function RevealCard({
               </div>
             ) : null}
 
-            <p
-              className="mt-5 whitespace-pre-wrap break-words text-center font-serif-italic text-xl leading-snug sm:leading-relaxed"
-              style={{ color: theme.ink }}
-            >
-              “{cleanNote}”
-            </p>
+            {cleanNote ? (
+              <p
+                className="mt-5 whitespace-pre-wrap break-words text-center font-serif-italic text-xl leading-snug sm:leading-relaxed"
+                style={{ color: theme.ink }}
+              >
+                “{cleanNote}”
+              </p>
+            ) : null}
 
             <div
               className="mt-4 flex flex-wrap items-center justify-center gap-2 font-mono-body text-xs tracking-wider uppercase opacity-75"

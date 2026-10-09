@@ -12,6 +12,7 @@ import { move } from "../types";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { AiVariantPicker } from "../components/AiVariantPicker";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -344,15 +345,16 @@ export function AboutScreen({
             >
               ↓
             </button>
-            <button
-              type="button"
+            <ConfirmButton
               className="wp-btn"
-              onClick={() =>
+              title={`Remove “${stat.label || "this stat"}”?`}
+              confirmLabel="Remove"
+              onConfirm={() =>
                 setData({ ...data, site: { ...site, stats: site.stats.filter((_, j) => j !== i) } })
               }
             >
               Remove
-            </button>
+            </ConfirmButton>
           </div>
         ))}
         <button

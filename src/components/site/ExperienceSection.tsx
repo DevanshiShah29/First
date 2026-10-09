@@ -1,3 +1,5 @@
+import { displayFallback } from "@/content/display-fallback";
+import { sectionTitle } from "@/content/section-titles";
 import type { ExperienceItem, PublicSiteContent } from "@/content/types";
 import { Fade } from "@/components/Fade";
 
@@ -22,7 +24,7 @@ export function ExperienceSection({
       <div className="section-shell">
         <Fade y={24}>
           <h2 id="experience-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
-            Experience
+            {sectionTitle(site.titles, "experience")}
           </h2>
           <div className="accent-underline mt-3 h-1 w-28 rounded" />
           <p className="mt-4 max-w-2xl text-muted">{site.experienceIntro}</p>
@@ -42,7 +44,7 @@ export function ExperienceSection({
                       </span>
                     ) : null}
                   </div>
-                  <h3 className="mt-2 text-2xl font-semibold text-foreground">{job.role}</h3>
+                  <h3 className="mt-2 text-2xl font-semibold text-foreground">{displayFallback(job.role, "Role")}</h3>
                   <p className="company-grad mt-1 text-sm">{job.company}</p>
                   <p className="mt-4 leading-7 text-muted">{job.summary}</p>
                   <ul className="mt-4 list-disc space-y-2 pl-5">

@@ -1,0 +1,252 @@
+/* AI variant picker + suggest preview */
+.wp-ai-variants {
+  margin-top: 4px;
+}
+
+.wp-ai-variants-lede {
+  margin: 0 0 10px;
+  color: #50575e;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.wp-ai-variant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.wp-ai-variant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  padding: 12px;
+  border: 1px solid #d0d4f5;
+  border-radius: 8px;
+  background: #fff;
+  color: inherit;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.wp-ai-variant-card:hover {
+  border-color: #a5b4fc;
+}
+
+.wp-ai-variant-card.is-selected {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+  background: #f8f9ff;
+}
+
+.wp-ai-variant-card.is-all-selected {
+  border-color: #4338ca;
+}
+
+.wp-ai-variant-card-select {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wp-ai-variant-card-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.wp-ai-variant-badge {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wp-ai-variant-use-all {
+  font-size: 12px;
+  color: #646970;
+}
+
+.wp-ai-variant-body {
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #1d2327;
+}
+
+.wp-ai-variant-fields {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wp-ai-variant-fields dt {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #646970;
+}
+
+.wp-ai-variant-fields dd {
+  margin: 2px 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.wp-ai-field-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #e2e4e7;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.wp-ai-field-pick:hover {
+  border-color: #a5b4fc;
+}
+
+.wp-ai-field-pick.is-picked {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.wp-ai-field-pick:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.wp-ai-field-pick-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wp-ai-field-pick-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #646970;
+}
+
+.wp-ai-field-pick-hint {
+  font-size: 11px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.wp-ai-field-pick.is-picked .wp-ai-field-pick-hint {
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.wp-ai-field-pick-value {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #1d2327;
+}
+
+.wp-ai-variant-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.wp-ai-suggest {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #c9ceff;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wp-ai-suggest-kicker {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4f46e5;
+}
+
+.wp-ai-suggest-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wp-ai-suggest-copy {
+  min-width: 0;
+  flex: 1 1 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wp-ai-suggest-title {
+  font-size: 15px;
+  color: #1d2327;
+}
+
+.wp-ai-suggest-meta {
+  font-size: 12px;
+  color: #50575e;
+}
+
+.wp-ai-suggest-detail {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #646970;
+}
+
+.wp-ai-suggest-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wp-ai-color-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  vertical-align: -1px;
+}
+
+.wp-ai-suggest-swatch-row {
+  display: inline-flex;
+  align-items: center;
+}
+

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { displayFallback } from "@/content/display-fallback";
 import { EMPTY_CRAFT, type CraftContent } from "@/content/types";
 
 /**
@@ -38,25 +39,29 @@ export function CraftView({
 
           {hasGroups ? (
             <div className="mt-14 space-y-14">
-              {craft.groups.map((group) => (
-                <section key={group.title} aria-labelledby={`craft-${group.title}`}>
+              {craft.groups.map((group, gi) => {
+                const groupTitle = displayFallback(group.title, "Untitled group");
+                return (
+                <section key={`${groupTitle}-${gi}`} aria-labelledby={`craft-group-${gi}`}>
                   <h2
-                    id={`craft-${group.title}`}
+                    id={`craft-group-${gi}`}
                     className="text-2xl font-semibold text-foreground sm:text-3xl"
                   >
-                    {group.title}
+                    {groupTitle}
                   </h2>
                   <div className="accent-underline mt-3 h-1 w-24 rounded" />
                   {group.intro.trim() ? (
                     <p className="mt-4 max-w-2xl text-muted">{group.intro}</p>
                   ) : null}
                   <ul className="mt-8 space-y-6">
-                    {group.items.map((item) => (
+                    {group.items.map((item, ii) => (
                       <li
-                        key={item.title}
+                        key={`${item.title}-${ii}`}
                         className="card-surface rounded-2xl border border-line p-5 sm:p-6"
                       >
-                        <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {displayFallback(item.title, "Untitled")}
+                        </h3>
                         {item.why.trim() ? (
                           <p className="mt-2 text-sm leading-7 text-muted">{item.why}</p>
                         ) : null}
@@ -64,7 +69,8 @@ export function CraftView({
                     ))}
                   </ul>
                 </section>
-              ))}
+                );
+              })}
             </div>
           ) : null}
         </>

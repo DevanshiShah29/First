@@ -8,6 +8,7 @@ import type { HeroMediaKind, HeroMediaPlace, HeroMediaSide } from "@/content/typ
 import { mediaHint, parsePlayableMedia } from "@/lib/media-url";
 
 // UI components
+import { ConfirmButton } from "./ConfirmDialog";
 import { TextInput } from "../fields";
 
 const ACCEPT =
@@ -337,9 +338,19 @@ export function MediaEditor({
               </a>
             ) : null}
             {hasFile || kind !== "none" ? (
-              <button type="button" className="wp-btn wp-btn-danger-outline" onClick={onClear} disabled={uploading}>
+              <ConfirmButton
+                className="wp-btn wp-btn-danger-outline"
+                disabled={uploading}
+                title={surface === "contact" ? "Use the built-in graphic?" : "Remove this media?"}
+                message={
+                  surface === "contact"
+                    ? "This clears the saved image or video. Save to update the live site."
+                    : "This clears the saved media. Save to update the live site."
+                }
+                confirmLabel={clearLabel}
+                onConfirm={onClear}>
                 {clearLabel}
-              </button>
+              </ConfirmButton>
             ) : null}
           </div>
           {fileError ? <p className="wp-media-file-error">{fileError}</p> : null}

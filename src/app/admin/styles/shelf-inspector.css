@@ -1,0 +1,421 @@
+/* —— Shelf CMS components —— */
+.wp-shelf-sidebar-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #72aee6;
+  border-radius: 8px;
+  background: #f0f6fc;
+}
+.wp-shelf-inspector-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.wp-shelf-inspector-top strong {
+  font-size: 13px;
+  color: #1d2327;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wp-shelf-inspector-close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #646970;
+  cursor: pointer;
+  padding: 2px 5px;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: 4px;
+}
+.wp-shelf-inspector-close:hover {
+  color: #d63638;
+  background: rgba(214, 54, 56, 0.08);
+}
+.wp-shelf-table-thumb {
+  appearance: none;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  padding: 3px;
+  background: #fff;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+.wp-shelf-table-thumb:hover {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+.wp-shelf-table-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.wp-shelf-table-thumb-empty {
+  font-size: 10px;
+  font-weight: 700;
+  color: #8c8f94;
+  letter-spacing: 0.04em;
+}
+.wp-btn-small.is-danger {
+  color: #b32d2e !important;
+  border-color: #dba7a7 !important;
+}
+.wp-btn-small.is-danger:hover {
+  background: #fcf0f1 !important;
+  border-color: #d63638 !important;
+  color: #d63638 !important;
+}
+.wp-shelf-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #1d2327;
+}
+.wp-shelf-toggle-block {
+  display: flex;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.wp-shelf-publish-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.wp-btn-small {
+  height: 26px !important;
+  line-height: 24px !important;
+  font-size: 0.75rem !important;
+  padding: 0 8px !important;
+}
+.wp-shelf-edit-media {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.wp-shelf-edit-media-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  min-width: 0;
+}
+.wp-shelf-edit-thumb {
+  object-fit: contain;
+  background:
+    linear-gradient(45deg, #f0f0f1 25%, transparent 25%),
+    linear-gradient(-45deg, #f0f0f1 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f0f0f1 75%),
+    linear-gradient(-45deg, transparent 75%, #f0f0f1 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  background-color: #fff;
+  border-radius: 10px;
+  border: 1px solid #dcdcde;
+}
+.wp-shelf-edit-thumb.is-empty {
+  width: 72px;
+  height: 88px;
+  border-style: dashed;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #8c8f94;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.wp-shelf-placement-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+.wp-shelf-placement-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wp-shelf-placement-badges span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f0f0f1;
+  border: 1px solid #dcdcde;
+  color: #50575e;
+  font-size: 11px;
+  font-weight: 600;
+}
+.wp-shelf-placement-badges strong {
+  color: #1d2327;
+  font-size: 12px;
+}
+.wp-shelf-segment {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 8px;
+  background: #f0f0f1;
+  border: 1px solid #dcdcde;
+}
+.wp-shelf-segment-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: #50575e;
+  cursor: pointer;
+}
+.wp-shelf-segment-btn.is-active {
+  background: #fff;
+  color: #1d2327;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+.wp-shelf-toolbar-hint {
+  margin: 0;
+  margin-left: auto;
+  font-size: 12px;
+  color: #646970;
+}
+.wp-shelf-add-plank {
+  width: 100%;
+  margin: 4px 0;
+}
+.wp-shelf-palette-wrap {
+  padding: 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  background: #fbfbfc;
+}
+.wp-shelf-palette-label {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #646970;
+}
+.wp-shelf-palette-empty {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #646970;
+}
+.wp-shelf-canvas-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.wp-shelf-canvas-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1d2327;
+}
+.wp-shelf-canvas-tip {
+  font-weight: 500;
+  color: #646970;
+}
+.wp-shelf-canvas {
+  position: relative;
+  border: 1px solid #c3c4c7;
+  border-radius: 12px;
+  overflow: auto;
+  background:
+    radial-gradient(circle at top, #f3f4f5 0%, #e4e5e7 70%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.wp-shelf-inspector-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  width: 100%;
+}
+.wp-shelf-inspector-head strong {
+  font-size: 13px;
+  color: #1d2327;
+}
+.wp-shelf-inspector-meta {
+  font-size: 11px;
+  color: #646970;
+}
+/* Force live desktop cabinet chrome while the Desktop tab is active */
+.wp-shelf-canvas.is-desktop-preview {
+  padding: 24px 20px;
+}
+.wp-shelf-canvas.is-desktop-preview .bookshelf {
+  width: 67rem;
+  min-width: 67rem;
+  margin-inline: auto;
+}
+.wp-shelf-canvas.is-desktop-preview .bookshelf-room {
+  padding: 0;
+}
+.wp-shelf-canvas.is-desktop-preview .bookshelf-case-body {
+  grid-template-columns: 1rem minmax(0, 1fr) 1rem;
+}
+.wp-shelf-canvas.is-desktop-preview .bookshelf-case-back {
+  padding: 0.55rem 0.5rem 0.15rem;
+}
+.wp-shelf-canvas.is-desktop-preview .bookshelf-plank {
+  margin: 0 -0.5rem;
+  height: 0.98rem;
+}
+/* Force live mobile cabinet chrome while the Mobile tab is active */
+.wp-shelf-canvas.is-mobile-preview {
+  padding: 24px 16px;
+}
+.wp-shelf-mobile-frame {
+  max-width: 390px;
+  width: 100%;
+  margin-inline: auto;
+  padding: 0 1.5rem;
+  box-sizing: border-box;
+}
+.wp-shelf-canvas.is-mobile-preview .bookshelf {
+  width: 100%;
+  margin-inline: auto;
+}
+.wp-shelf-canvas.is-mobile-preview .bookshelf-room {
+  padding: 0;
+}
+.wp-shelf-canvas.is-mobile-preview .bookshelf-case-body {
+  grid-template-columns: 0.78rem minmax(0, 1fr) 0.78rem;
+}
+.wp-shelf-canvas.is-mobile-preview .bookshelf-case-back {
+  padding: 0.45rem 0.35rem 0.1rem;
+}
+.wp-shelf-canvas.is-mobile-preview .bookshelf-plank {
+  margin: 0 -0.35rem;
+  height: 0.88rem;
+}
+
+
+.wp-shelf-spacer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  min-height: 4rem;
+  border: 1px dashed #c3c4c7;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(34, 113, 177, 0.06),
+    rgba(34, 113, 177, 0.06) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  color: #646970;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: grab;
+  user-select: none;
+}
+.wp-shelf-spacer.is-selected {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+.wp-shelf-spacer.is-dragging {
+  opacity: 0.45;
+}
+.wp-shelf-editor-row.is-overflowing .wp-shelf-drop-zone,
+.wp-shelf-drop-zone.is-overflowing {
+  outline: 2px solid #d63638;
+  background: rgba(214, 54, 56, 0.06);
+}
+.wp-shelf-overflow-badge {
+  color: #b32d2e;
+  font-size: 11px;
+  font-weight: 600;
+  margin-right: auto;
+}
+.wp-shelf-inspector {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 4px;
+}
+.wp-shelf-inspector-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  font-size: 12px;
+}
+.wp-shelf-inspector-field > span:first-child {
+  min-width: 72px;
+  font-weight: 600;
+  color: #1d2327;
+}
+.wp-shelf-inspector-field input,
+.wp-shelf-inspector-field select {
+  min-width: 100px;
+}
+.wp-shelf-inspector-field input[type="range"] {
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+.wp-shelf-stack-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wp-shelf-stack-books {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: grid;
+  gap: 4px;
+}
+.wp-shelf-stack-books li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+.wp-shelf-picker-item.is-disabled {
+  opacity: 0.45;
+}
+.wp-shelf-picker-item input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+/* —— Shelf ornament upload drag state —— */
+.wp-shelf-edit-media.is-dragging {
+  outline: 2px dashed #2271b1;
+  outline-offset: 6px;
+  border-radius: 6px;
+  background: #f0f6fc;
+}
+
+

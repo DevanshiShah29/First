@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseSectionTitles } from "./section-titles";
 import {
   HERO_TEMPLATES,
   SKILL_ICONS,
@@ -17,6 +18,9 @@ const skillIconIds = [...SKILL_ICONS] as [SkillIcon, ...SkillIcon[]];
  */
 const nonEmpty = (label: string) =>
   z.string().trim().min(1, `${label} is required.`);
+
+/** Trimmed CMS text. A blank field stays blank instead of a placeholder word. */
+const blankable = z.string().trim();
 
 const hexColor = z
   .string()
@@ -86,11 +90,12 @@ const siteSchema = z.object({
   github: z.string(),
   resume: z.string(),
   sections: sectionVisibilitySchema,
+  titles: z.unknown().optional().transform((value) => parseSectionTitles(value)),
   stats: z.array(
     z.object({
       value: z.number().finite().nonnegative(),
       suffix: z.string(),
-      label: nonEmpty("Stat label"),
+      label: blankable,
     }),
   ),
 });
@@ -101,7 +106,7 @@ const experienceSchema = z.object({
   id: nonEmpty("Experience id"),
   when: z.string(),
   current: z.boolean(),
-  role: nonEmpty("Experience role"),
+  role: blankable,
   company: z.string(),
   summary: z.string(),
   bullets: z.array(z.string()),
@@ -111,7 +116,7 @@ const experienceSchema = z.object({
 
 const projectSchema = z.object({
   id: nonEmpty("Project id"),
-  name: nonEmpty("Project name"),
+  name: blankable,
   blurb: z.string(),
   tags: z.array(z.string()),
   github: z.string(),
@@ -120,7 +125,7 @@ const projectSchema = z.object({
 });
 
 const skillItemSchema = z.object({
-  name: nonEmpty("Skill name"),
+  name: blankable,
   icon: z.enum(skillIconIds),
   color: z.string().optional(),
   iconUrl: z.string().optional(),
@@ -128,7 +133,7 @@ const skillItemSchema = z.object({
 });
 
 const skillGroupSchema = z.object({
-  title: nonEmpty("Skill group title"),
+  title: blankable,
   items: z.array(skillItemSchema),
   status: publishStatusSchema,
 });
@@ -170,7 +175,7 @@ const themeSchema = z.object({
 const memorySchema = z.object({
   id: nonEmpty("Memory id"),
   title: z.string().optional(),
-  note: nonEmpty("Memory note"),
+  note: blankable,
   date: z.string().optional(),
   category: z.string().optional(),
   icon: z.string().optional(),
@@ -189,7 +194,7 @@ const remOrNull = z
 
 const shelfArtifactSchema = z.object({
   id: nonEmpty("Shelf artifact id"),
-  name: nonEmpty("Shelf artifact name"),
+  name: blankable,
   imageUrl: z.string(),
   widthRem: z.number().finite().positive(),
   heightRem: z.number().finite().positive(),
@@ -292,13 +297,13 @@ const shelfLayoutSchema = z
   });
 
 const craftItemSchema = z.object({
-  title: nonEmpty("Craft item title"),
+  title: blankable,
   why: z.string(),
   status: publishStatusSchema,
 });
 
 const craftGroupSchema = z.object({
-  title: nonEmpty("Craft group title"),
+  title: blankable,
   intro: z.string(),
   items: z.array(craftItemSchema),
   status: publishStatusSchema,

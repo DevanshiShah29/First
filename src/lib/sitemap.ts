@@ -1,3 +1,4 @@
+import { sectionTitle } from "@/content/section-titles";
 import {
   isNavHrefEnabled,
   isPublished,
@@ -25,7 +26,8 @@ export function siteMap(
   site: PublicSiteContent | SiteContent,
   craft?: CraftContent,
 ): SiteMapGroup[] {
-  const connect: SiteLink[] = [{ href: "/#contact", label: "Contact" }];
+  const titles = site.titles;
+  const connect: SiteLink[] = [{ href: "/#contact", label: sectionTitle(titles, "contactNav") }];
   if (site.email) connect.push({ href: `mailto:${site.email}`, label: site.email, external: true });
   if (site.linkedin) connect.push({ href: site.linkedin, label: "LinkedIn", external: true });
   if (site.github) connect.push({ href: site.github, label: "GitHub", external: true });
@@ -33,8 +35,8 @@ export function siteMap(
 
   const explore: SiteLink[] = [
     { href: "/", label: "Home" },
-    { href: "/reading", label: "Book Nook" },
-    { href: "/memories", label: "Memories" },
+    { href: "/reading", label: sectionTitle(titles, "reading") },
+    { href: "/memories", label: sectionTitle(titles, "memories") },
   ];
   if (craft && isPublished(craft.status)) {
     explore.push({ href: "/craft", label: craft.title?.trim() || "Notes" });
@@ -48,10 +50,10 @@ export function siteMap(
     {
       title: "Work",
       links: [
-        { href: "/#about", label: "About" },
-        { href: "/#experience", label: "Experience" },
-        { href: "/#projects", label: "Projects" },
-        { href: "/#skills", label: "Skills" },
+        { href: "/#about", label: sectionTitle(titles, "aboutNav") },
+        { href: "/#experience", label: sectionTitle(titles, "experience") },
+        { href: "/#projects", label: sectionTitle(titles, "projects") },
+        { href: "/#skills", label: sectionTitle(titles, "skillsNav") },
       ],
     },
     {

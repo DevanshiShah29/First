@@ -11,6 +11,7 @@ import { move, type Screen } from "../types";
 // UI components
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -112,15 +113,16 @@ export function ExperienceListScreen({
                     Down
                   </button>
                   {" | "}
-                  <button
-                    type="button"
+                  <ConfirmButton
                     className="trash"
-                    onClick={() =>
+                    title={`Move “${item.role || "this role"}” to trash?`}
+                    confirmLabel="Move to trash"
+                    onConfirm={() =>
                       setData({ ...data, experience: data.experience.filter((_, j) => j !== i) })
                     }
                   >
                     Trash
-                  </button>
+                  </ConfirmButton>
                 </div>
               </td>
               <td>{item.company}</td>
@@ -382,16 +384,17 @@ function ExperienceEditForm({
             <p className="wp-publish-muted">This flag is included when generating copy.</p>
           </div>
           <div className="wp-publish-actions">
-            <button
-              type="button"
+            <ConfirmButton
               className="wp-btn-link"
-              onClick={() => {
+              title={`Move “${job.role || "this role"}” to trash?`}
+              confirmLabel="Move to trash"
+              onConfirm={() => {
                 setData({ ...data, experience: data.experience.filter((j) => j.id !== job.id) });
                 go("experience");
               }}
             >
               Move to Trash
-            </button>
+            </ConfirmButton>
             <CmsSaveButton
               save={save}
               dirty={dirty}

@@ -4,6 +4,7 @@
 import type { MouseEvent, ReactNode } from "react";
 
 // Application services & types
+import { displayFallback } from "@/content/display-fallback";
 import { sectionEnabled, type HeroTemplateId, type PublicSiteContent, type SiteContent } from "@/content/types";
 
 // UI components
@@ -225,13 +226,13 @@ export function SplitHero({ site, onProjects }: HeroProps) {
             </ul>
             {site.stats.length ? (
               <div className="mt-8 grid grid-cols-3 gap-3">
-                {site.stats.slice(0, 3).map((stat) => (
-                  <div key={stat.label}>
+                {site.stats.slice(0, 3).map((stat, i) => (
+                  <div key={`${stat.label}-${i}`}>
                     <p className="text-xl font-semibold text-foreground">
                       {stat.value}
                       {stat.suffix}
                     </p>
-                    <p className="mt-1 text-xs text-muted">{stat.label}</p>
+                    <p className="mt-1 text-xs text-muted">{displayFallback(stat.label, "Stat")}</p>
                   </div>
                 ))}
               </div>
@@ -307,13 +308,13 @@ export function SpotlightHero({ site, onProjects }: HeroProps) {
         {site.stats.length ? (
           <Fade delay={0.3}>
             <div className="mt-14 grid max-w-2xl grid-cols-3 gap-6 border-t border-line pt-8">
-              {site.stats.slice(0, 3).map((stat) => (
-                <div key={stat.label}>
+              {site.stats.slice(0, 3).map((stat, i) => (
+                <div key={`${stat.label}-${i}`}>
                   <p className="text-2xl font-semibold text-foreground">
                     {stat.value}
                     {stat.suffix}
                   </p>
-                  <p className="mt-1 text-sm text-muted">{stat.label}</p>
+                  <p className="mt-1 text-sm text-muted">{displayFallback(stat.label, "Stat")}</p>
                 </div>
               ))}
             </div>

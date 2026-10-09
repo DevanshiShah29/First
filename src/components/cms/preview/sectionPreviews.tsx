@@ -94,21 +94,21 @@ export function SectionPreview({
       return (
         <div className="bg-background text-foreground">
           {isHidden(content, "projects") ? <HiddenBanner label="Projects" /> : null}
-          <ProjectsSection projects={projects} />
+          <ProjectsSection projects={projects} titles={site.titles} />
         </div>
       );
     case "skills":
       return (
         <div className="bg-background text-foreground">
           {isHidden(content, "skills") ? <HiddenBanner label="Skills" /> : null}
-          <SkillsSection skillGroups={skills} techGroups={technologies} />
+          <SkillsSection skillGroups={skills} techGroups={technologies} titles={site.titles} />
         </div>
       );
     case "technologies":
       return (
         <div className="bg-background text-foreground">
           {isHidden(content, "technologies") ? <HiddenBanner label="Technologies" /> : null}
-          <SkillsSection skillGroups={skills} techGroups={technologies} />
+          <SkillsSection skillGroups={skills} techGroups={technologies} titles={site.titles} />
         </div>
       );
     case "contact":

@@ -99,11 +99,14 @@ export function Site({ content }: { content: PublicContentData }) {
         {sectionEnabled(sections, "experience") ? (
           <ExperienceSection site={site} experience={experience} />
         ) : null}
-        {sectionEnabled(sections, "projects") ? <ProjectsSection projects={projects} /> : null}
+        {sectionEnabled(sections, "projects") ? (
+          <ProjectsSection projects={projects} titles={site.titles} />
+        ) : null}
         {showSkills || showTechnologies ? (
           <SkillsSection
             skillGroups={showSkills ? skillGroups : []}
             techGroups={showTechnologies ? techGroups : []}
+            titles={site.titles}
           />
         ) : null}
         {sectionEnabled(sections, "contact") ? <ContactSection site={site} /> : null}

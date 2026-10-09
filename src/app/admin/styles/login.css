@@ -1,0 +1,195 @@
+html:has(.wp-app),
+html:has(.wp-login) {
+  background: #f0f0f1;
+  color-scheme: light;
+}
+
+html:has(.wp-app) body,
+html:has(.wp-login) body {
+  background: #f0f0f1 !important;
+  color: #3c434a !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell,
+    "Helvetica Neue", sans-serif !important;
+}
+
+.wp-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: #f0f0f1;
+  color: #3c434a;
+}
+
+.wp-login-box {
+  width: 100%;
+  max-width: 320px;
+}
+
+.wp-login-box h1 {
+  text-align: center;
+  margin: 0 0 20px;
+}
+
+.wp-login-box h1 a {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #3c434a;
+  font-size: 20px;
+  font-weight: 400;
+}
+
+.wp-login-form {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: 26px 24px;
+}
+
+.wp-login-form label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 16px;
+  color: #1d2327;
+}
+
+.wp-password-field {
+  position: relative;
+  display: block;
+  margin-top: 4px;
+}
+
+.wp-login-form .wp-password-field input[type="password"],
+.wp-login-form .wp-password-field input[type="text"] {
+  width: 100%;
+  margin-top: 0;
+  padding: 3px 44px 3px 5px;
+  min-height: 40px;
+  font-size: 24px;
+  border: 1px solid #8c8f94;
+  background: #fff;
+  color: #2c3338;
+  border-radius: 4px;
+}
+
+.wp-login-form .wp-password-field input:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
+}
+
+.wp-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #646970;
+  cursor: pointer;
+}
+
+.wp-password-toggle:hover {
+  color: #1d2327;
+  background: #f0f0f1;
+}
+
+.wp-password-toggle:focus-visible {
+  outline: 2px solid #2271b1;
+  outline-offset: 1px;
+}
+
+.wp-password-toggle .wp-menu-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.wp-login-submit {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.wp-login-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.wp-login-forgot {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #2271b1;
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.wp-login-forgot:hover:not(:disabled) {
+  color: #135e96;
+}
+
+.wp-login-forgot:disabled {
+  color: #a7aaad;
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.wp-login-lead {
+  margin: 0 0 12px;
+  text-align: center;
+  font-size: 14px;
+  color: #50575e;
+}
+
+.wp-login-nav {
+  margin: 16px 0 0;
+  padding: 0 24px;
+  font-size: 13px;
+}
+
+.wp-login-nav a {
+  color: #50575e;
+  text-decoration: none;
+}
+
+.wp-login-nav a:hover {
+  color: #135e96;
+}
+
+.wp-notice {
+  margin: 0 0 16px;
+  padding: 8px 12px;
+  border: 1px solid #c3c4c7;
+  border-left-width: 4px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.wp-notice.is-error {
+  border-left-color: #d63638;
+}
+
+.wp-notice.is-success {
+  border-left-color: #00a32a;
+}
+
+.wp-notice.is-info {
+  border-left-color: #72aee6;
+}
+

@@ -1,17 +1,21 @@
+import { displayFallback } from "@/content/display-fallback";
+import { sectionTitle, type SectionTitles } from "@/content/section-titles";
 import type { SkillGroup } from "@/content/types";
 import { Fade } from "@/components/Fade";
 import { SkillMark } from "@/components/icons";
 
 /**
  * Renders skills and technology groups.
- * @example <SkillsSection skillGroups={skills} techGroups={tech} />
+ * @example <SkillsSection skillGroups={skills} techGroups={tech} titles={site.titles} />
  */
 export function SkillsSection({
   skillGroups = [],
   techGroups = [],
+  titles,
 }: {
   skillGroups?: SkillGroup[];
   techGroups?: SkillGroup[];
+  titles?: Partial<SectionTitles> | null;
 }) {
   if (skillGroups.length === 0 && techGroups.length === 0) return null;
 
@@ -20,19 +24,24 @@ export function SkillsSection({
       <div className="section-shell">
         <Fade y={24}>
           <h2 id="skills-heading" className="text-3xl font-semibold text-foreground sm:text-4xl">
-            Skills &amp; Technologies
+            {sectionTitle(titles, "skills")}
           </h2>
           <div className="accent-underline mt-3 h-1 w-48 rounded" />
         </Fade>
         <div className="mt-10 grid gap-8 lg:grid-cols-2">
-          {[...techGroups, ...skillGroups].map((group, gi) => (
-            <Fade key={`${group.title}-${gi}`} y={22} delay={0.08 * (gi % 2)}>
+          {[
+            ...techGroups.map((group) => ({ group, emptyTitle: "Technologies" })),
+            ...skillGroups.map((group) => ({ group, emptyTitle: "Skills" })),
+          ].map(({ group, emptyTitle }, gi) => (
+            <Fade key={`${emptyTitle}-${group.title}-${gi}`} y={22} delay={0.08 * (gi % 2)}>
               <div className="skill-group-card card-surface rounded-2xl p-6">
-                <h3 className="text-xl font-semibold text-foreground">{group.title}</h3>
+                <h3 className="text-xl font-semibold text-foreground">
+                  {displayFallback(group.title, emptyTitle)}
+                </h3>
                 <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-                  {group.items.map((item) => (
+                  {group.items.map((item, ii) => (
                     <div
-                      key={item.name}
+                      key={`${item.name}-${ii}`}
                       className="skill-tile group flex cursor-default flex-col items-center gap-2 rounded-xl border border-line bg-transparent p-4 text-muted transition-all hover:text-foreground"
                     >
                       <SkillMark
@@ -42,7 +51,7 @@ export function SkillsSection({
                         className="skill-mark opacity-75 transition-all group-hover:opacity-100 group-hover:brightness-125"
                       />
                       <span className="text-center text-xs font-medium transition-colors group-hover:text-foreground">
-                        {item.name}
+                        {displayFallback(item.name, "Item")}
                       </span>
                     </div>
                   ))}

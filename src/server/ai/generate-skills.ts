@@ -69,16 +69,18 @@ function parseExistingGroups(v: unknown): SkillGroup[] {
   if (!Array.isArray(v)) return [];
   return v.slice(0, 8).map((group) => {
     const g = group && typeof group === "object" ? (group as Record<string, unknown>) : {};
-    const title = str(g.title, 80) || "Skills";
+    const title = str(g.title, 80);
     const itemsRaw = Array.isArray(g.items) ? g.items : [];
-    const items: SkillItem[] = itemsRaw.slice(0, 24).map((item) => {
+    const items: SkillItem[] = itemsRaw.slice(0, 24).flatMap((item) => {
       const row = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
-      return {
-        name: str(row.name, 60) || "Skill",
+      const name = str(row.name, 60);
+      if (!name) return [];
+      return [{
+        name,
         icon: mapIcon(row.icon),
         color: normalizeHex(row.color),
         iconUrl: str(row.iconUrl, 500) || undefined,
-      };
+      }];
     });
     return { title, items };
   });
@@ -93,7 +95,7 @@ function parseGenerated(raw: string, existingGroups: SkillGroup[]): SkillSuggest
   if (!obj) return null;
   const name = str(obj.name, 60);
   if (!name) return null;
-  let groupTitle = str(obj.groupTitle ?? obj.group, 80) || "Skills";
+  let groupTitle = str(obj.groupTitle ?? obj.group, 80);
   const existingMatch = existingGroups.find(
     (g) => g.title.trim().toLowerCase() === groupTitle.trim().toLowerCase(),
   );

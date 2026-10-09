@@ -54,11 +54,11 @@ function parseGenerated(raw: string): GenerateAboutResult | null {
     const experienceIntro = str(row.experienceIntro, 500);
     if (!about && !philosophy) continue;
     variants.push({
-      about: about || "…",
-      philosophyKicker: philosophyKicker || "Philosophy",
-      philosophyTitle: philosophyTitle || "How I work",
-      philosophy: philosophy || about,
-      experienceIntro: experienceIntro || "",
+      about,
+      philosophyKicker,
+      philosophyTitle,
+      philosophy,
+      experienceIntro,
     });
   }
 

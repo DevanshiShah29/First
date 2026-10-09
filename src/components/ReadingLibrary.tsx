@@ -1,8 +1,10 @@
+import { sectionTitle, type SectionTitles } from "@/content/section-titles";
 import { EMPTY_SHELF_LAYOUT, type ShelfArtifactItem, type ShelfLayout } from "@/content/types";
 import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
 import { MediaImage } from "./MediaImage";
 import { NewTabHint } from "./a11y";
 import { Fade } from "./Fade";
+import { RouteRetry } from "./RouteRetry";
 import { Bookshelf } from "./reading/Bookshelf";
 import { shelfSections } from "./reading/shelfSections";
 
@@ -101,20 +103,39 @@ function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: 
  */
 export function ReadingLibrary({
   library,
+  loadFailed = false,
   artifacts = [],
   shelfLayout = EMPTY_SHELF_LAYOUT,
+  titles,
 }: {
   library: GoodreadsLibrary;
+  loadFailed?: boolean;
   artifacts?: ShelfArtifactItem[];
   shelfLayout?: ShelfLayout;
+  titles?: Partial<SectionTitles> | null;
 }) {
+  const pageTitle = sectionTitle(titles, "reading");
+  const nowTitle = sectionTitle(titles, "readingNow");
+  const doneTitle = sectionTitle(titles, "readingDone");
+  const wantTitle = sectionTitle(titles, "readingWant");
   const total = library.currentlyReading.length + library.read.length + library.toRead.length;
+
+  if (loadFailed) {
+    return (
+      <section id="library" className="section-shell py-20 sm:py-28">
+        <p className="kicker">From the desk</p>
+        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">{pageTitle}</h1>
+        <p className="mt-5 max-w-xl text-muted">Couldn’t load books from Goodreads right now.</p>
+        <RouteRetry />
+      </section>
+    );
+  }
 
   if (!library.configured) {
     return (
       <section id="library" className="section-shell py-20 sm:py-28">
         <p className="kicker">From the desk</p>
-        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Book Nook</h1>
+        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">{pageTitle}</h1>
         <p className="mt-5 max-w-xl text-muted">
           The bookshelf is taking a break. Add a Goodreads profile in the CMS to fill this page.
         </p>
@@ -126,14 +147,8 @@ export function ReadingLibrary({
     return (
       <section id="library" className="section-shell py-20 sm:py-28">
         <p className="kicker">From the desk</p>
-        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">Book Nook</h1>
-        <p className="mt-5 max-w-xl text-muted">
-          Couldn’t load books from Goodreads right now.{" "}
-          <a className="text-accent-text" href={library.profileUrl} target="_blank" rel="noopener noreferrer">
-            Open the profile
-            <NewTabHint />
-          </a>
-        </p>
+        <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">{pageTitle}</h1>
+        <p className="mt-5 max-w-xl text-muted">Nothing on these shelves yet.</p>
       </section>
     );
   }
@@ -144,7 +159,7 @@ export function ReadingLibrary({
         <Fade y={24}>
           <p className="kicker">From the desk</p>
           <h1 className="mt-3 max-w-3xl text-4xl font-semibold leading-tight text-foreground sm:text-5xl">
-            Book Nook
+            {pageTitle}
           </h1>
           <p className="mt-5 max-w-2xl text-base leading-7 text-muted sm:text-lg">
             Everything on my Goodreads shelves — what I’m in the middle of, what I’ve finished, and what I want next,
@@ -154,14 +169,14 @@ export function ReadingLibrary({
           <nav className="mt-8 flex flex-wrap gap-3 text-sm" aria-label="Shelves">
             {library.currentlyReading.length ? (
               <a href="#currently-reading" className="nav-link">
-                Reading ({library.currentlyReading.length})
+                {nowTitle} ({library.currentlyReading.length})
               </a>
             ) : null}
             <a href="#read" className="nav-link">
-              Read ({library.read.length})
+              {doneTitle} ({library.read.length})
             </a>
             <a href="#want-to-read" className="nav-link">
-              Want to read ({library.toRead.length})
+              {wantTitle} ({library.toRead.length})
             </a>
           </nav>
         </Fade>
@@ -178,7 +193,7 @@ export function ReadingLibrary({
       {library.currentlyReading.length ? (
         <section id="currently-reading" className="section-shell pt-16">
           <Fade y={24}>
-            <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Currently reading</h2>
+            <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">{nowTitle}</h2>
           </Fade>
           <div className="mt-8 grid gap-6">
             {library.currentlyReading.map((book) => (
@@ -190,7 +205,7 @@ export function ReadingLibrary({
 
       <section id="read" className="section-shell pt-16">
         <Fade y={24}>
-          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Read</h2>
+          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">{doneTitle}</h2>
         </Fade>
         <div className="mt-8 grid gap-6">
           {library.read.map((book) => (
@@ -201,7 +216,7 @@ export function ReadingLibrary({
 
       <section id="want-to-read" className="section-shell pt-16">
         <Fade y={24}>
-          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">Want to read</h2>
+          <h2 className="text-2xl font-semibold text-foreground sm:text-3xl">{wantTitle}</h2>
         </Fade>
         <div className="reading-want mt-8">
           {library.toRead.map((book) => (

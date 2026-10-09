@@ -43,10 +43,10 @@ function parseGenerated(raw: string): GenerateHeroResult | null {
     const line = str(row.line, 320);
     if (!greeting && !line) continue;
     variants.push({
-      kicker: kicker || "Portfolio",
-      greeting: greeting || "Hi, I’m …",
-      roles: roles.length ? roles : ["Product Manager"],
-      line: line || greeting,
+      kicker,
+      greeting,
+      roles,
+      line,
     });
   }
 

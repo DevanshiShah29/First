@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PageShell } from "@/components/PageShell";
 import { ReadingLibrary } from "@/components/ReadingLibrary";
 import { loadContent } from "@/content/store";
+import { sectionTitle } from "@/content/section-titles";
 import { EMPTY_SHELF_LAYOUT, sectionEnabled, toPublicContent } from "@/content/types";
 import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
 import { buildPageMetadata } from "@/lib/seo";
@@ -18,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const content = await loadContent();
   if (!sectionEnabled(content.site.sections, "reading")) notFound();
   return buildPageMetadata({
-    title: `Book Nook | ${content.site.name}`,
+    title: `${sectionTitle(content.site.titles, "reading")} | ${content.site.name}`,
     description: `Books ${content.site.name} is reading, has read, and wants to read — with notes from Goodreads.`,
     path: "/reading",
     siteName: content.site.name,
@@ -35,17 +36,20 @@ export default async function ReadingPage() {
   const content = toPublicContent(full);
   const name = full.site.name.split(" ")[0] || full.site.name;
   let library = emptyLibrary(full.site.goodreadsUrl);
+  let loadFailed = false;
   try {
     library = await loadGoodreadsLibrary(full.site.goodreadsUrl, name);
   } catch {
-    library = { ...emptyLibrary(full.site.goodreadsUrl), configured: true, name };
+    loadFailed = true;
   }
   return (
     <PageShell content={content}>
       <ReadingLibrary
         library={library}
+        loadFailed={loadFailed}
         artifacts={content.shelfArtifacts ?? []}
         shelfLayout={full.shelfLayout ?? EMPTY_SHELF_LAYOUT}
+        titles={content.site.titles}
       />
     </PageShell>
   );

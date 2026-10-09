@@ -4,6 +4,7 @@
 import type { SkillItem } from "@/content/types";
 
 // UI components
+import { ConfirmButton } from "./components/ConfirmDialog";
 import { PublishStatusControl } from "./components/PublishStatusControl";
 import { HexColorInput, TextInput } from "./fields";
 
@@ -133,9 +134,14 @@ export function SkillItemRow({
         >
           ↓
         </button>
-        <button type="button" className="wp-btn" onClick={onRemove}>
+        <ConfirmButton
+          className="wp-btn"
+          title={`Remove this ${noun}?`}
+          confirmLabel="Remove"
+          onConfirm={onRemove}
+        >
           Remove
-        </button>
+        </ConfirmButton>
       </div>
     </div>
   );

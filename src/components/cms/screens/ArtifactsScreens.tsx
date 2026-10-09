@@ -14,6 +14,7 @@ import { move, type Screen } from "../types";
 
 // UI components
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { Metabox } from "../components/Metabox";
 import { Field, TextInput } from "../fields";
 import { ShelfPlacementEditor } from "../shelf/ShelfPlacementEditor";
@@ -271,16 +272,17 @@ export function ArtifactsListScreen({
                             Down
                           </button>
                           {" | "}
-                          <button
-                            type="button"
+                          <ConfirmButton
                             className="trash"
-                            onClick={() =>
+                            title={`Move “${item.name || "this ornament"}” to trash?`}
+                            confirmLabel="Move to trash"
+                            onConfirm={() =>
                               setCatalog(
                                 artifactsList.filter((_, j) => j !== i),
                               )
                             }>
                             Trash
-                          </button>
+                          </ConfirmButton>
                         </div>
                       </td>
                       <td>
@@ -562,13 +564,14 @@ export function ArtifactsEditScreen({
                   />
                 </label>
                 {artifact.imageUrl ? (
-                  <button
-                    type="button"
+                  <ConfirmButton
                     className="wp-btn"
-                    onClick={() => patchArtifact({ imageUrl: "" })}
-                    disabled={uploading}>
+                    disabled={uploading}
+                    title="Remove this image?"
+                    confirmLabel="Remove image"
+                    onConfirm={() => patchArtifact({ imageUrl: "" })}>
                     Remove image
-                  </button>
+                  </ConfirmButton>
                 ) : null}
                 <p className="wp-sub" style={{ margin: 0 }}>
                   Use a transparent PNG (e.g. via{" "}
@@ -641,10 +644,11 @@ export function ArtifactsEditScreen({
                 : "Not placed on the shelf yet. Open the Shelf Builder tab to place it."}
             </p>
             <div className="wp-publish-actions" style={{ marginTop: 12 }}>
-              <button
-                type="button"
+              <ConfirmButton
                 className="wp-btn-link trash"
-                onClick={() => {
+                title={`Move “${artifact.name || "this ornament"}” to trash?`}
+                confirmLabel="Move to trash"
+                onConfirm={() => {
                   setData({
                     ...data,
                     shelfArtifacts: artifactsList.filter(
@@ -654,7 +658,7 @@ export function ArtifactsEditScreen({
                   go("artifacts");
                 }}>
                 Move to Trash
-              </button>
+              </ConfirmButton>
               <CmsSaveButton
                 save={save}
                 dirty={dirty}
@@ -664,11 +668,13 @@ export function ArtifactsEditScreen({
               />
             </div>
             {placed ? (
-              <button
-                type="button"
+              <ConfirmButton
                 className="wp-btn"
                 style={{ marginTop: 12, width: "100%" }}
-                onClick={() =>
+                title="Remove this ornament from the shelf?"
+                message="It stays in the catalog. Save to update the live site."
+                confirmLabel="Remove from shelf"
+                onConfirm={() =>
                   setData({
                     ...data,
                     shelfLayout: removeArtifactFromLayout(
@@ -678,7 +684,7 @@ export function ArtifactsEditScreen({
                   })
                 }>
                 Remove from shelf
-              </button>
+              </ConfirmButton>
             ) : null}
           </Metabox>
         </div>

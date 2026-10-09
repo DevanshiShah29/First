@@ -67,10 +67,10 @@ function parsePageGenerated(raw: string): GenerateCraftPageResult | null {
     const footnote = str(row.footnote, 400);
     if (!title && !intro) continue;
     variants.push({
-      kicker: kicker || "Engineering",
-      title: title || "Notes on craft",
-      intro: intro || "",
-      footnote: footnote || "",
+      kicker,
+      title,
+      intro,
+      footnote,
     });
   }
 
@@ -105,10 +105,8 @@ function parseGroupGenerated(raw: string): GenerateCraftGroupResult | null {
     }
     if (items.length === 0 && !intro) continue;
     variants.push({
-      intro: intro || "",
-      items: items.length
-        ? items
-        : [{ title: "A practice", why: "Why it matters — fill in after." }],
+      intro,
+      items,
     });
   }
 

@@ -4,6 +4,7 @@
 import { useEffect, useId, useState, type MouseEvent } from "react";
 import Link from "next/link";
 
+import { sectionTitle } from "@/content/section-titles";
 import {
   isNavHrefEnabled,
   isPublished,
@@ -21,19 +22,22 @@ import { ThemeToggle } from "./ThemeToggle";
 // Icons
 import { IconClose, IconMenu } from "./icons";
 
-const homeNav = [
-  { href: "#about", label: "About" },
-  { href: "#projects", label: "Projects" },
-  { href: "#skills", label: "Skills" },
-  { href: "#contact", label: "Contact" },
-] as const;
-
-const pageNav = [
-  { href: "/#about", label: "About" },
-  { href: "/#projects", label: "Projects" },
-  { href: "/#skills", label: "Skills" },
-  { href: "/#contact", label: "Contact" },
-] as const;
+/**
+ * Header links for homepage sections. Labels come from CMS titles.
+ * @example sectionNav("home", site.titles) // [{ href: "#about", label: "About" }]
+ */
+function sectionNav(
+  variant: "home" | "page",
+  titles: PublicSiteContent["titles"] | SiteContent["titles"] | undefined,
+) {
+  const prefix = variant === "home" ? "#" : "/#";
+  return [
+    { href: `${prefix}about`, label: sectionTitle(titles, "aboutNav") },
+    { href: `${prefix}projects`, label: sectionTitle(titles, "projects") },
+    { href: `${prefix}skills`, label: sectionTitle(titles, "skillsNav") },
+    { href: `${prefix}contact`, label: sectionTitle(titles, "contactNav") },
+  ];
+}
 
 /**
  * Renders sticky primary navigation.
@@ -55,15 +59,15 @@ export function SiteHeader({
   const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const menuId = useId();
-  const nav = (variant === "home" ? homeNav : pageNav).filter((item) =>
+  const nav = sectionNav(variant, site?.titles).filter((item) =>
     isNavHrefEnabled(item.href, site?.sections),
   );
   const displayName = site?.name || name;
   const notesLabel = craft?.title?.trim() || "Notes";
 
   const mobilePages = [
-    { href: "/reading", label: "Book Nook" },
-    { href: "/memories", label: "Memories" },
+    { href: "/reading", label: sectionTitle(site?.titles, "reading") },
+    { href: "/memories", label: sectionTitle(site?.titles, "memories") },
     ...(craft && isPublished(craft.status) ? [{ href: "/craft", label: notesLabel }] : []),
   ].filter((item) => isNavHrefEnabled(item.href, site?.sections));
 

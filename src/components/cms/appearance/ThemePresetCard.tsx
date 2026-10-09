@@ -1,6 +1,7 @@
 "use client";
 
 import type { ThemePalette } from "@/content/types";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { ColorPreviewStrip } from "./ColorPreviewStrip";
 
 export type ThemeCardModel = {
@@ -63,9 +64,14 @@ export function ThemePresetCard({
           </button>
         ) : null}
         {onDelete ? (
-          <button type="button" className="wp-btn wp-btn-small wp-btn-danger-outline" onClick={onDelete}>
+          <ConfirmButton
+            className="wp-btn wp-btn-small wp-btn-danger-outline"
+            title={`Delete “${theme.name || "this theme"}”?`}
+            message="This removes the saved theme. Save to update the live site."
+            confirmLabel="Delete"
+            onConfirm={onDelete}>
             Delete
-          </button>
+          </ConfirmButton>
         ) : null}
       </div>
     </article>

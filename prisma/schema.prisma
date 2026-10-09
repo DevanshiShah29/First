@@ -52,6 +52,8 @@ model SiteSettings {
   resume           String   @default("")
   /// Homepage and page visibility. Missing keys stay shown.
   sections         Json     @default("{}")
+  /// Page and section titles. Missing or blank keys use display fallbacks.
+  titles           Json     @default("{}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

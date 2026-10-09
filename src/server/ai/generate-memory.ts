@@ -51,9 +51,9 @@ function parseGenerated(raw: string): GenerateMemoryResult | null {
     const color = normalizeHex(row.color) || "#A78BFA";
     if (!note && !title) continue;
     variants.push({
-      title: title || "A small moment",
-      note: note || title,
-      category: category || "Tiny Joy",
+      title,
+      note,
+      category,
       color,
     });
   }

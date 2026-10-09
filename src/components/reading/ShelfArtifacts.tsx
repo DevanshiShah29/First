@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { displayFallback } from "@/content/display-fallback";
 
 type ShelfArtifactView = {
   imageUrl: string;
@@ -41,7 +42,7 @@ export function ShelfArtifact({ artifact }: { artifact: ShelfArtifactView }) {
     <div
       className={`bookshelf-artifact${free ? " is-free" : " is-inline"}`}
       style={style}
-      title={artifact.name}
+      title={displayFallback(artifact.name ?? "", "Ornament")}
       aria-hidden
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

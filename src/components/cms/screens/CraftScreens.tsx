@@ -18,6 +18,7 @@ import { move } from "../types";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { AiVariantPicker } from "../components/AiVariantPicker";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -554,10 +555,11 @@ export function CraftScreen({
                     Move down
                   </button>
                   {" · "}
-                  <button
-                    type="button"
+                  <ConfirmButton
                     className="wp-btn-link"
-                    onClick={() => {
+                    title={`Trash “${item.title || "this item"}”?`}
+                    confirmLabel="Trash item"
+                    onConfirm={() => {
                       const next = [...groups];
                       next[gi] = {
                         ...group,
@@ -567,7 +569,7 @@ export function CraftScreen({
                     }}
                   >
                     Trash item
-                  </button>
+                  </ConfirmButton>
                 </p>
               </div>
             ))}
@@ -586,13 +588,15 @@ export function CraftScreen({
                 + Add item
               </button>
               {" · "}
-              <button
-                type="button"
+              <ConfirmButton
                 className="wp-btn-link"
-                onClick={() => setGroups(groups.filter((_, j) => j !== gi))}
+                title={`Trash “${group.title || "this group"}”?`}
+                message="This removes the group and everything in it. Save to update the live site."
+                confirmLabel="Trash group"
+                onConfirm={() => setGroups(groups.filter((_, j) => j !== gi))}
               >
                 Trash group
-              </button>
+              </ConfirmButton>
             </p>
           </Metabox>
         );

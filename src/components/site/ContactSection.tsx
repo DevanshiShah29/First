@@ -4,6 +4,7 @@
 import { useState, type FormEvent } from "react";
 
 // Application services & types
+import { sectionTitle } from "@/content/section-titles";
 import { hasContactMedia, type PublicSiteContent } from "@/content/types";
 import { sendContactMessage } from "@/lib/contact-client";
 import { resumeDownloadProps } from "@/lib/resume";
@@ -76,7 +77,7 @@ export function ContactSection({ site }: { site: PublicSiteContent }) {
               <h2
                 id="contact-heading"
                 className="text-3xl font-semibold text-foreground sm:text-4xl">
-                Let&apos;s Work Together
+                {sectionTitle(site.titles, "contact")}
               </h2>
               <p className="mt-3 text-muted">{site.contactLine}</p>
               <form
@@ -166,7 +167,7 @@ export function ContactSection({ site }: { site: PublicSiteContent }) {
                 <ContactScene />
               )}
               <div className="flex flex-1 flex-col justify-end p-6 pt-1">
-                <p className="kicker text-muted-soft">Contact</p>
+                <p className="kicker text-muted-soft">{sectionTitle(site.titles, "contactNav")}</p>
                 <a
                   href={`mailto:${site.email}`}
                   className="mt-4 block text-foreground transition hover:text-accent-text">

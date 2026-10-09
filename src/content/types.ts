@@ -1,3 +1,5 @@
+import type { SectionTitles } from "./section-titles";
+
 export const SKILL_ICONS = [
   "discovery",
   "prioritize",
@@ -247,6 +249,8 @@ export type SiteContent = {
   stats: { value: number; suffix: string; label: string }[];
   /** Homepage and standalone pages. Missing means every section stays shown. */
   sections?: SectionVisibility;
+  /** Public page and section titles. Blank keys use display fallbacks and stay blank in the database. */
+  titles: SectionTitles;
 };
 
 /** Public visibility for a CMS entry. Missing means published. */

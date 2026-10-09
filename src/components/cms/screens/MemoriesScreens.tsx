@@ -13,6 +13,7 @@ import { move, type Screen } from "../types";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { AiVariantPicker } from "../components/AiVariantPicker";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
@@ -118,15 +119,16 @@ export function MemoriesListScreen({
                       Down
                     </button>
                     {" | "}
-                    <button
-                      type="button"
+                    <ConfirmButton
                       className="trash"
-                      onClick={() =>
+                      title={`Move “${item.title || "this memory"}” to trash?`}
+                      confirmLabel="Move to trash"
+                      onConfirm={() =>
                         setData({ ...data, memories: memoriesList.filter((_, j) => j !== i) })
                       }
                     >
                       Trash
-                    </button>
+                    </ConfirmButton>
                   </div>
                 </td>
                 <td>{item.date || "—"}</td>
@@ -157,18 +159,19 @@ export function MemoriesListScreen({
                       />
                     </label>
                     {item.photoUrl ? (
-                      <button
-                        type="button"
+                      <ConfirmButton
                         className="wp-btn-link trash"
                         style={{ fontSize: "0.8rem", textDecoration: "none" }}
-                        title="Remove photo"
-                        onClick={() => {
+                        buttonTitle="Remove photo"
+                        title="Remove this photo?"
+                        confirmLabel="Remove photo"
+                        onConfirm={() => {
                           const memories = memoriesList.map((m) => (m.id === item.id ? { ...m, photoUrl: "" } : m));
                           setData({ ...data, memories });
                         }}
                       >
                         Remove
-                      </button>
+                      </ConfirmButton>
                     ) : null}
                   </div>
                 </td>
@@ -422,17 +425,18 @@ export function MemoriesEditScreen({
                         }}
                       />
                       {memory.photoUrl ? (
-                        <button
-                          type="button"
+                        <ConfirmButton
                           className="wp-btn-link"
-                          onClick={() => {
+                          title="Remove this photo?"
+                          confirmLabel="Remove photo"
+                          onConfirm={() => {
                             const memories = [...memoriesList];
                             memories[memIndex] = { ...memory, photoUrl: "" };
                             setData({ ...data, memories });
                           }}
                         >
                           Remove photo
-                        </button>
+                        </ConfirmButton>
                       ) : null}
                     </div>
                     {uploading ? <span className="wp-description" style={{ display: "block", marginTop: 6 }}>Uploading photo…</span> : null}
@@ -471,16 +475,17 @@ export function MemoriesEditScreen({
             hint="Draft memories stay out of the public jar until you publish them."
           />
           <div className="wp-publish-actions">
-            <button
-              type="button"
+            <ConfirmButton
               className="wp-btn-link"
-              onClick={() => {
+              title={`Move “${memory.title || "this memory"}” to trash?`}
+              confirmLabel="Move to trash"
+              onConfirm={() => {
                 setData({ ...data, memories: memoriesList.filter((m) => m.id !== memory.id) });
                 go("memories");
               }}
             >
               Move to Trash
-            </button>
+            </ConfirmButton>
             <CmsSaveButton
               save={save}
               dirty={dirty}

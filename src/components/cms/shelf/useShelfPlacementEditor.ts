@@ -38,6 +38,7 @@ import {
   clientToRoomPos,
   ORIENTATION_META,
   placementXRem,
+  scrollShelfWhileDragging,
   type DragPayload,
   type PaletteKind,
   type PendingDecor,
@@ -247,6 +248,74 @@ export function useShelfPlacementEditor({
     },
     [measureTargets],
   );
+  const seenPlanksRef = useRef({ viewport, count: view.planks.length });
+  useEffect(() => {
+    const seen = seenPlanksRef.current;
+    const sameViewport = seen.viewport === viewport;
+    const previousCount = seen.count;
+    seenPlanksRef.current = { viewport, count: view.planks.length };
+    if (!sameViewport || view.planks.length <= previousCount) return;
+    const row = bayRef.current?.querySelectorAll<HTMLElement>(
+      "[data-editor-plank]",
+    )[view.planks.length - 1];
+    row?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [viewport, view.planks.length]);
+
+  // Drop targets call preventDefault on dragover, which disables native autoscroll.
+  useEffect(() => {
+    let frame = 0;
+    const pointer = { x: 0, y: 0, active: false };
+
+    const tick = () => {
+      frame = 0;
+      const mode = dragRef.current;
+      if (!mode || !pointer.active) return;
+      const root = document.scrollingElement;
+      const canvas = bayRef.current?.closest(".wp-shelf-canvas");
+      const pageBefore = root?.scrollTop ?? 0;
+      const canvasBefore = canvas instanceof HTMLElement ? canvas.scrollTop : 0;
+      scrollShelfWhileDragging(bayRef.current, pointer.y);
+      const pageAfter = root?.scrollTop ?? 0;
+      const canvasAfter = canvas instanceof HTMLElement ? canvas.scrollTop : 0;
+      const decorDrag =
+        mode.source === "palette-decor" ||
+        mode.source === "decor-move" ||
+        mode.source === "decor-resize" ||
+        (mode.source === "palette" && mode.kind === "decor");
+      if (!decorDrag && (pageAfter !== pageBefore || canvasAfter !== canvasBefore)) {
+        const next = targetAt(pointer.x, pointer.y);
+        setInsertPreview((prev) =>
+          prev?.plankIndex === next?.plankIndex && prev?.itemIndex === next?.itemIndex
+            ? prev
+            : next,
+        );
+      }
+      frame = requestAnimationFrame(tick);
+    };
+
+    const onDragOver = (ev: DragEvent) => {
+      if (!dragRef.current) return;
+      pointer.x = ev.clientX;
+      pointer.y = ev.clientY;
+      pointer.active = true;
+      if (!frame) frame = requestAnimationFrame(tick);
+    };
+    const stop = () => {
+      pointer.active = false;
+      cancelAnimationFrame(frame);
+      frame = 0;
+    };
+
+    document.addEventListener("dragover", onDragOver);
+    document.addEventListener("dragend", stop);
+    document.addEventListener("drop", stop);
+    return () => {
+      stop();
+      document.removeEventListener("dragover", onDragOver);
+      document.removeEventListener("dragend", stop);
+      document.removeEventListener("drop", stop);
+    };
+  }, [targetAt]);
 
   /**
    * Places decor at pointer position inside the shelf room (X in rem).

@@ -108,3 +108,71 @@ export function placementXRem(
   }
   return 0;
 }
+
+const DRAG_SCROLL_EDGE_PX = 72;
+const DRAG_SCROLL_MAX_STEP_PX = 18;
+
+/**
+ * Pixels to scroll when a pointer sits in the edge band of a scrollport.
+ * Negative moves toward the start. Zero when the pointer is outside the band.
+ * @example dragEdgeScrollDelta(8, 0, 800) // -16
+ */
+export function dragEdgeScrollDelta(
+  pointer: number,
+  start: number,
+  end: number,
+): number {
+  const edge = DRAG_SCROLL_EDGE_PX;
+  const span = end - start;
+  if (span <= edge * 2) return 0;
+  if (pointer < start + edge) {
+    const t = (edge - (pointer - start)) / edge;
+    return -Math.max(1, Math.round(DRAG_SCROLL_MAX_STEP_PX * clamp(t, 0, 1)));
+  }
+  if (pointer > end - edge) {
+    const t = (edge - (end - pointer)) / edge;
+    return Math.max(1, Math.round(DRAG_SCROLL_MAX_STEP_PX * clamp(t, 0, 1)));
+  }
+  return 0;
+}
+
+/**
+ * True when `el` can still move in the direction of `dy`.
+ * @example canScrollBy(document.documentElement, 12)
+ */
+function canScrollBy(el: HTMLElement, dy: number) {
+  if (dy < 0) return el.scrollTop > 0;
+  return el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+}
+
+/**
+ * Scrolls the shelf canvas, or the page, while a stack is dragged toward an edge.
+ * Drop targets call preventDefault on dragover, which turns off the browser's autoscroll.
+ * @example scrollShelfWhileDragging(bay, ev.clientY)
+ */
+export function scrollShelfWhileDragging(
+  origin: HTMLElement | null,
+  clientY: number,
+) {
+  const canvas = origin?.closest(".wp-shelf-canvas");
+  const canvasEl = canvas instanceof HTMLElement ? canvas : null;
+  if (canvasEl) {
+    const rect = canvasEl.getBoundingClientRect();
+    const overCanvas = clientY >= rect.top && clientY <= rect.bottom;
+    if (overCanvas) {
+      const visibleTop = Math.max(rect.top, 0);
+      const visibleBottom = Math.min(rect.bottom, window.innerHeight);
+      const canvasDy = dragEdgeScrollDelta(clientY, visibleTop, visibleBottom);
+      if (canvasDy && canScrollBy(canvasEl, canvasDy)) {
+        canvasEl.scrollTop += canvasDy;
+        return;
+      }
+    }
+  }
+
+  const viewportDy = dragEdgeScrollDelta(clientY, 0, window.innerHeight);
+  const root = document.scrollingElement;
+  if (viewportDy && root instanceof HTMLElement && canScrollBy(root, viewportDy)) {
+    root.scrollTop += viewportDy;
+  }
+}

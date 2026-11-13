@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { ThemePalette } from "@/content/types";
 import { Metabox } from "../components/Metabox";
 import { TextInput } from "../fields";
@@ -9,6 +10,7 @@ export function ThemePalettePanel({
   light,
   dark,
   onPaletteChange,
+  checkPanel,
   generating,
   canRegenerate,
   onReset,
@@ -22,6 +24,7 @@ export function ThemePalettePanel({
   light: ThemePalette;
   dark: ThemePalette;
   onPaletteChange: (mode: "light" | "dark", next: ThemePalette) => void;
+  checkPanel: ReactNode;
   generating: boolean;
   canRegenerate: boolean;
   onReset: () => void;
@@ -36,12 +39,20 @@ export function ThemePalettePanel({
     <Metabox id="app_palette_edit" title="Edit palette" badge="light + dark">
       <EditablePalette light={light} dark={dark} onChange={onPaletteChange} />
 
+      {checkPanel}
+
       <div className="wp-theme-edit-actions">
         <button type="button" className="wp-btn" onClick={onReset}>
           Reset
         </button>
-        <button type="button" className="wp-btn" disabled={generating || !canRegenerate} onClick={onRegenerate}>
-          Regenerate
+        <button
+          type="button"
+          className="wp-btn"
+          disabled={generating || !canRegenerate}
+          title="Generates a new palette from the prompt in Create with AI"
+          onClick={onRegenerate}
+        >
+          Regenerate with AI
         </button>
         <button type="button" className="wp-btn wp-btn-primary" onClick={onApply}>
           Apply

@@ -26,7 +26,6 @@ export function parsePalette(value: unknown, fallback: ThemePalette): ThemePalet
     background: normalizeHex(row.background, fallback.background),
     foreground: normalizeHex(row.foreground, fallback.foreground),
     card: normalizeHex(row.card, fallback.card),
-    cardHover: normalizeHex(row.cardHover, fallback.cardHover),
     chip: normalizeHex(row.chip, fallback.chip),
     accentText: normalizeHex(row.accentText, fallback.accentText),
     accentHover: normalizeHex(row.accentHover, fallback.accentHover),

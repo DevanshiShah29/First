@@ -136,6 +136,8 @@ async function fetchContentFromDb(): Promise<ContentData> {
       resume: site.resume,
       sections: site.sections,
       titles: site.titles,
+      seasons: site.seasons,
+      cursor: site.cursor,
       stats: site.stats.map((s) => ({
         value: s.value,
         suffix: s.suffix,
@@ -213,7 +215,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
   });
 }
 
-const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v10"], {
+const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v11"], {
   tags: [CMS_CONTENT_TAG],
   // Fallback if a save misses tag expiration. Saves pass revalidateTag(..., { expire: 0 }).
   revalidate: 3600,

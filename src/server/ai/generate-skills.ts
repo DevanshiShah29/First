@@ -148,8 +148,8 @@ export async function generateSkills(
   }
 
   const prompt = [
-    "You suggest ONE new soft/product skill for a personal portfolio Skills section.",
-    "Not programming languages. Sharp, concrete labels — not buzzword salad. No emojis.",
+    "You suggest ONE new soft/product skill for Devanshi's portfolio Skills section.",
+    "Not programming languages. Name it the way she would say it out loud. No slogan, no emojis.",
     "Sample skill names: Discovery, Prioritization, Writing specs, Opportunity mapping, Outcomes over output, Empty states.",
     "",
     "Return ONLY valid JSON with this shape:",

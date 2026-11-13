@@ -169,6 +169,16 @@ export function useCmsNavigation(
           { label: "Dashboard", onClick: () => go("dashboard") },
           { label: "Appearance", current: true },
         ];
+      case "seasons":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Seasons", current: true },
+        ];
+      case "titles":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Page titles", current: true },
+        ];
       case "experience":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },

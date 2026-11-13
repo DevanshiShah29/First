@@ -37,6 +37,8 @@ export type {
   HeroCopyVariant,
   MemoryCopyVariant,
 } from "./cms/generate-copy";
+export { generateSeasonLook } from "./cms/generate-season";
+export type { GeneratedSeasonLook } from "./cms/generate-season";
 export { generateThemePalette, improveThemePalette } from "./cms/generate-theme";
 export type { GeneratedThemeResult, ImproveThemeResult } from "./cms/generate-theme";
 export { fetchCmsAnalytics } from "./cms/analytics";

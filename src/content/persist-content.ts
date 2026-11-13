@@ -54,6 +54,8 @@ async function siteCoreData(site: SiteContent) {
     resume: site.resume,
     sections: normalizeSections(site.sections) as unknown as Prisma.InputJsonValue,
     titles: (site.titles ?? EMPTY_SECTION_TITLES) as unknown as Prisma.InputJsonValue,
+    seasons: site.seasons as unknown as Prisma.InputJsonValue,
+    cursor: site.cursor as unknown as Prisma.InputJsonValue,
   };
 }
 
@@ -140,6 +142,8 @@ export async function persistContent(
       resume: data.site.resume,
       sections: normalizeSections(data.site.sections),
       titles: data.site.titles ?? EMPTY_SECTION_TITLES,
+      seasons: data.site.seasons,
+      cursor: data.site.cursor,
     }) !==
       fingerprint({
         name: previous.site.name,
@@ -167,6 +171,8 @@ export async function persistContent(
         resume: previous.site.resume,
         sections: normalizeSections(previous.site.sections),
         titles: previous.site.titles ?? EMPTY_SECTION_TITLES,
+        seasons: previous.site.seasons,
+        cursor: previous.site.cursor,
       });
 
   const heroChanged =

@@ -122,7 +122,7 @@ export function ensureHoverDiff(base: string, hover: string, bg: string): string
 }
 
 /**
- * Analyzes an 8-color palette for contrast, similarity, hover, and hierarchy issues.
+ * Analyzes a palette for contrast, similarity, hover, and hierarchy issues.
  * @example checkPalette(lightPalette) // PaletteIssue[]
  */
 export function checkPalette(palette: ThemePalette): PaletteIssue[] {
@@ -131,7 +131,6 @@ export function checkPalette(palette: ThemePalette): PaletteIssue[] {
     background: normalizeHex(palette.background, "#FFFFFF"),
     foreground: normalizeHex(palette.foreground, "#000000"),
     card: normalizeHex(palette.card, "#FFFFFF"),
-    cardHover: normalizeHex(palette.cardHover, "#F0F0F0"),
     chip: normalizeHex(palette.chip, "#F0F0F0"),
     accentText: normalizeHex(palette.accentText, "#0000FF"),
     accentHover: normalizeHex(palette.accentHover, "#0000CC"),
@@ -194,17 +193,6 @@ export function checkPalette(palette: ThemePalette): PaletteIssue[] {
         p.background,
         relativeLuminance(hexToRgb(p.background) || { r: 0, g: 0, b: 0 }) > 0.45 ? -0.05 : 0.07,
       ),
-    });
-  }
-
-  if (colorDistance(p.card, p.cardHover) < 12) {
-    const suggested = ensureHoverDiff(p.card, p.cardHover, p.background);
-    issues.push({
-      id: "card-hover-weak",
-      field: "cardHover",
-      message: "Card hover is too close to the card color — hover feedback is weak.",
-      current: p.cardHover,
-      suggested,
     });
   }
 

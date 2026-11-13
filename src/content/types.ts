@@ -1,3 +1,5 @@
+import type { CursorSettings } from "./cursor";
+import type { SeasonsSettings } from "./seasons";
 import type { SectionTitles } from "./section-titles";
 
 export const SKILL_ICONS = [
@@ -251,6 +253,10 @@ export type SiteContent = {
   sections?: SectionVisibility;
   /** Public page and section titles. Blank keys use display fallbacks and stay blank in the database. */
   titles: SectionTitles;
+  /** Festive overlay. Missing or off keeps the year-round Appearance theme. */
+  seasons: SeasonsSettings;
+  /** Brand arrow follower. Missing means the default style. */
+  cursor: CursorSettings;
 };
 
 /** Public visibility for a CMS entry. Missing means published. */
@@ -319,7 +325,6 @@ export type ThemePalette = {
   background: string;
   foreground: string;
   card: string;
-  cardHover: string;
   chip: string;
   accentText: string;
   accentHover: string;
@@ -359,7 +364,6 @@ export const DEFAULT_THEME: ThemeContent = {
     background: "#080808",
     foreground: "#F8F8F8",
     card: "#0F0F0F",
-    cardHover: "#141414",
     chip: "#0F0F0F",
     accentText: "#A78BFA",
     accentHover: "#A78BFA",
@@ -369,7 +373,6 @@ export const DEFAULT_THEME: ThemeContent = {
     background: "#F7F7FB",
     foreground: "#121218",
     card: "#FFFFFF",
-    cardHover: "#F3F1FF",
     chip: "#F4F3FA",
     accentText: "#6D28D9",
     accentHover: "#5B21B6",
@@ -383,7 +386,6 @@ export const THEME_PALETTE_FIELDS: { key: keyof ThemePalette; label: string }[] 
   { key: "background", label: "Background" },
   { key: "foreground", label: "Text" },
   { key: "card", label: "Cards" },
-  { key: "cardHover", label: "Card hover" },
   { key: "chip", label: "Chips / tiles" },
   { key: "accentText", label: "Accent text" },
   { key: "accentHover", label: "Accent hover" },

@@ -1,8 +1,11 @@
 "use client";
 
 import type { PaletteIssue } from "@/lib/theme-contrast";
-import { Metabox } from "../components/Metabox";
 
+/**
+ * Contrast / hierarchy tool for the palette currently being edited.
+ * @example <ThemeCheckPanel paletteMode={mode} onPaletteMode={setMode} … />
+ */
 export function ThemeCheckPanel({
   paletteMode,
   onPaletteMode,
@@ -27,27 +30,34 @@ export function ThemeCheckPanel({
   onApplyIssue: (issue: PaletteIssue) => void;
 }) {
   return (
-    <Metabox id="app_palette_check" title="AI Palette Check" badge="optional">
+    <section className="wp-theme-check" aria-labelledby="theme-check-title">
+      <h3 className="wp-theme-check-title" id="theme-check-title">
+        Palette check
+      </h3>
       <p className="wp-theme-section-lede">
-        Check a palette for contrast, similarity, weak hovers, and hierarchy.
+        Checks the palette you are editing for contrast, hierarchy, and weak hovers. Improve with AI
+        fixes the issues it finds and updates the preview right away.
       </p>
-      <div className="wp-palette-mode-toggle" role="group" aria-label="Palette to check">
-        <button
-          type="button"
-          className={`wp-preview-mode-btn${paletteMode === "light" ? " is-active" : ""}`}
-          aria-pressed={paletteMode === "light"}
-          onClick={() => onPaletteMode("light")}
-        >
-          Light
-        </button>
-        <button
-          type="button"
-          className={`wp-preview-mode-btn${paletteMode === "dark" ? " is-active" : ""}`}
-          aria-pressed={paletteMode === "dark"}
-          onClick={() => onPaletteMode("dark")}
-        >
-          Dark
-        </button>
+      <div className="wp-theme-check-toolbar">
+        <span className="wp-theme-check-mode-label">Palette</span>
+        <div className="wp-palette-mode-toggle" role="group" aria-label="Palette to check">
+          <button
+            type="button"
+            className={`wp-preview-mode-btn${paletteMode === "light" ? " is-active" : ""}`}
+            aria-pressed={paletteMode === "light"}
+            onClick={() => onPaletteMode("light")}
+          >
+            Light
+          </button>
+          <button
+            type="button"
+            className={`wp-preview-mode-btn${paletteMode === "dark" ? " is-active" : ""}`}
+            aria-pressed={paletteMode === "dark"}
+            onClick={() => onPaletteMode("dark")}
+          >
+            Dark
+          </button>
+        </div>
       </div>
       <div className="wp-theme-check-actions">
         <button type="button" className="wp-btn" onClick={onCheck}>
@@ -91,6 +101,6 @@ export function ThemeCheckPanel({
           ))}
         </ul>
       ) : null}
-    </Metabox>
+    </section>
   );
 }

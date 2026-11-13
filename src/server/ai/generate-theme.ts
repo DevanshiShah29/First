@@ -85,12 +85,12 @@ Return ONLY JSON with this shape:
   "dark": { ${keys} }
 }
 
-Rules for both light and dark palettes (same 8 keys each):
-- background, foreground (text), card, cardHover, chip (chips/tiles), accentText, accentHover, badge
+Rules for both light and dark palettes (same 7 keys each):
+- background, foreground (text), card, chip (chips/tiles), accentText, accentHover, badge
 - Strong visual harmony and intentional hierarchy
 - Readable text/background contrast (WCAG AA: text vs background ≥ 4.5:1)
 - Accent text readable on background and cards (≥ 3:1)
-- card distinct from background; cardHover clearly different from card
+- card distinct from background
 - chip distinct enough from card/background for tiles
 - accentHover clearly different from accentText
 - badge should feel like a highlight without clashing

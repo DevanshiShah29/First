@@ -9,6 +9,8 @@ export type Screen =
   | "contact"
   | "hero"
   | "appearance"
+  | "seasons"
+  | "titles"
   | "experience"
   | "experience-edit"
   | "projects"

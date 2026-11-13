@@ -1,4 +1,5 @@
 import { callGeminiJson } from "@/server/ai/gemini";
+import { PORTFOLIO_VOICE } from "@/server/ai/voice";
 import { parseJsonObject, str, strList } from "@/server/ai/strings";
 
 export type GenerateCraftPageInput = {
@@ -139,8 +140,9 @@ export async function generateCraftPage(
   }
 
   const prompt = [
-    "You write the Craft page intro for a personal portfolio (/craft — engineering notes).",
-    "Voice: thoughtful, concrete, maker energy; no buzzwords; no emojis.",
+    "You write the Craft page intro for Devanshi's portfolio (/craft, engineering notes).",
+    PORTFOLIO_VOICE,
+    "No emojis.",
     "Return ONLY valid JSON:",
     '{"variants":[{"kicker":"…","title":"…","intro":"…","footnote":"…"}]}',
     "",
@@ -161,7 +163,7 @@ export async function generateCraftPage(
     `Current footnote: ${footnote || "(empty)"}`,
   ].join("\n");
 
-  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.8);
+  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.6);
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
   const generated = parsePageGenerated(gemini.text);
@@ -205,9 +207,10 @@ export async function generateCraftGroup(
   }
 
   const prompt = [
-    "You polish one Craft group on a personal portfolio (/craft).",
-    "Each item is a practice/principle with a short why-it-matters note.",
-    "Voice: concrete, reflective, no fluff, no emojis.",
+    "You polish one Craft group on Devanshi's portfolio (/craft).",
+    "Each item is a practice with a short note on why it matters.",
+    PORTFOLIO_VOICE,
+    "No emojis.",
     "Return ONLY valid JSON:",
     '{"variants":[{"intro":"…","items":[{"title":"…","why":"…"}]}]}',
     "",
@@ -229,7 +232,7 @@ export async function generateCraftGroup(
       : "Draft items: (empty)",
   ].join("\n");
 
-  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.8);
+  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.6);
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
   const generated = parseGroupGenerated(gemini.text);

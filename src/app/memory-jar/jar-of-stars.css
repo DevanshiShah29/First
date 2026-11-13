@@ -269,12 +269,18 @@ html[data-theme="light"] .jar-of-stars {
 
 .jar-of-stars .jar-site-btn--primary {
   border-width: 0;
-  background: linear-gradient(
+  background-image: linear-gradient(
     90deg,
-    var(--brand-from, #7c3aed),
-    var(--brand-to, #6366f1)
+    var(--brand-from, #7c3aed) 0%,
+    var(--brand-from, #7c3aed) 42%,
+    var(--brand-to, #6366f1) 58%,
+    var(--brand-to, #6366f1) 100%
   );
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  background-repeat: no-repeat;
   color: #ffffff;
+  transition: background-position 0.45s ease;
 }
 
 /* The note stays light paper in dark mode, so the outline button needs the site surface behind it. */
@@ -283,15 +289,12 @@ html:not([data-theme="light"]) .jar-of-stars .jar-reveal-backdrop .jar-site-btn:
   background: var(--site-btn-bg);
 }
 
-.jar-of-stars .jar-site-btn--primary:hover {
+.jar-of-stars .jar-site-btn--primary:hover:not(:disabled) {
   border-color: transparent;
   color: #ffffff;
-  transform: translateY(-0.125rem);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--brand-from, #7c3aed) 40%, transparent);
-}
-
-.jar-of-stars .jar-site-btn--primary:active {
-  transform: translateY(0);
+  transform: none;
+  box-shadow: none;
+  background-position: 100% 50%;
 }
 
 .jar-of-stars .jar-scene {

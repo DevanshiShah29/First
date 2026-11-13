@@ -40,8 +40,10 @@ import {
   ProjectsEditScreen,
   ProjectsListScreen,
 } from "./screens/ProjectsScreens";
+import { SeasonsScreen } from "./screens/SeasonsScreen";
 import { SiteScreen } from "./screens/SiteScreen";
 import { SkillGroupsScreen } from "./screens/SkillsScreens";
+import { TitlesScreen } from "./screens/TitlesScreen";
 
 // Icons
 import {
@@ -56,9 +58,11 @@ import {
   IconJar,
   IconPages,
   IconPin,
+  IconSeasons,
   IconSettings,
   IconShelf,
   IconStar,
+  IconTitles,
 } from "./wp-icons";
 
 /**
@@ -132,7 +136,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   }
 
   // Match homepage section order (Hero → About → Experience → Projects → Skills → Contact),
-  // then Craft / Memories / Appearance / Settings.
+  // then Craft / Memories / Appearance / Page titles / Settings.
   const menu: MenuItem[] = [
     { id: "dashboard", label: "Dashboard", icon: <IconDash />, match: screen === "dashboard" },
     { id: "analytics", label: "Analytics", icon: <IconAnalytics />, match: screen === "analytics" },
@@ -147,6 +151,8 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "memories", label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
     { id: "artifacts", label: "Shelf", icon: <IconShelf />, match: screen.startsWith("artifacts") },
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
+    { id: "seasons", label: "Seasons", icon: <IconSeasons />, match: screen === "seasons" },
+    { id: "titles", label: "Page titles", icon: <IconTitles />, match: screen === "titles" },
     { id: "site", label: "Settings", icon: <IconSettings />, match: screen === "site" },
   ];
 
@@ -259,6 +265,26 @@ export function AdminApp({ initial }: { initial: ContentData }) {
 
           {screen === "appearance" && (
             <AppearanceScreen
+              data={data}
+              setData={setData}
+              save={save}
+              dirty={dirty}
+              status={status}
+            />
+          )}
+
+          {screen === "seasons" && (
+            <SeasonsScreen
+              data={data}
+              setData={setData}
+              save={save}
+              dirty={dirty}
+              status={status}
+            />
+          )}
+
+          {screen === "titles" && (
+            <TitlesScreen
               data={data}
               setData={setData}
               save={save}

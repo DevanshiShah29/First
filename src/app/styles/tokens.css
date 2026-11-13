@@ -8,7 +8,6 @@
   --muted: rgba(248, 248, 248, 0.55);
   --muted-soft: rgba(248, 248, 248, 0.35);
   --card: #0f0f0f;
-  --card-hover: #141414;
   --border: rgba(255, 255, 255, 0.06);
   --header: rgba(8, 8, 8, 0.94);
   --inset: rgba(8, 8, 8, 0.6);
@@ -30,7 +29,6 @@
   --muted: rgba(18, 18, 24, 0.62);
   --muted-soft: rgba(18, 18, 24, 0.42);
   --card: #ffffff;
-  --card-hover: #f3f1ff;
   --border: rgba(18, 18, 24, 0.08);
   --header: rgba(247, 247, 251, 0.96);
   --inset: rgba(255, 255, 255, 0.72);
@@ -51,7 +49,6 @@
   --color-muted: var(--muted);
   --color-muted-soft: var(--muted-soft);
   --color-card: var(--card);
-  --color-card-hover: var(--card-hover);
   --color-line: var(--border);
   --color-header: var(--header);
   --color-inset: var(--inset);
@@ -174,19 +171,52 @@ html.has-custom-cursor .cursor-trail {
 .cursor-pointer svg {
   display: block;
 }
+.cursor-pointer.is-glow {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--brand-from, #7c3aed) 75%, transparent))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--brand-to, #6366f1) 55%, transparent));
+}
+.cursor-pointer.is-echo {
+  filter: none;
+}
 .cursor-trail {
+  width: 7px;
+  height: 7px;
+  margin: 8px 0 0 4px;
+  border-radius: 999px;
+  background: var(--brand-from, #7c3aed);
+}
+.cursor-trail.is-shadow {
   width: 18px;
   height: 18px;
   margin: 6px 0 0 6px;
-  border-radius: 999px;
   background: color-mix(in srgb, var(--brand-from, #7c3aed) 35%, transparent);
   filter: blur(4px);
 }
+.cursor-trail.is-ring {
+  width: 36px;
+  height: 36px;
+  margin: -7px 0 0 -7px;
+  border: 1.5px solid color-mix(in srgb, var(--brand-from, #7c3aed) 75%, white);
+  background: transparent;
+  filter: none;
+}
+.cursor-trail.is-mid {
+  width: 6px;
+  height: 6px;
+  margin: 13px 0 0 8px;
+  background: color-mix(in srgb, var(--brand-from, #7c3aed) 45%, var(--brand-to, #6366f1));
+}
+.cursor-trail.is-far {
+  width: 5px;
+  height: 5px;
+  margin: 18px 0 0 12px;
+  background: var(--brand-to, #6366f1);
+}
 .cursor-trail.is-jar {
-  width: 14px;
-  height: 14px;
-  margin: 4px 0 0 4px;
-  background: color-mix(in srgb, #fbbf24 30%, transparent);
+  width: 5px;
+  height: 5px;
+  margin: 8px 0 0 6px;
+  background: #fbbf24;
 }
 
 .site-header {

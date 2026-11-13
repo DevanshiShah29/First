@@ -54,6 +54,10 @@ model SiteSettings {
   sections         Json     @default("{}")
   /// Page and section titles. Missing or blank keys use display fallbacks.
   titles           Json     @default("{}")
+  /// Festive overlay. Empty object means off, with built-in packs filled in on read.
+  seasons          Json     @default("{}")
+  /// Cursor follower. Empty object uses the default style on read.
+  cursor           Json     @default("{}")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

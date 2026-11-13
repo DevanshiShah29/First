@@ -14,7 +14,7 @@ export default function NotFound() {
       <p className="mt-3 max-w-md text-muted">The link may be old, or the page was never built.</p>
       <Link
         href="/"
-        className="btn-primary mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold text-foreground hover:-translate-y-0.5"
+        className="btn-primary mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold"
       >
         Back home
       </Link>

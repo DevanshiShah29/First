@@ -1,4 +1,5 @@
 import { callGeminiJson } from "@/server/ai/gemini";
+import { PORTFOLIO_VOICE } from "@/server/ai/voice";
 import { parseJsonObject, str, strList } from "@/server/ai/strings";
 const FETCH_TIMEOUT_MS = 8_000;
 const MAX_HTML_CHARS = 80_000;
@@ -292,12 +293,9 @@ export async function generateProject(
   ).filter((c): c is SourceContext => Boolean(c));
 
   const prompt = [
-    "You write portfolio project copy for a product-minded engineer / product manager.",
-    "Voice: sharp, concrete, human; outcome-focused; no buzzword salad; no emojis; no \"I built\" spam.",
-    "Match this sample tone:",
-    '"A vocabulary studio with quizzes, matching, and a relation graph — because new words lived in scattered notes and nothing remembered how they related."',
-    '"A quiet ledger where rows come first and charts only exist if the rows are honest. Months ended with a feeling; now they end with a picture."',
-    '"Guests find and book. Organizers create and watch status. Availability is not a later feature — booking is trust."',
+    "You write portfolio project blurbs for Devanshi.",
+    PORTFOLIO_VOICE,
+    "No emojis. Say what the product is for in ordinary speech. Do not invent a tagline.",
     "",
     "Given the project sources below, return ONLY valid JSON with this shape:",
     '{"blurb":"1-2 sentences","tags":["Tag","Tag"]}',
@@ -320,7 +318,7 @@ export async function generateProject(
     contexts.map((c) => `### ${c.label}\n${c.text}`).join("\n\n") || "(no sources fetched)",
   ].join("\n");
 
-  const gemini = await callGeminiJson(apiKey, [{ text: prompt }]);
+  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.6);
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
   const generated = parseGenerated(gemini.text);

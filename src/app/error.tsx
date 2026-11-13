@@ -25,7 +25,7 @@ export default function Error({
       <p className="mt-3 max-w-md text-muted">Something went wrong while opening this page. You can try again.</p>
       <button
         type="button"
-        className="btn-primary mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold text-foreground hover:-translate-y-0.5"
+        className="btn-primary mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold"
         onClick={() => retry()}
       >
         Try again

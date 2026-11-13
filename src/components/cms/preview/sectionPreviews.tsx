@@ -142,6 +142,7 @@ export function SectionPreview({
         </div>
       );
     case "appearance":
+    case "seasons":
       return (
         <div className="min-h-full bg-background text-foreground">
           <SiteHeader

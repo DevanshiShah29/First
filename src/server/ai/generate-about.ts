@@ -4,6 +4,7 @@ import {
   geminiPartsWithProfile,
 } from "@/server/ai-profile-context";
 import { callGeminiJson } from "@/server/ai/gemini";
+import { PORTFOLIO_VOICE } from "@/server/ai/voice";
 import { parseJsonObject, str, strList } from "@/server/ai/strings";
 
 export type GenerateAboutInput = {
@@ -96,8 +97,9 @@ export async function generateAbout(
   }
 
   const prompt = [
-    "You write the About section of a personal portfolio for a product-minded engineer / PM.",
-    "Voice: sharp, concrete, warm, first-person; no buzzword salad; no emojis.",
+    "You write the About section of Devanshi's portfolio.",
+    PORTFOLIO_VOICE,
+    "No emojis. Paragraphs should sound spoken, not like a manifesto.",
     "Return ONLY valid JSON with this shape:",
     '{"variants":[{"about":"…","philosophyKicker":"…","philosophyTitle":"…","philosophy":"…","experienceIntro":"…"}]}',
     "",
@@ -125,7 +127,7 @@ export async function generateAbout(
     formatProfileContextForPrompt(profile),
   ].join("\n");
 
-  const gemini = await callGeminiJson(apiKey, geminiPartsWithProfile(prompt, profile), 0.8);
+  const gemini = await callGeminiJson(apiKey, geminiPartsWithProfile(prompt, profile), 0.6);
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
   const generated = parseGenerated(gemini.text);

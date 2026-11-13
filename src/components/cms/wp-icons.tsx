@@ -46,6 +46,18 @@ export function IconPin({ className }: IconProps) {
 }
 
 /**
+ * Renders the Page titles/text menu icon.
+ * @example <IconTitles />
+ */
+export function IconTitles({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M3 4h14v2H3V4zm0 5h14v2H3V9zm0 5h9v2H3v-2z" />
+    </Svg>
+  );
+}
+
+/**
  * Renders the Projects/pages menu icon.
  * @example <IconPages />
  */
@@ -89,6 +101,18 @@ export function IconAppearance({ className }: IconProps) {
   return (
     <Svg className={className}>
       <path d="M10 2a8 8 0 0 0 0 16c.7 0 1-.5 1-1 0-.3-.1-.5-.3-.7-.2-.3-.3-.6-.3-1 0-.8.7-1.5 1.5-1.5H14A4 4 0 0 0 10 2zm-3.5 8a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm2.8-4a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4zm3.4 0a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4zM15 9.5a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4z" />
+    </Svg>
+  );
+}
+
+/**
+ * Renders the Seasons menu icon.
+ * @example <IconSeasons />
+ */
+export function IconSeasons({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M10 1.6l1.1 3.3 3.4.6-2.6 2.1.8 3.3L10 9.2 7.3 10.9l.8-3.3L5.5 5.5l3.4-.6L10 1.6zM4.5 12.2l.6 1.7 1.8.3-1.4 1.1.4 1.8-1.4-.9-1.4.9.4-1.8-1.4-1.1 1.8-.3.6-1.7zM15.5 12.2l.6 1.7 1.8.3-1.4 1.1.4 1.8-1.4-.9-1.4.9.4-1.8-1.4-1.1 1.8-.3.6-1.7z" />
     </Svg>
   );
 }

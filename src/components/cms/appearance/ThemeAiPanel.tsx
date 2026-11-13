@@ -2,6 +2,10 @@
 
 import { Metabox } from "../components/Metabox";
 
+/**
+ * AI palette starter: writes a light + dark palette from a short description.
+ * @example <ThemeAiPanel aiPrompt={prompt} onPrompt={setPrompt} … />
+ */
 export function ThemeAiPanel({
   aiPrompt,
   onPrompt,
@@ -16,11 +20,15 @@ export function ThemeAiPanel({
   onGenerate: () => void;
 }) {
   return (
-    <Metabox id="app_ai_theme" title="Create with AI" badge="AI">
+    <Metabox id="app_ai_theme" title="Create with AI" badge="start here">
       <div className="wp-theme-ai">
         <label className="wp-theme-ai-label" htmlFor="theme-ai-prompt">
           Describe the visual personality
         </label>
+        <p className="wp-theme-ai-help">
+          AI writes a matching light and dark palette. The live preview updates immediately — save to
+          publish it.
+        </p>
         <textarea
           id="theme-ai-prompt"
           className="wp-textarea"
@@ -39,8 +47,11 @@ export function ThemeAiPanel({
             <span className={`wp-btn-ai-icon${generating ? " is-spin" : ""}`} aria-hidden="true">
               ✦
             </span>
-            {generating ? "Generating…" : "Generate Theme"}
+            {generating ? "Generating…" : "Generate palette"}
           </button>
+          {!generating && aiPrompt.trim().length < 3 ? (
+            <p className="wp-theme-ai-hint">Describe the vibe to enable generation.</p>
+          ) : null}
         </div>
         {generateError ? <p className="wp-ai-generate-error">{generateError}</p> : null}
       </div>

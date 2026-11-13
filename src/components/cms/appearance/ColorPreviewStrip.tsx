@@ -3,7 +3,7 @@
 import { THEME_PALETTE_FIELDS, type ThemePalette } from "@/content/types";
 
 /**
- * Renders an 8-swatch mini preview of a theme palette.
+ * Renders a mini preview of a theme palette.
  * @example <ColorPreviewStrip palette={light} />
  */
 export function ColorPreviewStrip({

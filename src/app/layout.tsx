@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import { connection } from "next/server";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { SeasonLayer } from "@/components/season/SeasonLayer";
 import { loadContent } from "@/content/store";
+import { resolveActiveSeason, themeWithSeason } from "@/content/seasons";
 import { buildPageMetadata } from "@/lib/seo";
 import { siteOrigin } from "@/lib/site-url";
 import { themeCss, themeInitScript } from "@/lib/theme";
@@ -47,17 +50,29 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const content = await loadContent();
+  await connection();
+  const season = resolveActiveSeason(content.site.seasons, new Date());
+  const theme = themeWithSeason(content.theme, season);
   return (
-    <html lang="en" className={`${outfit.variable} antialiased`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${outfit.variable} antialiased`}
+      data-season={season?.id}
+      data-season-intensity={season?.intensity}
+      suppressHydrationWarning
+    >
       <head>
-        <style dangerouslySetInnerHTML={{ __html: themeCss(content.theme) }} />
+        <style dangerouslySetInnerHTML={{ __html: themeCss(theme) }} />
       </head>
       <body className="min-h-screen bg-background text-foreground">
         <Script
           id="theme-init"
           strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeInitScript(content.theme.defaultMode) }}
+          dangerouslySetInnerHTML={{ __html: themeInitScript(theme.defaultMode) }}
         />
+        {season?.intensity === "full" ? (
+          <SeasonLayer season={season.id} images={season.ornamentImages} />
+        ) : null}
         <GoogleAnalytics />
         <AnalyticsTracker />
         <Analytics />

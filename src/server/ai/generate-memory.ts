@@ -1,4 +1,5 @@
 import { callGeminiJson } from "@/server/ai/gemini";
+import { PORTFOLIO_VOICE } from "@/server/ai/voice";
 import { normalizeHex, parseJsonObject, str } from "@/server/ai/strings";
 
 export type GenerateMemoryInput = {
@@ -85,8 +86,9 @@ export async function generateMemory(
   }
 
   const prompt = [
-    "You polish a single Memory Jar entry for a personal portfolio.",
-    "Tone: intimate, specific, warm — like a handwritten note. No corporate voice. No emojis.",
+    "You polish a single Memory Jar entry for Devanshi.",
+    PORTFOLIO_VOICE,
+    "This one can be warmer than the work copy. Keep it specific to the real moment. No emojis. No corporate voice.",
     "Return ONLY valid JSON:",
     '{"variants":[{"title":"…","note":"…","category":"…","color":"#A78BFA"}]}',
     "",
@@ -106,7 +108,7 @@ export async function generateMemory(
     `Current color: ${color || "(empty)"}`,
   ].join("\n");
 
-  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.9);
+  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.7);
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
   const generated = parseGenerated(gemini.text);

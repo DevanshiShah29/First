@@ -18,7 +18,7 @@ export function useAppearanceDraft(
   setData: (data: ContentData) => void,
 ) {
   const [draft, setDraft] = useState<DraftTheme>(() => draftFromTheme(data.theme));
-  const [paletteMode, setPaletteMode] = useState<"light" | "dark">("light");
+  const [paletteMode, setPaletteModeState] = useState<"light" | "dark">("light");
   const [aiPrompt, setAiPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
@@ -293,17 +293,29 @@ export function useAppearanceDraft(
   };
 
   /**
+   * Focuses the light or dark palette and drops results that belong to the other mode.
+   * @example setPaletteMode("dark") // void
+   */
+  const setPaletteMode = useCallback((mode: "light" | "dark") => {
+    setPaletteModeState(mode);
+    setIssues([]);
+    setCheckSummary(null);
+    setCheckError(null);
+  }, []);
+
+  /**
    * Runs a local contrast/hierarchy check on the focused palette mode.
    * @example runLocalCheck() // void
    */
   const runLocalCheck = () => {
     const found = checkPalette(draft[paletteMode]);
+    const modeLabel = paletteMode === "light" ? "Light" : "Dark";
     setIssues(found);
     setCheckError(null);
     setCheckSummary(
       found.length === 0
-        ? "No issues found — contrast and hierarchy look solid."
-        : `Found ${found.length} issue${found.length === 1 ? "" : "s"} to review.`,
+        ? `${modeLabel} palette: no issues found — contrast and hierarchy look solid.`
+        : `${modeLabel} palette: found ${found.length} issue${found.length === 1 ? "" : "s"} to review.`,
     );
   };
 
@@ -331,7 +343,9 @@ export function useAppearanceDraft(
     };
     setDraft(next);
     setIssues(result.data.issues);
-    setCheckSummary(result.data.summary);
+    setCheckSummary(
+      `${paletteMode === "light" ? "Light" : "Dark"} palette: ${result.data.summary}`,
+    );
     // Keep preview in sync with improved draft
     applyDraft(next, activeThemeId);
   };
@@ -340,12 +354,21 @@ export function useAppearanceDraft(
     const fixed = applyAllSuggestions(draft[paletteMode], issues);
     updateDraftPalette(paletteMode, fixed);
     setIssues([]);
-    setCheckSummary("Applied all suggestions.");
+    setCheckSummary(
+      `${paletteMode === "light" ? "Light" : "Dark"} palette: applied all suggestions.`,
+    );
   };
 
   const applyOneIssue = (issue: PaletteIssue) => {
     updateDraftPalette(paletteMode, applyPaletteSuggestion(draft[paletteMode], issue));
-    setIssues((prev) => prev.filter((item) => item.id !== issue.id));
+    const remaining = issues.filter((item) => item.id !== issue.id);
+    const modeLabel = paletteMode === "light" ? "Light" : "Dark";
+    setIssues(remaining);
+    setCheckSummary(
+      remaining.length === 0
+        ? `${modeLabel} palette: all issues resolved.`
+        : `${modeLabel} palette: ${remaining.length} issue${remaining.length === 1 ? "" : "s"} left to review.`,
+    );
   };
 
   const resetToDefaults = () => {

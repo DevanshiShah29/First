@@ -1,4 +1,5 @@
 import { callGeminiJson } from "@/server/ai/gemini";
+import { PORTFOLIO_VOICE } from "@/server/ai/voice";
 import { parseJsonObject, str, strList } from "@/server/ai/strings";
 
 export type GenerateHeroInput = {
@@ -76,8 +77,9 @@ export async function generateHero(
   }
 
   const prompt = [
-    "You polish homepage hero copy for a personal portfolio.",
-    "Voice: warm, sharp, confident, human — no buzzword salad, no emojis, no corporate fluff.",
+    "You polish homepage hero copy for Devanshi.",
+    PORTFOLIO_VOICE,
+    "No emojis. The one-liner should sound like something she would actually say.",
     "Return ONLY valid JSON with this shape:",
     '{"variants":[{"kicker":"…","greeting":"…","roles":["…","…"],"line":"…"}]}',
     "",
@@ -88,7 +90,7 @@ export async function generateHero(
     "- roles: 2–4 typed rotating role labels (concise).",
     "- line: one-liner value prop, 1–2 sentences, max ~220 chars.",
     "- Preserve truth from the current draft; sharpen wording, do not invent a new identity.",
-    "- Keep first-person natural; avoid \"I am passionate about\".",
+    "- Keep first person natural.",
     "",
     `Current kicker: ${kicker || "(empty)"}`,
     `Current greeting: ${greeting || "(empty)"}`,
@@ -96,7 +98,7 @@ export async function generateHero(
     `Current one-liner: ${line || "(empty)"}`,
   ].join("\n");
 
-  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.85);
+  const gemini = await callGeminiJson(apiKey, [{ text: prompt }], 0.6);
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
   const generated = parseGenerated(gemini.text);

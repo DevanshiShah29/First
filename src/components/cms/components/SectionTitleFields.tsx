@@ -25,7 +25,7 @@ const TITLE_FIELDS: { key: SectionTitleKey; label: string }[] = [
 ];
 
 /**
- * Settings fields for public page and section titles.
+ * CMS fields for public page and section titles.
  * A blank field keeps the placeholder wording and is stored empty.
  * @example <SectionTitleFields site={site} onSite={setSite} />
  */

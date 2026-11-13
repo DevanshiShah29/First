@@ -1,0 +1,62 @@
+/* /craft editorial layout: technical-notes backdrop, gradient numerals. */
+.craft-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Faint blueprint grid that fades out behind the page copy. */
+.craft-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 4.5rem 4.5rem;
+  background-position: center top;
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent 82%);
+  -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.55), transparent 82%);
+}
+
+/* Brand glow anchored to the top-right of the hero. */
+.craft-hero::after {
+  content: "";
+  position: absolute;
+  top: -14rem;
+  right: -8rem;
+  z-index: 0;
+  width: 36rem;
+  height: 36rem;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--orb-a), transparent 68%);
+}
+
+.craft-numeral {
+  font-variant-numeric: tabular-nums;
+  background-image: linear-gradient(160deg, var(--brand-from), var(--brand-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .craft-numeral {
+    color: var(--accent-text);
+  }
+}
+
+/* Hairline that trails away from each note's index. */
+.craft-item-line {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--brand-from) 55%, transparent),
+    color-mix(in srgb, var(--brand-to) 20%, transparent) 45%,
+    transparent
+  );
+}

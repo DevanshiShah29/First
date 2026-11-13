@@ -6,6 +6,9 @@ import { Cormorant_Garamond, Space_Mono, Waiting_for_the_Sunrise } from "next/fo
 
 // Application services & types
 import type { ContentData } from "@/content/types";
+import { resolveActiveSeason, themeWithSeason } from "@/content/seasons";
+import { Cursor } from "@/components/Cursor";
+import { SeasonLayer } from "@/components/season/SeasonLayer";
 import { themeCss } from "@/lib/theme";
 import {
   CMS_PREVIEW_READY,
@@ -86,10 +89,19 @@ export default function AdminPreviewPage() {
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
+  const season = preview ? resolveActiveSeason(preview.content.site.seasons, new Date()) : null;
+
   useEffect(() => {
     if (!preview) return;
     document.documentElement.setAttribute("data-theme", preview.themeMode);
-  }, [preview]);
+    if (season) {
+      document.documentElement.setAttribute("data-season", season.id);
+      document.documentElement.setAttribute("data-season-intensity", season.intensity);
+    } else {
+      document.documentElement.removeAttribute("data-season");
+      document.documentElement.removeAttribute("data-season-intensity");
+    }
+  }, [preview, season]);
 
   const jarFonts =
     preview?.section === "memories"
@@ -100,7 +112,13 @@ export default function AdminPreviewPage() {
     <div className={`cms-live-preview min-h-full bg-background text-foreground ${jarFonts}`.trim()}>
       {preview ? (
         <>
-          <style dangerouslySetInnerHTML={{ __html: themeCss(preview.content.theme) }} />
+          <style dangerouslySetInnerHTML={{ __html: themeCss(themeWithSeason(preview.content.theme, season)) }} />
+          {season?.intensity === "full" ? (
+            <SeasonLayer season={season.id} images={season.ornamentImages} placement="preview" />
+          ) : null}
+          {preview.section === "memories" ? null : (
+            <Cursor style={preview.content.site.cursor.style} />
+          )}
           <main id="cms-preview-main" tabIndex={-1}>
             <SectionPreview section={preview.section} content={preview.content} />
           </main>

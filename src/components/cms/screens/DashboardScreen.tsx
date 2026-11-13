@@ -195,6 +195,11 @@ export function DashboardScreen({
                 Appearance
               </button>
             </li>
+            <li>
+              <button type="button" onClick={() => go("seasons")}>
+                Seasons
+              </button>
+            </li>
           </ul>
         </Metabox>
 

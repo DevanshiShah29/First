@@ -1,0 +1,145 @@
+.season-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.season-ornament {
+  position: absolute;
+  width: 2.5rem;
+  height: 2.5rem;
+  animation: season-float 5.5s ease-in-out infinite;
+}
+
+.season-ornament svg,
+.season-ornament img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.season-ornament--photo {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.season-ornament--p0 {
+  top: calc(var(--header-h) + 0.75rem);
+  right: 1rem;
+}
+
+.season-ornament--p1 {
+  bottom: 1.25rem;
+  left: 1rem;
+  animation-delay: -1.8s;
+}
+
+.season-ornament--p2 {
+  right: 1.5rem;
+  bottom: 1.75rem;
+  width: 3.25rem;
+  height: 3.25rem;
+  animation-delay: -3.2s;
+}
+
+.season-ornament--p3 {
+  top: 38%;
+  right: 0.75rem;
+  animation-delay: -0.8s;
+}
+
+.season-ornament--p4 {
+  top: 46%;
+  left: 0.75rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  animation-delay: -2.4s;
+}
+
+.season-ornament--p5 {
+  bottom: 4.5rem;
+  left: 38%;
+  animation-delay: -1.2s;
+}
+
+.season-ornament--p6 {
+  top: calc(var(--header-h) + 0.5rem);
+  right: 28%;
+  width: 3rem;
+  height: 3rem;
+  animation-delay: -2.8s;
+}
+
+.season-ornament--p7 {
+  bottom: 2rem;
+  right: 32%;
+  width: 3.25rem;
+  height: 3.25rem;
+  animation-delay: -0.4s;
+}
+
+.season-ornament--a {
+  top: calc(var(--header-h) + 0.75rem);
+  right: 1rem;
+}
+
+.season-ornament--b {
+  bottom: 1.25rem;
+  left: 1rem;
+  animation-delay: -1.8s;
+}
+
+.season-ornament--c {
+  right: 1.5rem;
+  bottom: 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  opacity: 0.8;
+  animation-delay: -3.2s;
+}
+
+@keyframes season-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+@media (max-width: 40rem) {
+  .season-ornament {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .season-ornament--c,
+  .season-ornament--p2,
+  .season-ornament--p4,
+  .season-ornament--p6,
+  .season-ornament--p7 {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  .season-ornament--photo {
+    width: 3rem;
+    height: 3rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .season-ornament {
+    animation: none;
+  }
+}
+
+@media print {
+  .season-layer {
+    display: none;
+  }
+}

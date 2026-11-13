@@ -4,6 +4,7 @@ import {
   geminiPartsWithProfile,
 } from "@/server/ai-profile-context";
 import { callGeminiJson } from "@/server/ai/gemini";
+import { PORTFOLIO_VOICE } from "@/server/ai/voice";
 import { parseJsonObject, str, strList } from "@/server/ai/strings";
 
 export type GenerateExperienceInput = {
@@ -67,11 +68,9 @@ export async function generateExperience(
   const profile = await gatherProfileContext({ linkedin, resume });
 
   const prompt = [
-    "You write portfolio experience copy for a product-minded engineer / product manager.",
-    "Voice: sharp, concrete, first-person implied but no \"I\" spam; outcome-focused; no buzzword salad; no emojis.",
-    "Match this sample tone:",
-    '"Turned ambiguous founder briefs into shippable scope. Moved the room from “can we build it” to “should this exist, and for whom.”"',
-    '"Ran discovery with users of half-built tools and wrote specs that include empty states and who a feature is not for."',
+    "You write portfolio experience copy for Devanshi.",
+    PORTFOLIO_VOICE,
+    "No emojis.",
     "",
     "Given the role details below, return ONLY valid JSON with this shape:",
     '{"summary":"1-2 sentences","bullets":["...","...","..."],"tags":["Tag","Tag"]}',
@@ -99,7 +98,7 @@ export async function generateExperience(
     formatProfileContextForPrompt(profile),
   ].join("\n");
 
-  const gemini = await callGeminiJson(apiKey, geminiPartsWithProfile(prompt, profile));
+  const gemini = await callGeminiJson(apiKey, geminiPartsWithProfile(prompt, profile), 0.6);
   if (!gemini.ok) return { ok: false, error: gemini.error, status: gemini.status };
 
   const generated = parseGenerated(gemini.text);

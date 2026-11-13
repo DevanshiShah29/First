@@ -19,13 +19,21 @@ export function EditorTabs({
   children,
   preview,
   defaultTab = "data",
+  previewTick = 0,
 }: {
   children: ReactNode;
   preview: ReactNode;
   defaultTab?: TabId;
+  /** Increments when a control should open the Preview tab. */
+  previewTick?: number;
 }) {
   const baseId = useId();
   const [tab, setTab] = useState<TabId>(defaultTab);
+  const [seenTick, setSeenTick] = useState(previewTick);
+  if (previewTick !== seenTick) {
+    setSeenTick(previewTick);
+    if (previewTick > 0) setTab("preview");
+  }
 
   const dataTabId = `${baseId}-tab-data`;
   const previewTabId = `${baseId}-tab-preview`;

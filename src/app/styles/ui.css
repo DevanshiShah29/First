@@ -1,20 +1,29 @@
 
-.accent-underline,
-.btn-primary {
+.accent-underline {
   background: linear-gradient(
     90deg,
     var(--brand-from, #7c3aed),
     var(--brand-to, #6366f1)
   );
 }
+
 .btn-primary {
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  color: #fff;
+  background-image: linear-gradient(
+    90deg,
+    var(--brand-from, #7c3aed) 0%,
+    var(--brand-from, #7c3aed) 42%,
+    var(--brand-to, #6366f1) 58%,
+    var(--brand-to, #6366f1) 100%
+  );
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  background-repeat: no-repeat;
+  box-shadow: none;
+  transition: background-position 0.45s ease;
 }
-.btn-primary:hover {
-  box-shadow: 0 0 30px
-    color-mix(in srgb, var(--brand-from, #7c3aed) 40%, transparent);
+.btn-primary:hover:not(:disabled) {
+  background-position: 100% 50%;
 }
 
 .card-surface {

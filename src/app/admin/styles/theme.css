@@ -192,10 +192,65 @@
   color: #1d2327;
 }
 
+.wp-theme-ai-help {
+  margin: -2px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #646970;
+}
+
 .wp-theme-ai-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
+}
+
+.wp-theme-ai-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #646970;
+}
+
+.wp-theme-check {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #f6f7f7;
+}
+
+.wp-theme-check-title {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.wp-theme-check .wp-theme-section-lede {
+  margin-bottom: 12px;
+}
+
+.wp-theme-check-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-bottom: 10px;
+}
+
+.wp-theme-check-mode-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.wp-theme-check .wp-palette-mode-toggle {
+  margin-bottom: 0;
+}
+
+.wp-theme-check .wp-theme-check-actions {
+  margin-top: 0;
 }
 
 .wp-palette-editor {
@@ -266,6 +321,11 @@
   font-size: 13px;
   font-weight: 600;
   color: #1d2327;
+}
+
+.wp-palette-row-usage {
+  font-weight: 500;
+  color: #646970;
 }
 
 .wp-palette-row-key {
@@ -373,3 +433,405 @@
   }
 }
 
+.wp-season-status {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid #c5d9ed;
+  border-radius: 8px;
+  background: #f0f6fc;
+}
+
+.wp-season-status.is-quiet {
+  border-color: #dcdcde;
+  background: #f6f7f7;
+}
+
+.wp-season-status-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.wp-season-status-detail {
+  margin: 4px 0 0;
+  color: #50575e;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.wp-season-status-today {
+  margin: 0;
+  color: #646970;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.wp-season-status-today span {
+  display: block;
+  margin-top: 2px;
+}
+
+.wp-season-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+}
+
+.wp-season-field > label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.wp-season-field .wp-description {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.wp-season-ai {
+  margin-top: 16px;
+}
+
+.wp-season-ai .wp-ai-source-summary + .wp-form-table {
+  margin-top: 8px;
+}
+
+.wp-season-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 16px;
+}
+
+.wp-season-add .wp-description {
+  margin: 0;
+}
+
+.wp-season-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 24rem;
+  margin-top: 12px;
+  font-size: 12px;
+  color: #646970;
+}
+
+.wp-season-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.wp-season-card.is-open {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+.wp-season-card .wp-switch {
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.wp-season-brand {
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.wp-season-card-meta {
+  margin: 0;
+  color: #646970;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.wp-season-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #f0f0f1;
+  color: #50575e;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.wp-season-pill.is-showing {
+  background: #2271b1;
+  color: #fff;
+}
+
+.wp-season-pill.is-ended,
+.wp-season-pill.is-dates {
+  background: #fcf9e8;
+  color: #996800;
+}
+
+.wp-season-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid #2271b1;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.wp-season-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.wp-season-editor-head .wp-theme-card-actions {
+  margin-top: 0;
+}
+
+.wp-season-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid #dcdcde;
+}
+
+.wp-season-palette {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wp-season-ornaments {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wp-season-drop {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px dashed #c3c4c7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wp-season-drop.is-dragging {
+  border-color: #2271b1;
+  background: #f0f6fc;
+}
+
+.wp-season-ornament-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.wp-season-ornament-tools .wp-input {
+  flex: 1;
+  min-width: 180px;
+}
+
+.wp-season-ornament-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wp-season-ornament-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 96px;
+}
+
+.wp-season-ornament-item img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background:
+    linear-gradient(45deg, #f0f0f1 25%, transparent 25%),
+    linear-gradient(-45deg, #f0f0f1 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f0f0f1 75%),
+    linear-gradient(-45deg, transparent 75%, #f0f0f1 75%);
+  background-size: 12px 12px;
+  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+  background-color: #fff;
+}
+
+.wp-season-ornaments .wp-notice {
+  margin: 0;
+}
+
+.wp-season-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: flex-end;
+}
+
+.wp-season-dates > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #646970;
+}
+
+.wp-season-note {
+  margin: 12px 0 0;
+  color: #996800;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.wp-season-note.is-inline {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .wp-season-status {
+    flex-direction: column;
+  }
+
+  .wp-season-status-today {
+    text-align: left;
+    white-space: normal;
+  }
+
+  .wp-season-editor-head {
+    flex-direction: column;
+  }
+}
+
+/* —— Cursor follower previews —— */
+
+.wp-cursor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.wp-cursor-option {
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #f6f7f7;
+}
+
+.wp-cursor-preview {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 64px;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #fff;
+  --background: #fff;
+}
+
+.wp-cursor-preview.is-glow {
+  border-color: color-mix(in srgb, var(--brand-from, #7c3aed) 45%, #dcdcde);
+}
+
+.wp-cursor-arrow {
+  position: absolute;
+  right: 10px;
+  bottom: 4px;
+  display: flex;
+}
+
+.wp-cursor-arrow svg,
+.wp-cursor-echo svg {
+  display: block;
+}
+
+.wp-cursor-preview.is-glow .wp-cursor-arrow {
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--brand-from, #7c3aed) 75%, transparent))
+    drop-shadow(0 0 8px color-mix(in srgb, var(--brand-to, #6366f1) 55%, transparent));
+}
+
+.wp-cursor-trail {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.wp-cursor-trail.is-shadow {
+  top: 9px;
+  left: 20px;
+  width: 18px;
+  height: 18px;
+  background: color-mix(in srgb, var(--brand-from, #7c3aed) 35%, transparent);
+  filter: blur(4px);
+}
+
+.wp-cursor-trail.is-ring {
+  top: 5px;
+  left: 10px;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid color-mix(in srgb, var(--brand-from, #7c3aed) 75%, white);
+  background: transparent;
+}
+
+.wp-cursor-trail.is-dot {
+  top: 22px;
+  left: 32px;
+  width: 7px;
+  height: 7px;
+  background: var(--brand-from, #7c3aed);
+}
+
+.wp-cursor-trail.is-dot.is-mid {
+  top: 16px;
+  left: 25px;
+  width: 6px;
+  height: 6px;
+  background: color-mix(in srgb, var(--brand-from, #7c3aed) 45%, var(--brand-to, #6366f1));
+}
+
+.wp-cursor-trail.is-dot.is-far {
+  top: 10px;
+  left: 19px;
+  width: 5px;
+  height: 5px;
+  background: var(--brand-to, #6366f1);
+}
+
+.wp-cursor-echo {
+  position: absolute;
+  top: 5px;
+  left: 14px;
+  display: flex;
+  opacity: 0.35;
+}

@@ -38,7 +38,7 @@ export function HeroCtas({
         <a
           href="#projects"
           onClick={onProjects}
-          className="btn-primary inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-foreground hover:-translate-y-0.5"
+          className="btn-primary inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold"
         >
           View My Work
           <IconArrowRight />

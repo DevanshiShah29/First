@@ -11,7 +11,7 @@ export function RouteRetry() {
   return (
     <button
       type="button"
-      className="btn-primary mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold text-foreground hover:-translate-y-0.5"
+      className="btn-primary mt-8 inline-flex items-center rounded-lg px-6 py-3 text-sm font-semibold"
       onClick={() => router.refresh()}
     >
       Try again

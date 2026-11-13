@@ -12,7 +12,7 @@ export type ThemePreset = {
 
 /**
  * Built-in Appearance presets. Each provides light + dark palettes
- * for the 8 theme variables (background, text, cards, hover, chips, accents, badges).
+ * for the theme variables (background, text, cards, chips, accents, badges).
  */
 export const THEME_PRESETS: ThemePreset[] = [
   {
@@ -25,7 +25,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#F4F1EA",
       foreground: "#1F2A22",
       card: "#FFFCF7",
-      cardHover: "#EAE6DC",
       chip: "#E7EDE6",
       accentText: "#4F6B52",
       accentHover: "#3E5541",
@@ -35,7 +34,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#121714",
       foreground: "#E8EDE8",
       card: "#1A211C",
-      cardHover: "#232B25",
       chip: "#1F2822",
       accentText: "#A8C4A9",
       accentHover: "#C0D7C1",
@@ -52,7 +50,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#FBF6F5",
       foreground: "#2A1F22",
       card: "#FFFFFF",
-      cardHover: "#F5E9EA",
       chip: "#F3E6E8",
       accentText: "#B45C68",
       accentHover: "#9A4A55",
@@ -62,7 +59,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#1A1416",
       foreground: "#F5E9EB",
       card: "#241C1F",
-      cardHover: "#2E2428",
       chip: "#2A2024",
       accentText: "#E8A8B0",
       accentHover: "#F0C0C6",
@@ -79,7 +75,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#F3F7FB",
       foreground: "#122033",
       card: "#FFFFFF",
-      cardHover: "#E8F0F8",
       chip: "#E6EEF6",
       accentText: "#1F5FCC",
       accentHover: "#174BA3",
@@ -89,7 +84,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#0B1220",
       foreground: "#E8F0FA",
       card: "#121A2B",
-      cardHover: "#1A2438",
       chip: "#162033",
       accentText: "#7EB6FF",
       accentHover: "#A6CCFF",
@@ -106,7 +100,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#F5F3FA",
       foreground: "#16141F",
       card: "#FFFFFF",
-      cardHover: "#EDE9F7",
       chip: "#EBE7F4",
       accentText: "#6D28D9",
       accentHover: "#5B21B6",
@@ -116,7 +109,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#08080C",
       foreground: "#F3F0FA",
       card: "#101018",
-      cardHover: "#181822",
       chip: "#14141C",
       accentText: "#C4B5FD",
       accentHover: "#DDD6FE",
@@ -133,7 +125,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#F7F0E6",
       foreground: "#2A2118",
       card: "#FFFBF5",
-      cardHover: "#EFE4D4",
       chip: "#EFE6D8",
       accentText: "#A65D45",
       accentHover: "#8E4935",
@@ -143,7 +134,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#16110E",
       foreground: "#F5EDE3",
       card: "#1F1914",
-      cardHover: "#2A221B",
       chip: "#241C16",
       accentText: "#E0A07A",
       accentHover: "#EFB892",
@@ -160,7 +150,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#F4F4F5",
       foreground: "#18181B",
       card: "#FFFFFF",
-      cardHover: "#E4E4E7",
       chip: "#E4E4E7",
       accentText: "#3F3F46",
       accentHover: "#27272A",
@@ -170,7 +159,6 @@ export const THEME_PRESETS: ThemePreset[] = [
       background: "#09090B",
       foreground: "#FAFAFA",
       card: "#121214",
-      cardHover: "#1A1A1D",
       chip: "#161618",
       accentText: "#A1A1AA",
       accentHover: "#D4D4D8",

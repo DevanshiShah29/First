@@ -17,6 +17,8 @@ import {
   type SkillItem,
 } from "./types";
 import { asRecord, bool, num, str, strList } from "./parse-fields";
+import { parseCursor } from "./cursor";
+import { parseSeasons } from "./seasons";
 import { parseSectionTitles } from "./section-titles";
 
 /**
@@ -92,6 +94,8 @@ export function parseSite(value: unknown): SiteContent {
     resume: str(s.resume),
     sections: normalizeSections(s.sections),
     titles: parseSectionTitles(s.titles),
+    seasons: parseSeasons(s.seasons),
+    cursor: parseCursor(s.cursor),
     stats: statsRaw.map((item) => {
       const row = asRecord(item);
       return {

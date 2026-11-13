@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { parseCursor } from "./cursor";
+import { parseSeasons } from "./seasons";
 import { parseSectionTitles } from "./section-titles";
 import {
   HERO_TEMPLATES,
@@ -91,6 +93,8 @@ const siteSchema = z.object({
   resume: z.string(),
   sections: sectionVisibilitySchema,
   titles: z.unknown().optional().transform((value) => parseSectionTitles(value)),
+  seasons: z.unknown().optional().transform((value) => parseSeasons(value)),
+  cursor: z.unknown().optional().transform((value) => parseCursor(value)),
   stats: z.array(
     z.object({
       value: z.number().finite().nonnegative(),
@@ -142,7 +146,6 @@ const paletteSchema = z.object({
   background: hexColor,
   foreground: hexColor,
   card: hexColor,
-  cardHover: hexColor,
   chip: hexColor,
   accentText: hexColor,
   accentHover: hexColor,

@@ -8,7 +8,6 @@ import type { Screen } from "../types";
 import { ChangePasswordForm } from "../ChangePasswordForm";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { Metabox } from "../components/Metabox";
-import { SectionTitleFields } from "../components/SectionTitleFields";
 import { Field, TextArea, TextInput } from "../fields";
 
 interface SiteScreenProps {
@@ -79,13 +78,6 @@ export function SiteScreen({
             </Field>
           </tbody>
         </table>
-      </Metabox>
-
-      <Metabox id="site_titles" title="Page titles">
-        <p className="wp-sub" style={{ marginTop: 0 }}>
-          Names for the pages and sections. Leave a field blank to keep the placeholder.
-        </p>
-        <SectionTitleFields site={site} onSite={(next) => setData({ ...data, site: next })} />
       </Metabox>
 
       <ChangePasswordForm

@@ -81,7 +81,7 @@ export function Site({ content }: { content: PublicContentData }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Cursor />
+      <Cursor style={site.cursor.style} />
       <SkipLink />
       <SiteHeader
         name={site.name}

@@ -5,6 +5,7 @@ import { ThemeAiPanel } from "../appearance/ThemeAiPanel";
 import { ThemeCheckPanel } from "../appearance/ThemeCheckPanel";
 import { ThemeLibrary } from "../appearance/ThemeLibrary";
 import { ThemePalettePanel } from "../appearance/ThemePalettePanel";
+import { CursorStylePanel } from "../appearance/CursorStylePanel";
 import { ThemeBrandPanel, ThemeOptionsPanel } from "../appearance/ThemeSettingsPanels";
 import { useAppearanceDraft } from "../appearance/useAppearanceDraft";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
@@ -30,10 +31,17 @@ export function AppearanceScreen({ data, setData, save, dirty, status }: Appeara
     <>
       <h1 className="wp-screen-title">Appearance</h1>
       <p className="wp-sub">
-        Design your portfolio theme with presets, AI generation, and live preview. All themes use the
-        same 8 color variables so the site updates consistently.
+        Design your portfolio theme with AI generation, presets, and a live preview. All themes use
+        the same 7 color variables so the site updates consistently.
       </p>
       <EditorTabs preview={<LivePreviewShell data={data} dirty={dirty} section="appearance" />}>
+        <ThemeAiPanel
+          aiPrompt={editor.aiPrompt}
+          onPrompt={editor.setAiPrompt}
+          generating={editor.generating}
+          generateError={editor.generateError}
+          onGenerate={() => void editor.generateTheme()}
+        />
         <ThemeLibrary
           presetCards={editor.presetCards}
           savedCards={editor.savedCards}
@@ -43,17 +51,24 @@ export function AppearanceScreen({ data, setData, save, dirty, status }: Appeara
           onEdit={editor.editSavedTheme}
           onDelete={editor.deleteSavedTheme}
         />
-        <ThemeAiPanel
-          aiPrompt={editor.aiPrompt}
-          onPrompt={editor.setAiPrompt}
-          generating={editor.generating}
-          generateError={editor.generateError}
-          onGenerate={() => void editor.generateTheme()}
-        />
         <ThemePalettePanel
           light={editor.draft.light}
           dark={editor.draft.dark}
           onPaletteChange={editor.updateDraftPalette}
+          checkPanel={
+            <ThemeCheckPanel
+              paletteMode={editor.paletteMode}
+              onPaletteMode={editor.setPaletteMode}
+              onCheck={editor.runLocalCheck}
+              checking={editor.checking}
+              onImprove={() => void editor.runImprove()}
+              issues={editor.issues}
+              checkError={editor.checkError}
+              checkSummary={editor.checkSummary}
+              onApplyAll={editor.applyAllIssues}
+              onApplyIssue={editor.applyOneIssue}
+            />
+          }
           generating={editor.generating}
           canRegenerate={editor.aiPrompt.trim().length >= 3}
           onReset={editor.resetDraft}
@@ -64,18 +79,7 @@ export function AppearanceScreen({ data, setData, save, dirty, status }: Appeara
           editingSaved={Boolean(editor.editingSavedId)}
           onSave={editor.saveAsTheme}
         />
-        <ThemeCheckPanel
-          paletteMode={editor.paletteMode}
-          onPaletteMode={editor.setPaletteMode}
-          onCheck={editor.runLocalCheck}
-          checking={editor.checking}
-          onImprove={() => void editor.runImprove()}
-          issues={editor.issues}
-          checkError={editor.checkError}
-          checkSummary={editor.checkSummary}
-          onApplyAll={editor.applyAllIssues}
-          onApplyIssue={editor.applyOneIssue}
-        />
+        <CursorStylePanel data={data} setData={setData} />
         <ThemeOptionsPanel
           defaultMode={data.theme.defaultMode}
           allowToggle={data.theme.allowToggle}

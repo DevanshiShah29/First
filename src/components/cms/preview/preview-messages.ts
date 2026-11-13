@@ -14,7 +14,8 @@ export type PreviewSection =
   | "contact"
   | "craft"
   | "memories"
-  | "appearance";
+  | "appearance"
+  | "seasons";
 
 export type PreviewThemeMode = "light" | "dark";
 

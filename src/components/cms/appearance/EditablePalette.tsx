@@ -2,6 +2,7 @@
 
 import { THEME_PALETTE_FIELDS, type ThemePalette } from "@/content/types";
 import { HexColorInput } from "../fields";
+import { formatPaletteUsage, PALETTE_USAGE_PERCENT } from "./palette-usage";
 
 /**
  * Editable light + dark palettes shown side by side.
@@ -35,7 +36,58 @@ export function EditablePalette({
 }
 
 /**
- * One mode's 8-color palette rows with swatch + hex + picker.
+ * One palette color: swatch, name, key, and hex field.
+ * @example <PaletteColorRow label="Background" fieldKey="background" value="#fff" onChange={set} />
+ */
+export function PaletteColorRow({
+  label,
+  fieldKey,
+  value,
+  onChange,
+  usage,
+}: {
+  label: string;
+  fieldKey: string;
+  value: string;
+  onChange: (value: string) => void;
+  /** Share of this role on the public site, 0–100. */
+  usage?: number;
+}) {
+  const usageLabel = usage == null ? null : formatPaletteUsage(usage);
+  return (
+    <div className="wp-palette-row">
+      <div
+        className="wp-palette-row-swatch"
+        style={{ background: value }}
+        title={value}
+        aria-hidden="true"
+      />
+      <div className="wp-palette-row-meta">
+        <span className="wp-palette-row-name">
+          {label}
+          {usageLabel ? (
+            <span
+              className="wp-palette-row-usage"
+              title="Share of this color on the public site, compared with the other palette colors"
+            >
+              {` (${usageLabel})`}
+            </span>
+          ) : null}
+        </span>
+        <span className="wp-palette-row-key">{fieldKey}</span>
+      </div>
+      <div className="wp-palette-row-input">
+        <HexColorInput
+          value={value}
+          onChange={onChange}
+        />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One mode's palette rows with swatch, usage, and hex field.
  */
 function PaletteColumn({
   title,
@@ -51,24 +103,14 @@ function PaletteColumn({
       <h3 className="wp-palette-column-title">{title}</h3>
       <div className="wp-palette-rows">
         {THEME_PALETTE_FIELDS.map((field) => (
-          <div key={field.key} className="wp-palette-row">
-            <div
-              className="wp-palette-row-swatch"
-              style={{ background: palette[field.key] }}
-              title={palette[field.key]}
-              aria-hidden="true"
-            />
-            <div className="wp-palette-row-meta">
-              <span className="wp-palette-row-name">{field.label}</span>
-              <span className="wp-palette-row-key">{field.key}</span>
-            </div>
-            <div className="wp-palette-row-input">
-              <HexColorInput
-                value={palette[field.key]}
-                onChange={(value) => onChange({ ...palette, [field.key]: value })}
-              />
-            </div>
-          </div>
+          <PaletteColorRow
+            key={field.key}
+            label={field.label}
+            fieldKey={field.key}
+            value={palette[field.key]}
+            usage={PALETTE_USAGE_PERCENT[field.key]}
+            onChange={(value) => onChange({ ...palette, [field.key]: value })}
+          />
         ))}
       </div>
     </section>

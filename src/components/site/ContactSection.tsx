@@ -145,7 +145,7 @@ export function ContactSection({ site }: { site: PublicSiteContent }) {
                 <button
                   type="submit"
                   disabled={status === "sending"}
-                  className="btn-primary inline-flex items-center rounded-lg px-5 py-3 text-sm font-semibold text-white hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0">
+                  className="btn-primary inline-flex items-center rounded-lg px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50">
                   {status === "sending" ? "Sending…" : "Send Message"}
                 </button>
                 <p
@@ -192,7 +192,7 @@ export function ContactSection({ site }: { site: PublicSiteContent }) {
                     download={resume.download}
                     target={resume.target}
                     rel={resume.rel}
-                    className="btn-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5">
+                    className="btn-primary mt-6 inline-flex w-full items-center justify-center gap-2 rounded-lg px-5 py-3 text-sm font-semibold">
                     Resume
                     <IconDownload />
                   </a>

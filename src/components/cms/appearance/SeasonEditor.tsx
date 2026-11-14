@@ -102,12 +102,12 @@ export function SeasonEditor({
           </button>
           {onRemove ? (
             <ConfirmButton
-              className="wp-btn wp-btn-small"
-              title={`Remove ${name}?`}
-              confirmLabel="Remove"
+              className="wp-btn wp-btn-small wp-btn-danger-outline"
+              title={`Delete ${name}?`}
+              confirmLabel="Delete"
               onConfirm={onRemove}
             >
-              Remove
+              Delete
             </ConfirmButton>
           ) : null}
         </div>
@@ -315,7 +315,13 @@ export function SeasonEditor({
             Manage catalog
           </button>
         </div>
-        <SeasonOrnamentPicker images={item.ornamentImages} ornaments={ornaments} onImages={onImages} />
+        <SeasonOrnamentPicker
+          images={item.ornamentImages}
+          ornaments={ornaments}
+          cursorOrnament={item.cursorOrnament ?? null}
+          onImages={onImages}
+          onCursorOrnament={(cursorOrnament) => onChange({ cursorOrnament })}
+        />
       </div>
     </section>
   );

@@ -117,7 +117,14 @@ export default function AdminPreviewPage() {
             <SeasonLayer season={season.id} images={season.ornamentImages} placement="preview" />
           ) : null}
           {preview.section === "memories" ? null : (
-            <Cursor style={preview.content.site.cursor.style} />
+            <Cursor
+              style={preview.content.site.cursor.style}
+              ornament={
+                season?.cursorOrnament && season.ornamentImages.includes(season.cursorOrnament)
+                  ? season.cursorOrnament
+                  : null
+              }
+            />
           )}
           <main id="cms-preview-main" tabIndex={-1}>
             <SectionPreview section={preview.section} content={preview.content} />

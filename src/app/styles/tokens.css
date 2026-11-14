@@ -178,6 +178,29 @@ html.has-custom-cursor .cursor-trail {
 .cursor-pointer.is-echo {
   filter: none;
 }
+.cursor-pointer.is-ornament {
+  width: 28px;
+  height: 28px;
+  margin: -4px 0 0 -4px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.28))
+    drop-shadow(0 0 6px color-mix(in srgb, var(--brand-from, #7c3aed) 40%, transparent));
+}
+.cursor-pointer.is-ornament img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+.cursor-pointer.is-ornament.is-glow {
+  filter: drop-shadow(0 0 8px color-mix(in srgb, var(--brand-from, #7c3aed) 75%, transparent))
+    drop-shadow(0 0 16px color-mix(in srgb, var(--brand-to, #6366f1) 55%, transparent))
+    drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+.cursor-pointer.is-echo.is-ornament {
+  filter: none;
+}
 .cursor-trail {
   width: 7px;
   height: 7px;

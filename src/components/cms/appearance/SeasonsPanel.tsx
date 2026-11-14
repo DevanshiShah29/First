@@ -94,7 +94,12 @@ export function SeasonsPanel({
    * @example changeImages("diwali", ["/bat.png"]) // void
    */
   function changeImages(id: SeasonConfig["id"], ornamentImages: string[]) {
-    updateItem(id, { ornamentImages });
+    const item = seasons.items.find((s) => s.id === id);
+    const cursorOrnament =
+      item?.cursorOrnament && ornamentImages.includes(item.cursorOrnament)
+        ? item.cursorOrnament
+        : null;
+    updateItem(id, { ornamentImages, cursorOrnament });
     onPreviewSeason?.(id);
   }
 
@@ -379,6 +384,9 @@ export function SeasonsPanel({
                     onPreview={() => onPreviewSeason?.(item.id, { openTab: true })}
                     onMoveUp={() => moveItem(item.id, -1)}
                     onMoveDown={() => moveItem(item.id, 1)}
+                    onDelete={
+                      isCustomSeasonId(item.id) ? () => removeFestival(item.id) : undefined
+                    }
                   />
                 );
               })}

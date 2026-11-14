@@ -4,6 +4,7 @@
 import type { ReactNode } from "react";
 
 // Application services & types
+import { resolveActiveCursorOrnament } from "@/content/seasons";
 import type { PublicContentData } from "@/content/types";
 
 // UI components
@@ -24,10 +25,11 @@ export function PageShell({
   children: ReactNode;
 }) {
   const { site, craft } = content;
+  const ornamentCursor = resolveActiveCursorOrnament(site.seasons);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Cursor style={site.cursor.style} />
+      <Cursor style={site.cursor.style} ornament={ornamentCursor} />
       <SkipLink />
       <SiteHeader
         name={site.name}

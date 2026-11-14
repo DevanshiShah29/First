@@ -54,6 +54,8 @@ export type SeasonConfig = {
   palette: SeasonPalette;
   /** Catalogue image addresses mapped to this season. Empty shows no ornaments. */
   ornamentImages: string[];
+  /** Optional ornament image URL to use as cursor when this festival/season is live. */
+  cursorOrnament?: string | null;
 };
 
 export type SeasonsSettings = {
@@ -139,6 +141,7 @@ function configFromPreset(preset: SeasonPreset, enabled: boolean): SeasonConfig 
     intensity: preset.intensity,
     palette: clonePalette(preset.palette),
     ornamentImages: [],
+    cursorOrnament: null,
   };
 }
 
@@ -163,6 +166,7 @@ export function createCustomSeason(now: Date, timeZone: string): SeasonConfig {
     intensity: "full",
     palette: clonePalette(CUSTOM_SEASON_PALETTE),
     ornamentImages: [],
+    cursorOrnament: null,
   };
 }
 
@@ -443,6 +447,8 @@ export function parseSeasons(value: unknown): SeasonsSettings {
 function parseBuiltInSeason(entry: Record<string, unknown>, preset: SeasonPreset): SeasonConfig {
   const intensityRaw = str(entry.intensity);
   const intensity: SeasonIntensity = intensityRaw === "subtle" ? "subtle" : "full";
+  const ornamentImages = parseOrnamentImages(entry.ornamentImages);
+  const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
   return {
     id: preset.id,
     name: preset.name,
@@ -450,7 +456,8 @@ function parseBuiltInSeason(entry: Record<string, unknown>, preset: SeasonPreset
     schedule: parseSchedule(entry.schedule, preset),
     intensity: intensityRaw === "full" || intensityRaw === "subtle" ? intensity : preset.intensity,
     palette: parseSeasonPalette(entry.palette, preset.palette),
-    ornamentImages: parseOrnamentImages(entry.ornamentImages),
+    ornamentImages,
+    cursorOrnament: rawCursor && ornamentImages.includes(rawCursor) ? rawCursor : null,
   };
 }
 
@@ -464,6 +471,8 @@ function parseCustomSeason(entry: Record<string, unknown>): SeasonConfig | null 
   const schedule = parseCustomSchedule(entry.schedule);
   if (!schedule) return null;
   const intensityRaw = str(entry.intensity);
+  const ornamentImages = parseOrnamentImages(entry.ornamentImages);
+  const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
   return {
     id,
     name: parseSeasonName(entry.name),
@@ -471,7 +480,8 @@ function parseCustomSeason(entry: Record<string, unknown>): SeasonConfig | null 
     schedule,
     intensity: intensityRaw === "subtle" ? "subtle" : "full",
     palette: parseSeasonPalette(entry.palette, CUSTOM_SEASON_PALETTE),
-    ornamentImages: parseOrnamentImages(entry.ornamentImages),
+    ornamentImages,
+    cursorOrnament: rawCursor && ornamentImages.includes(rawCursor) ? rawCursor : null,
   };
 }
 
@@ -591,6 +601,20 @@ export function resolveActiveSeason(
     return seasons.items.find((season) => season.id === seasons.manualId) ?? null;
   }
   return seasonsMatchingToday(seasons, now)[0] ?? null;
+}
+
+/**
+ * Resolves the ornament image to use as cursor for the currently live season.
+ * Returns null if no season is live or if the live season has no ornament cursor configured.
+ * @example resolveActiveCursorOrnament(settings, new Date()) // "/uploads/artifacts/diya.png" | null
+ */
+export function resolveActiveCursorOrnament(
+  settings: SeasonsSettings | null | undefined,
+  now: Date = new Date(),
+): string | null {
+  const season = resolveActiveSeason(settings, now);
+  if (!season || !season.cursorOrnament) return null;
+  return season.ornamentImages.includes(season.cursorOrnament) ? season.cursorOrnament : null;
 }
 
 /**

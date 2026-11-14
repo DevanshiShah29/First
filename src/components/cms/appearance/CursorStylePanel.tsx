@@ -54,6 +54,9 @@ export function CursorStylePanel({
               </div>
               <span className="wp-description">{option.hint}</span>
               <span className="wp-description">Memories keeps its star cursor.</span>
+              <span className="wp-description">
+                Active festivals can use a seasonal ornament as the cursor (configured in Seasons).
+              </span>
             </td>
           </tr>
         </tbody>

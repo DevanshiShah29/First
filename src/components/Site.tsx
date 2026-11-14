@@ -5,6 +5,7 @@ import { useEffect, type MouseEvent } from "react";
 
 // Application services & types
 import { sectionEnabled, type PublicContentData } from "@/content/types";
+import { resolveActiveCursorOrnament } from "@/content/seasons";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { scrollToHash } from "@/lib/scroll";
 
@@ -79,9 +80,11 @@ export function Site({ content }: { content: PublicContentData }) {
     history.replaceState(null, "", href);
   }
 
+  const ornamentCursor = resolveActiveCursorOrnament(site.seasons);
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Cursor style={site.cursor.style} />
+      <Cursor style={site.cursor.style} ornament={ornamentCursor} />
       <SkipLink />
       <SiteHeader
         name={site.name}

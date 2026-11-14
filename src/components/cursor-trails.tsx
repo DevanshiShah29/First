@@ -107,16 +107,26 @@ function DotTrail({ x, y, hidden }: PointProps) {
  * Fainter arrow that lags behind the real pointer.
  * @example <EchoTrail x={x} y={y} hidden={false} hover={false} />
  */
-function EchoTrail({ x, y, hidden }: PointProps) {
+function EchoTrail({
+  x,
+  y,
+  hidden,
+  ornament,
+}: PointProps & { ornament?: string | null }) {
   const trailX = useSpring(x, shadowSpring);
   const trailY = useSpring(y, shadowSpring);
   return (
     <motion.div
       aria-hidden
-      className="cursor-pointer is-echo"
+      className={`cursor-pointer is-echo${ornament ? " is-ornament" : ""}`}
       style={{ x: trailX, y: trailY, opacity: hidden ? 0 : 0.35 }}
     >
-      <CursorMark gradientId="cursor-echo-fill" />
+      {ornament ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={ornament} alt="" decoding="async" />
+      ) : (
+        <CursorMark gradientId="cursor-echo-fill" />
+      )}
     </motion.div>
   );
 }
@@ -129,10 +139,11 @@ type FollowerStyle = Exclude<CursorStyle, "none" | "glow">;
  */
 export function CursorFollower({
   style,
+  ornament,
   ...point
-}: PointProps & { style: FollowerStyle }) {
+}: PointProps & { style: FollowerStyle; ornament?: string | null }) {
   if (style === "shadow") return <ShadowTrail {...point} />;
   if (style === "ring") return <RingTrail {...point} />;
   if (style === "dots") return <DotTrail {...point} />;
-  return <EchoTrail {...point} />;
+  return <EchoTrail {...point} ornament={ornament} />;
 }

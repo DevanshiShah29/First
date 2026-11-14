@@ -45,7 +45,9 @@ function Photo({ src, spot }: { src: string; spot: OrnamentSpot | undefined }) {
   if (hidden || !spot) return null;
   return (
     <span
-      className={`season-ornament season-ornament--photo season-ornament--${spot.size} season-ornament--${spot.motion}${spot.quiet ? " is-quiet" : ""}`}
+      className={`season-ornament season-ornament--photo season-ornament--${spot.size} season-ornament--${spot.motion}${spot.quiet ? " is-quiet" : ""}${spot.anchor === "corner" ? " is-corner" : ""}`}
+      data-anchor={spot.anchor}
+      data-corner={spot.corner ?? undefined}
       style={spotStyle(spot) as CSSProperties}
     >
       {/* Addresses may be any https host the editor accepted. */}

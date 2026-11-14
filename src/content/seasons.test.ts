@@ -9,6 +9,7 @@ import {
   isCustomSeasonId,
   MAX_CUSTOM_SEASONS,
   parseSeasons,
+  resolveActiveCursorOrnament,
   resolveActiveSeason,
   seasonForIsoDate,
   seasonOrnamentImageUrl,
@@ -288,6 +289,84 @@ describe("parseSeasons", () => {
     assert.equal(parsed.items.length, SEASON_PRESETS.length + MAX_CUSTOM_SEASONS);
     assert.equal(parsed.items.filter((item) => isCustomSeasonId(item.id)).length, MAX_CUSTOM_SEASONS);
     assert.equal(parsed.items[11]?.id, "fest-000000000011");
+  });
+
+  it("keeps cursorOrnament when it matches an ornament image, and drops it otherwise", () => {
+    const parsed = parseSeasons({
+      items: [
+        {
+          id: "halloween",
+          ornamentImages: ["/uploads/artifacts/bat.png"],
+          cursorOrnament: "/uploads/artifacts/bat.png",
+        },
+        {
+          id: "christmas",
+          ornamentImages: ["/uploads/artifacts/tree.png"],
+          cursorOrnament: "/uploads/artifacts/snowflake.png",
+        },
+      ],
+    });
+    const halloween = parsed.items.find((item) => item.id === "halloween");
+    assert.equal(halloween?.cursorOrnament, "/uploads/artifacts/bat.png");
+    const christmas = parsed.items.find((item) => item.id === "christmas");
+    assert.equal(christmas?.cursorOrnament, null);
+  });
+});
+
+describe("resolveActiveCursorOrnament", () => {
+  it("returns the ornament cursor when a festival is live and has one configured", () => {
+    const settings: SeasonsSettings = {
+      mode: "manual",
+      manualId: "halloween",
+      timezone: ZONE,
+      items: [
+        {
+          ...DEFAULT_SEASONS.items[0],
+          id: "halloween",
+          ornamentImages: ["/uploads/artifacts/bat.png"],
+          cursorOrnament: "/uploads/artifacts/bat.png",
+        },
+      ],
+      ornaments: [],
+    };
+    assert.equal(resolveActiveCursorOrnament(settings), "/uploads/artifacts/bat.png");
+  });
+
+  it("returns null when no season is live or mode is off", () => {
+    const settings: SeasonsSettings = {
+      mode: "off",
+      manualId: "halloween",
+      timezone: ZONE,
+      items: [
+        {
+          ...DEFAULT_SEASONS.items[0],
+          id: "halloween",
+          ornamentImages: ["/uploads/artifacts/bat.png"],
+          cursorOrnament: "/uploads/artifacts/bat.png",
+        },
+      ],
+      ornaments: [],
+    };
+    assert.equal(resolveActiveCursorOrnament(settings), null);
+    assert.equal(resolveActiveCursorOrnament(null), null);
+  });
+
+  it("returns null when the live season has no cursorOrnament set", () => {
+    const settings: SeasonsSettings = {
+      mode: "manual",
+      manualId: "halloween",
+      timezone: ZONE,
+      items: [
+        {
+          ...DEFAULT_SEASONS.items[0],
+          id: "halloween",
+          ornamentImages: ["/uploads/artifacts/bat.png"],
+          cursorOrnament: null,
+        },
+      ],
+      ornaments: [],
+    };
+    assert.equal(resolveActiveCursorOrnament(settings), null);
   });
 });
 

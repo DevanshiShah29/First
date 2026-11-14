@@ -1,6 +1,7 @@
 "use client";
 
 import type { SeasonConfig } from "@/content/seasons";
+import { ConfirmButton } from "../components/ConfirmDialog";
 import { SeasonTrack } from "./SeasonTrack";
 import {
   scheduleSummary,
@@ -42,6 +43,7 @@ export function SeasonListRow({
   onPreview,
   onMoveUp,
   onMoveDown,
+  onDelete,
 }: {
   item: SeasonConfig;
   rank: number;
@@ -62,6 +64,7 @@ export function SeasonListRow({
   onPreview: () => void;
   onMoveUp: () => void;
   onMoveDown: () => void;
+  onDelete?: () => void;
 }) {
   const name = seasonName(item);
   const inverted = item.schedule.kind === "dated" && item.schedule.start > item.schedule.end;
@@ -88,6 +91,11 @@ export function SeasonListRow({
               {kind === "custom" ? "Festival" : "Built-in"}
             </span>
             {flag ? <span className={`wp-season-pill is-${flag}`}>{FLAG_LABEL[flag]}</span> : null}
+            {item.cursorOrnament ? (
+              <span className="wp-season-pill is-cursor" title="Ornament cursor configured">
+                Cursor
+              </span>
+            ) : null}
             {previewing ? <span className="wp-season-pill is-previewing">Preview</span> : null}
             {overlap && !showing ? <span className="wp-season-pill is-overlap">Overlaps</span> : null}
           </span>
@@ -155,6 +163,18 @@ export function SeasonListRow({
           >
             Preview
           </button>
+          {onDelete ? (
+            <ConfirmButton
+              className="wp-btn wp-btn-small wp-btn-danger-outline"
+              ariaLabel={`Delete ${name}`}
+              buttonTitle={`Delete ${name}`}
+              title={`Delete ${name}?`}
+              confirmLabel="Delete"
+              onConfirm={onDelete}
+            >
+              Delete
+            </ConfirmButton>
+          ) : null}
         </div>
       </div>
     </li>

@@ -109,12 +109,14 @@ describe("ornamentSpots", () => {
     assert.ok(spots.every((spot) => !crossesTopCenter(spot)));
   });
 
-  it("keeps an added festival out of the center", () => {
+  it("keeps an added festival in the four corners, still and without symbolism", () => {
     const spots = ornamentSpots("fest-ab12cd34ef56", 8);
-    for (const spot of spots) {
-      if (spot.edge === "top") assert.ok(spot.along <= 28 || spot.along >= 72);
-      if (spot.edge === "bottom") assert.ok(spot.along <= 28);
-    }
+    assert.ok(spots.every((spot) => spot.anchor === "corner" && spot.motion === "still"));
+    assert.ok(spots.every((spot) => spot.along <= 8));
+    assert.ok(spots.some((spot) => spot.edge === "top" && spot.side === "left"));
+    assert.ok(spots.some((spot) => spot.edge === "top" && spot.side === "right"));
+    assert.ok(spots.some((spot) => spot.edge === "bottom" && spot.side === "left"));
+    assert.ok(spots.some((spot) => spot.edge === "bottom" && spot.side === "right"));
   });
 
   it("parks a single image off the middle", () => {
@@ -136,6 +138,14 @@ describe("spotStyle", () => {
     assert.match(style.bottom ?? "", /rem$/);
   });
 
+  it("measures a top-right corner in from the right", () => {
+    const spot = ornamentSpots("fest-ab12cd34", 1)[0];
+    assert.ok(spot);
+    const style = spotStyle(spot);
+    assert.equal(style.left, undefined);
+    assert.match(style.right ?? "", /%$/);
+  });
+
   it("keeps a doorway garland below the header", () => {
     const spot = ornamentSpots("navratri", 1)[0];
     assert.ok(spot);
@@ -151,5 +161,6 @@ describe("ornamentPlacementCopy", () => {
       assert.equal(copy.includes("scattered across"), false);
     }
     assert.match(ornamentPlacementCopy("fest-ab12cd34"), /corners/);
+    assert.match(ornamentPlacementCopy("fest-ab12cd34"), /still/);
   });
 });

@@ -13,18 +13,27 @@ const textSel = "input, textarea, select, [contenteditable='true']";
 
 /**
  * Renders the brand pointer and the CMS-selected follower.
- * @example <Cursor style="dots" />
+ * Supports a live seasonal ornament in place of the brand arrow.
+ * @example <Cursor style="dots" ornament="/uploads/artifacts/diya.png" />
  */
-export function Cursor({ style = DEFAULT_CURSOR.style }: { style?: CursorStyle }) {
+export function Cursor({
+  style = DEFAULT_CURSOR.style,
+  ornament,
+}: {
+  style?: CursorStyle;
+  ornament?: string | null;
+}) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
   const [hover, setHover] = useState(false);
   const [text, setText] = useState(false);
   const [down, setDown] = useState(false);
+  const [failedOrnament, setFailedOrnament] = useState<string | null>(null);
   const isJarPage = pathname?.startsWith("/memories") || pathname === "/memory-jar";
   const x = useMotionValue(-80);
   const y = useMotionValue(-80);
   const follower = style === "none" || style === "glow" ? null : style;
+  const activeOrnament = ornament && failedOrnament !== ornament ? ornament : null;
 
   useEffect(() => {
     if (reduce || isJarPage) {
@@ -102,16 +111,33 @@ export function Cursor({ style = DEFAULT_CURSOR.style }: { style?: CursorStyle }
   return (
     <>
       {follower ? (
-        <CursorFollower style={follower} x={x} y={y} hidden={text} hover={hover} />
+        <CursorFollower
+          style={follower}
+          x={x}
+          y={y}
+          hidden={text}
+          hover={hover}
+          ornament={activeOrnament}
+        />
       ) : null}
       <motion.div
         aria-hidden
-        className={`cursor-pointer${hover ? " is-hover" : ""}${style === "glow" ? " is-glow" : ""}`}
+        className={`cursor-pointer${hover ? " is-hover" : ""}${style === "glow" ? " is-glow" : ""}${activeOrnament ? " is-ornament" : ""}`}
         style={{ x, y, opacity: text ? 0 : 1 }}
         animate={{ scale: down ? 0.82 : hover ? 1.12 : 1 }}
         transition={{ type: "spring", stiffness: 420, damping: 26 }}
       >
-        <CursorMark />
+        {activeOrnament ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={activeOrnament}
+            alt=""
+            decoding="async"
+            onError={() => setFailedOrnament(ornament ?? null)}
+          />
+        ) : (
+          <CursorMark />
+        )}
       </motion.div>
     </>
   );

@@ -36,6 +36,7 @@ export type OrnamentSpot = {
   quiet: boolean;
   /** Narrow screens keep corners only, inside the page gutter. */
   anchor: "corner" | "rim";
+  corner: "tl" | "tr" | "bl" | "br" | null;
   shiftX: string;
   shiftY: string;
 };
@@ -177,20 +178,42 @@ function spot(
   shiftY = "0px",
   quiet = false,
 ): OrnamentSpot {
+  const a = round(along);
+  const anchor = anchorFor(edge, side, a);
   return {
     motif,
     edge,
     side,
-    along: round(along),
+    along: a,
     drop,
     size,
     motion,
     delay: delay(index),
     quiet,
-    anchor: anchorFor(edge, side, round(along)),
+    anchor,
+    corner: cornerFor(edge, side, a, anchor),
     shiftX,
     shiftY,
   };
+}
+
+/**
+ * Which screen corner a corner-anchored spot belongs to.
+ * @example cornerFor("top", "none", 86, "corner") // "tr"
+ */
+function cornerFor(
+  edge: OrnamentEdge,
+  side: OrnamentSide,
+  along: number,
+  anchor: "corner" | "rim",
+): "tl" | "tr" | "bl" | "br" | null {
+  if (anchor !== "corner") return null;
+  if (edge === "bottom") return side === "right" ? "br" : "bl";
+  if (edge === "left") return along >= 68 ? "bl" : "tl";
+  if (edge === "right") return along >= 68 ? "br" : "tr";
+  if (side === "right") return "tr";
+  if (side === "left") return "tl";
+  return along >= 50 ? "tr" : "tl";
 }
 
 /**

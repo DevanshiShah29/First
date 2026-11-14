@@ -215,7 +215,7 @@ async function fetchContentFromDb(): Promise<ContentData> {
   });
 }
 
-const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v11"], {
+const getCachedContent = unstable_cache(fetchContentFromDb, ["cms-content-v12"], {
   tags: [CMS_CONTENT_TAG],
   // Fallback if a save misses tag expiration. Saves pass revalidateTag(..., { expire: 0 }).
   revalidate: 3600,

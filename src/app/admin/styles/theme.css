@@ -433,7 +433,7 @@
   }
 }
 
-.wp-season-status {
+.wp-season-toolbar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -445,26 +445,52 @@
   background: #f0f6fc;
 }
 
-.wp-season-status.is-quiet {
+.wp-season-toolbar.is-quiet {
   border-color: #dcdcde;
   background: #f6f7f7;
 }
 
-.wp-season-status-title {
+.wp-season-toolbar-status {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.wp-season-toolbar-title {
   margin: 0;
   font-size: 14px;
   font-weight: 600;
   color: #1d2327;
 }
 
-.wp-season-status-detail {
+.wp-season-toolbar-detail {
   margin: 4px 0 0;
   color: #50575e;
   font-size: 12px;
   line-height: 1.45;
 }
 
-.wp-season-status-today {
+.wp-season-toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+}
+
+.wp-season-toolbar-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #50575e;
+}
+
+.wp-season-toolbar-field .wp-select {
+  width: auto;
+  min-width: 150px;
+}
+
+.wp-season-toolbar-today {
   margin: 0;
   color: #646970;
   font-size: 12px;
@@ -473,48 +499,17 @@
   white-space: nowrap;
 }
 
-.wp-season-status-today span {
+.wp-season-toolbar-today span {
   display: block;
   margin-top: 2px;
 }
 
-.wp-season-field {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin-top: 14px;
-}
-
-.wp-season-field > label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1d2327;
-}
-
-.wp-season-field .wp-description {
-  flex-basis: 100%;
-  margin: 0;
-}
-
 .wp-season-ai {
-  margin-top: 16px;
+  margin-top: 0;
 }
 
 .wp-season-ai .wp-ai-source-summary + .wp-form-table {
   margin-top: 8px;
-}
-
-.wp-season-add {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin-top: 16px;
-}
-
-.wp-season-add .wp-description {
-  margin: 0;
 }
 
 .wp-season-name {
@@ -527,34 +522,219 @@
   color: #646970;
 }
 
-.wp-season-grid {
+.wp-season-workspace {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, 4fr) minmax(0, 6fr);
+  gap: 16px;
+  align-items: start;
   margin-top: 16px;
 }
 
-.wp-season-card.is-open {
+.wp-season-workspace-head {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wp-season-master {
+  min-width: 0;
+}
+
+.wp-season-master-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.wp-season-master-head .wp-description {
+  margin: 2px 0 0;
+}
+
+.wp-season-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wp-season-item {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid #dcdcde;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wp-season-item.is-selected {
   border-color: #2271b1;
   box-shadow: 0 0 0 1px #2271b1;
 }
 
-.wp-season-card .wp-switch {
+.wp-season-item-main {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  gap: 10px;
   min-width: 0;
-  flex-shrink: 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px 0 0 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
-.wp-season-brand {
-  height: 8px;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+.wp-season-item-main:hover {
+  background: #f6f7f7;
 }
 
-.wp-season-card-meta {
-  margin: 0;
+.wp-season-item-main:focus-visible {
+  outline: 2px solid #2271b1;
+  outline-offset: -2px;
+}
+
+.wp-season-item-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.wp-season-item-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.wp-season-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+}
+
+.wp-season-item-meta {
   color: #646970;
   font-size: 12px;
   line-height: 1.4;
+}
+
+.wp-season-item-track {
+  display: block;
+  margin-top: 2px;
+}
+
+.wp-season-item-track .wp-season-row-track {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.wp-season-item-track .wp-season-track-bar {
+  border-radius: 5px;
+}
+
+.wp-season-item-note {
+  color: #996800;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.wp-season-item-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 10px 10px 10px 0;
+}
+
+.wp-season-item-side .wp-switch {
+  min-width: 0;
+}
+
+.wp-season-item-move {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.wp-season-detail {
+  position: sticky;
+  top: 44px;
+  min-width: 0;
+  scroll-margin-top: 60px;
+}
+
+.wp-season-detail .wp-season-editor {
+  margin-top: 0;
+}
+
+.wp-season-detail-empty {
+  padding: 18px;
+  border: 1px dashed #c3c4c7;
+  border-radius: 10px;
+  background: #f6f7f7;
+}
+
+.wp-season-detail-empty .wp-palette-column-title {
+  margin: 0;
+}
+
+.wp-season-detail-empty .wp-description {
+  margin: 4px 0 0;
+}
+
+/* Tall editors scroll inside the column so the last palette row and
+   ornaments stay reachable while the master list scrolls beside it. */
+@media (min-width: 1101px) {
+  .wp-season-detail {
+    max-height: calc(100vh - 56px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+}
+
+.wp-season-overview {
+  margin-top: 16px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wp-season-overview > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1d2327;
+  cursor: pointer;
+}
+
+.wp-season-overview-hint {
+  font-size: 12px;
+  font-weight: 400;
+  color: #646970;
+}
+
+.wp-season-overview .wp-season-calendar {
+  margin: 0;
+  padding: 0 12px 12px;
 }
 
 .wp-season-pill {
@@ -581,6 +761,11 @@
   color: #996800;
 }
 
+.wp-season-pill.is-previewing {
+  background: #e5f5fa;
+  color: #0a4b78;
+}
+
 .wp-season-editor {
   display: flex;
   flex-direction: column;
@@ -604,40 +789,115 @@
   margin-top: 0;
 }
 
-.wp-season-block {
+.wp-season-editor-tabs {
+  margin-bottom: 0;
+}
+
+.wp-season-editor-tabs .wp-editor-tab {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.wp-season-editor-panel {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin: 0;
-  padding-top: 14px;
+}
+
+.wp-season-editor-panel[hidden] {
+  display: none;
+}
+
+.wp-season-editor-sep {
+  padding-top: 12px;
   border-top: 1px solid #dcdcde;
 }
 
-.wp-season-palette {
+.wp-season-catalog-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.wp-season-catalog-link .wp-description {
+  flex: 1 1 220px;
+  margin: 0;
+}
+
+.wp-season-catalog {
   display: flex;
   flex-direction: column;
+  gap: 8px;
+}
+
+.wp-season-catalog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.wp-season-catalog-actions .is-disabled {
+  opacity: 0.55;
+}
+
+.wp-shelf-modal-backdrop.wp-season-catalog-backdrop {
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 0;
+}
+
+.wp-season-catalog-drawer {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  height: 100%;
+  background: #fff;
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+}
+
+.wp-season-catalog-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 12px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid #dcdcde;
+}
+
+.wp-season-catalog-head h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: #1d2327;
+}
+
+.wp-season-catalog-head .wp-sub {
+  margin: 0;
+}
+
+.wp-season-catalog-body {
+  flex: 1 1 auto;
+  padding: 16px 20px 24px;
+  overflow: auto;
+}
+
+@media (max-width: 640px) {
+  .wp-season-catalog-head {
+    padding: 12px 14px 10px;
+  }
+
+  .wp-season-catalog-body {
+    padding: 12px 14px 20px;
+  }
 }
 
 .wp-season-ornaments {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.wp-season-drop {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border: 1px dashed #c3c4c7;
-  border-radius: 8px;
-  background: #fff;
-}
-
-.wp-season-drop.is-dragging {
-  border-color: #2271b1;
-  background: #f0f6fc;
 }
 
 .wp-season-ornament-tools {
@@ -684,6 +944,22 @@
   background-color: #fff;
 }
 
+.wp-season-ornament-item.is-selected img {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+.wp-season-ornament-item .wp-shelf-toggle {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.wp-season-ornament-extras {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .wp-season-ornaments .wp-notice {
   margin: 0;
 }
@@ -715,17 +991,237 @@
 }
 
 @media (max-width: 900px) {
-  .wp-season-status {
+  .wp-season-toolbar {
     flex-direction: column;
   }
 
-  .wp-season-status-today {
+  .wp-season-toolbar-controls {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .wp-season-toolbar-today {
     text-align: left;
     white-space: normal;
   }
 
   .wp-season-editor-head {
     flex-direction: column;
+  }
+}
+
+/* —— Season calendar, countdown, reorder —— */
+
+.wp-season-calendar {
+  margin-top: 16px;
+}
+
+.wp-season-calendar-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+.wp-season-calendar-head .wp-palette-column-title {
+  margin: 0;
+}
+
+.wp-season-calendar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.wp-season-calendar-controls .wp-input {
+  width: auto;
+}
+
+.wp-season-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.wp-season-row.is-head {
+  margin-top: 12px;
+}
+
+.wp-season-row-label {
+  font-size: 12px;
+  color: #50575e;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wp-season-row-track {
+  position: relative;
+  display: block;
+  height: 14px;
+  border-radius: 7px;
+  background: #f0f0f1;
+}
+
+.wp-season-row-track.is-off {
+  opacity: 0.45;
+}
+
+.wp-season-months {
+  display: flex;
+  justify-content: space-between;
+  height: auto;
+  background: none;
+  color: #646970;
+  font-size: 10px;
+}
+
+.wp-season-track-bar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 7px;
+}
+
+.wp-season-track-marker {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  border-radius: 2px;
+}
+
+.wp-season-track-marker.is-today {
+  background: #1d2327;
+}
+
+.wp-season-track-marker.is-preview {
+  background: #2271b1;
+}
+
+.wp-season-pill.is-overlap {
+  background: #f0ecfc;
+  color: #533feb;
+}
+
+.wp-btn-icon {
+  padding: 0 8px;
+  min-width: 28px;
+}
+
+/* Two-column list + editor, priority badges, kind tags */
+
+.wp-season-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  margin-right: 6px;
+  border-radius: 999px;
+  background: #dcdcde;
+  color: #1d2327;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.wp-season-item.is-showing .wp-season-rank {
+  background: #2271b1;
+  color: #fff;
+}
+
+.wp-season-kind {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  margin-right: 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.wp-season-kind.is-builtin {
+  background: #f0f0f1;
+  color: #50575e;
+}
+
+.wp-season-kind.is-custom {
+  background: #f0ecfc;
+  color: #533feb;
+}
+
+.wp-season-add-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+  padding: 12px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wp-season-add-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #646970;
+}
+
+.wp-season-add-field .wp-input {
+  width: auto;
+  min-width: 140px;
+}
+
+.wp-season-add-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .wp-season-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .wp-season-detail {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 640px) {
+  .wp-season-row {
+    grid-template-columns: 84px 1fr;
+  }
+
+  .wp-season-item {
+    flex-wrap: wrap;
+  }
+
+  .wp-season-item-main {
+    flex-basis: 100%;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .wp-season-item-side {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 12px 10px;
   }
 }
 

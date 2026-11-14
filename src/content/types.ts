@@ -304,9 +304,10 @@ export type ProjectItem = {
 
 export type SkillItem = {
   name: string;
+  /** Fallback icon used only when no custom icon URL is set. */
   icon: SkillIcon;
   color?: string;
-  /** Custom icon: uploaded image URL (PNG/WebP/etc). Takes precedence over `icon`. */
+  /** Custom icon URL (image). SVG links are tinted with `color`; raster images keep their own colors. */
   iconUrl?: string;
   /** Missing means published so existing skills stay on the public site. */
   status?: PublishStatus;

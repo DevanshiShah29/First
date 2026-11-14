@@ -21,7 +21,7 @@ import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
 import { PublishStatusControl } from "../components/PublishStatusControl";
-import { Field, TextInput } from "../fields";
+import { TextInput } from "../fields";
 import { SkillItemRow } from "../SkillItemRow";
 
 interface SkillGroupsScreenProps {
@@ -71,14 +71,16 @@ export function SkillGroupsScreen({
   dirty,
   status,
 }: SkillGroupsScreenProps) {
-  const groups = data[kind] ?? [];
+  const groups = useMemo(() => data[kind] ?? [], [data, kind]);
   const prefix = kind === "skills" ? "skill_group" : "tech_group";
+  const pluralNoun = kind === "technologies" ? "technologies" : "skills";
   const showAiAssist = kind === "technologies" || kind === "skills";
 
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [suggestion, setSuggestion] = useState<SkillOrTechSuggestion | null>(null);
   const [rejectedNames, setRejectedNames] = useState<string[]>([]);
+  const [aiOpen, setAiOpen] = useState(groups.length === 0);
 
   const experienceStacks = useMemo(
     () => collectUnique(data.experience.flatMap((job) => job.stack)),
@@ -112,6 +114,7 @@ export function SkillGroupsScreen({
   async function onGenerate() {
     if (generating) return;
     setGenerateError(null);
+    setAiOpen(true);
 
     const excludeNames = [
       ...groups.flatMap((g) => g.items.map((i) => i.name)),
@@ -217,23 +220,44 @@ export function SkillGroupsScreen({
     setSuggestion(null);
   }
 
+  /**
+   * Appends a blank group.
+   * @example addGroup() // void
+   */
+  function addGroup() {
+    setData({
+      ...data,
+      [kind]: [...groups, { title: `New ${noun} group`, items: [], status: "draft" }],
+    });
+  }
+
+  /**
+   * Appends a blank item to a group.
+   * @example addItem(0) // void
+   */
+  function addItem(gi: number) {
+    const nextGroups = [...groups];
+    const group = nextGroups[gi];
+    if (!group) return;
+    nextGroups[gi] = {
+      ...group,
+      items: [...group.items, { name: `New ${noun}`, icon: "empty", status: "draft" }],
+    };
+    setData({ ...data, [kind]: nextGroups });
+  }
+
   return (
     <>
       <h1 className="wp-screen-title">
         {title}
-        <button
-          type="button"
-          className="wp-btn wp-btn-primary"
-          onClick={() =>
-            setData({
-              ...data,
-              [kind]: [...groups, { title: `New ${noun} group`, items: [], status: "draft" }],
-            })
-          }
-        >
-          Add New
+        <button type="button" className="wp-btn wp-btn-primary" onClick={addGroup}>
+          Add {noun} group
         </button>
       </h1>
+      <p className="wp-sub">
+        Group related {pluralNoun} together. Draft groups and items stay off the public site until
+        you publish them.
+      </p>
 
       <EditorTabs
         preview={
@@ -245,126 +269,144 @@ export function SkillGroupsScreen({
         }
       >
       {showAiAssist ? (
-        <div className="wp-ai-stack" style={{ marginBottom: 18 }}>
-          <AiFormSection
-            step={1}
-            title="Sources for AI"
-            description={
-              kind === "technologies"
-                ? "Uses LinkedIn + resume from Contact, plus Experience stacks and Project tags."
-                : "Uses LinkedIn + resume from Contact, plus Experience summaries and tags."
-            }
-          >
-            <ul className="wp-ai-source-summary">
-              <li>
-                <strong>LinkedIn</strong>
-                <span>{hasLinkedIn ? data.site.linkedin : "Not set — add in Contact"}</span>
-              </li>
-              <li>
-                <strong>Resume</strong>
-                <span>{hasResume ? data.site.resume : "Not set — upload in Contact"}</span>
-              </li>
-              <li>
-                <strong>Experience stacks</strong>
-                <span>
-                  {experienceStacks.length
-                    ? `${experienceStacks.length} tags — ${experienceStacks.slice(0, 8).join(", ")}${experienceStacks.length > 8 ? "…" : ""}`
-                    : "None yet"}
-                </span>
-              </li>
-              {kind === "technologies" ? (
-                <li>
-                  <strong>Project tags</strong>
-                  <span>
-                    {projectTags.length
-                      ? `${projectTags.length} tags — ${projectTags.slice(0, 8).join(", ")}${projectTags.length > 8 ? "…" : ""}`
-                      : "None yet"}
-                  </span>
-                </li>
-              ) : (
-                <li>
-                  <strong>Experience summaries</strong>
-                  <span>
-                    {experienceSummaries.length
-                      ? `${experienceSummaries.length} role summar${experienceSummaries.length === 1 ? "y" : "ies"}`
-                      : "None yet"}
-                  </span>
-                </li>
-              )}
-              <li>
-                <strong>Current {kind}</strong>
-                <span>
-                  {existingItemCount
-                    ? `${existingItemCount} item${existingItemCount === 1 ? "" : "s"} in ${groups.length} group${groups.length === 1 ? "" : "s"}`
-                    : "Empty draft"}
-                </span>
-              </li>
-            </ul>
-          </AiFormSection>
-
-          <AiGeneratePanel
-            basisItems={
-              kind === "technologies"
-                ? [
-                    { label: "LinkedIn", ready: hasLinkedIn, optional: true },
-                    { label: "Resume", ready: hasResume, optional: true },
-                    {
-                      label: "Experience stacks",
-                      ready: experienceStacks.length > 0,
-                      optional: projectTags.length > 0 || existingItemCount > 0 || hasProfile,
-                    },
-                    {
-                      label: "Project tags",
-                      ready: projectTags.length > 0,
-                      optional: experienceStacks.length > 0 || existingItemCount > 0 || hasProfile,
-                    },
-                    { label: "Existing draft", ready: existingItemCount > 0, optional: true },
-                  ]
-                : [
-                    { label: "LinkedIn", ready: hasLinkedIn, optional: true },
-                    { label: "Resume", ready: hasResume, optional: true },
-                    {
-                      label: "Experience copy",
-                      ready: experienceStacks.length > 0 || experienceSummaries.length > 0,
-                      optional: existingItemCount > 0 || hasProfile,
-                    },
-                    { label: "Existing draft", ready: existingItemCount > 0, optional: true },
-                  ]
-            }
-            fills={
-              kind === "technologies"
-                ? "one new technology (approve to append)"
-                : "one new skill (approve to append)"
-            }
-            generating={generating}
-            error={generateError}
-            onGenerate={() => void onGenerate()}
-          />
-
-          {suggestion ? (
-            <AiSuggestPreview
-              title={suggestion.name}
-              meta={`${suggestion.groupTitle}${suggestion.isNewGroup ? " (new group)" : ""}`}
-              detail={
-                suggestion.color ? (
-                  <span className="wp-ai-suggest-swatch-row">
-                    <span
-                      className="wp-ai-color-swatch"
-                      style={{ background: suggestion.color }}
-                      aria-hidden="true"
-                    />
-                    {suggestion.color}
-                    {suggestion.icon && suggestion.icon !== "empty" ? ` · ${suggestion.icon}` : ""}
-                  </span>
-                ) : suggestion.icon && suggestion.icon !== "empty" ? (
-                  <span>Icon: {suggestion.icon}</span>
-                ) : null
+        <details
+          className="wp-skill-ai"
+          open={aiOpen}
+          onToggle={(event) => setAiOpen(event.currentTarget.open)}
+        >
+          <summary className="wp-skill-ai-summary">
+            <span className="wp-skill-ai-summary-title">AI assist</span>
+            <span className="wp-skill-ai-summary-desc">
+              Suggest one new {noun} from your LinkedIn, resume, experience, and project tags.
+            </span>
+          </summary>
+          <div className="wp-ai-stack wp-skill-ai-body">
+            <AiFormSection
+              step={1}
+              title="Sources for AI"
+              description={
+                kind === "technologies"
+                  ? "Uses LinkedIn + resume from Contact, plus Experience stacks and Project tags."
+                  : "Uses LinkedIn + resume from Contact, plus Experience summaries and tags."
               }
-              busy={generating}
-              onApprove={approveSuggestion}
-              onDismiss={dismissSuggestion}
+            >
+              <ul className="wp-ai-source-summary">
+                <li>
+                  <strong>LinkedIn</strong>
+                  <span>{hasLinkedIn ? data.site.linkedin : "Not set — add in Contact"}</span>
+                </li>
+                <li>
+                  <strong>Resume</strong>
+                  <span>{hasResume ? data.site.resume : "Not set — upload in Contact"}</span>
+                </li>
+                <li>
+                  <strong>Experience stacks</strong>
+                  <span>
+                    {experienceStacks.length
+                      ? `${experienceStacks.length} tags — ${experienceStacks.slice(0, 8).join(", ")}${experienceStacks.length > 8 ? "…" : ""}`
+                      : "None yet"}
+                  </span>
+                </li>
+                {kind === "technologies" ? (
+                  <li>
+                    <strong>Project tags</strong>
+                    <span>
+                      {projectTags.length
+                        ? `${projectTags.length} tags — ${projectTags.slice(0, 8).join(", ")}${projectTags.length > 8 ? "…" : ""}`
+                        : "None yet"}
+                    </span>
+                  </li>
+                ) : (
+                  <li>
+                    <strong>Experience summaries</strong>
+                    <span>
+                      {experienceSummaries.length
+                        ? `${experienceSummaries.length} role summar${experienceSummaries.length === 1 ? "y" : "ies"}`
+                        : "None yet"}
+                    </span>
+                  </li>
+                )}
+                <li>
+                  <strong>Current {kind}</strong>
+                  <span>
+                    {existingItemCount
+                      ? `${existingItemCount} item${existingItemCount === 1 ? "" : "s"} in ${groups.length} group${groups.length === 1 ? "" : "s"}`
+                      : "Empty draft"}
+                  </span>
+                </li>
+              </ul>
+            </AiFormSection>
+
+            <AiGeneratePanel
+              basisItems={
+                kind === "technologies"
+                  ? [
+                      { label: "LinkedIn", ready: hasLinkedIn, optional: true },
+                      { label: "Resume", ready: hasResume, optional: true },
+                      {
+                        label: "Experience stacks",
+                        ready: experienceStacks.length > 0,
+                        optional: projectTags.length > 0 || existingItemCount > 0 || hasProfile,
+                      },
+                      {
+                        label: "Project tags",
+                        ready: projectTags.length > 0,
+                        optional: experienceStacks.length > 0 || existingItemCount > 0 || hasProfile,
+                      },
+                      { label: "Existing draft", ready: existingItemCount > 0, optional: true },
+                    ]
+                  : [
+                      { label: "LinkedIn", ready: hasLinkedIn, optional: true },
+                      { label: "Resume", ready: hasResume, optional: true },
+                      {
+                        label: "Experience copy",
+                        ready: experienceStacks.length > 0 || experienceSummaries.length > 0,
+                        optional: existingItemCount > 0 || hasProfile,
+                      },
+                      { label: "Existing draft", ready: existingItemCount > 0, optional: true },
+                    ]
+              }
+              fills={
+                kind === "technologies"
+                  ? "one new technology (approve to append)"
+                  : "one new skill (approve to append)"
+              }
+              generating={generating}
+              error={generateError}
+              onGenerate={() => void onGenerate()}
             />
-          ) : null}
+
+            {suggestion ? (
+              <AiSuggestPreview
+                title={suggestion.name}
+                meta={`${suggestion.groupTitle}${suggestion.isNewGroup ? " (new group)" : ""}`}
+                detail={
+                  suggestion.color ? (
+                    <span className="wp-ai-suggest-swatch-row">
+                      <span
+                        className="wp-ai-color-swatch"
+                        style={{ background: suggestion.color }}
+                        aria-hidden="true"
+                      />
+                      {suggestion.color}
+                    </span>
+                  ) : null
+                }
+                busy={generating}
+                onApprove={approveSuggestion}
+                onDismiss={dismissSuggestion}
+              />
+            ) : null}
+          </div>
+        </details>
+      ) : null}
+      {groups.length === 0 ? (
+        <div className="wp-skill-empty-state">
+          <h2>No {pluralNoun} groups yet</h2>
+          <p>Create a group to organize your {pluralNoun} on the public site.</p>
+          <button type="button" className="wp-btn wp-btn-primary" onClick={addGroup}>
+            Add {noun} group
+          </button>
         </div>
       ) : null}
       {groups.map((group: SkillGroup, gi: number) => (
@@ -372,135 +414,115 @@ export function SkillGroupsScreen({
           key={`${prefix}_${gi}`}
           id={`${prefix}_${gi}`}
           title={group.title || `${title} group`}
-          badge={`${group.status === "draft" ? "Draft · " : ""}${group.items.length} ${group.items.length === 1 ? noun : `${noun}s`}`}
+          badge={`${group.status === "draft" ? "Draft · " : ""}${group.items.length} ${group.items.length === 1 ? noun : pluralNoun}`}
           actions={
-            <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <div className="wp-skill-group-move">
               <button
                 type="button"
-                className="wp-btn"
+                className="wp-btn wp-btn-small wp-skill-move"
                 onClick={() => setData({ ...data, [kind]: move(groups, gi, -1) })}
                 disabled={gi === 0}
                 title="Move group up"
                 aria-label="Move group up"
-                style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
               >
                 ↑
               </button>
               <button
                 type="button"
-                className="wp-btn"
+                className="wp-btn wp-btn-small wp-skill-move"
                 onClick={() => setData({ ...data, [kind]: move(groups, gi, 1) })}
                 disabled={gi === groups.length - 1}
                 title="Move group down"
                 aria-label="Move group down"
-                style={{ height: 24, lineHeight: "22px", padding: "0 6px", fontSize: 11 }}
               >
                 ↓
               </button>
             </div>
           }
         >
-          <table className="wp-form-table">
-            <tbody>
-              <Field label="Group title">
-                <TextInput
-                  value={group.title}
-                  onChange={(groupTitle) => {
-                    const nextGroups = [...groups];
-                    nextGroups[gi] = { ...group, title: groupTitle };
-                    setData({ ...data, [kind]: nextGroups });
-                  }}
-                />
-              </Field>
-              <Field
-                label="Status"
-                hint="Draft groups stay off the public site, including every item inside them."
-              >
-                <PublishStatusControl
-                  compact
-                  status={group.status}
-                  label={`Publish status for ${group.title || `${noun} group`}`}
-                  onChange={(status) => {
-                    const nextGroups = [...groups];
-                    nextGroups[gi] = { ...group, status };
-                    setData({ ...data, [kind]: nextGroups });
-                  }}
-                />
-              </Field>
-            </tbody>
-          </table>
-          {group.items.map((item, ii) => (
-            <SkillItemRow
-              key={`${kind}-item-${gi}-${ii}`}
-              item={item}
-              index={ii}
-              total={group.items.length}
-              uploading={uploading}
-              noun={noun}
-              onChange={(next: SkillItem) => {
-                const nextGroups = [...groups];
-                const items = [...group.items];
-                items[ii] = next;
-                nextGroups[gi] = { ...group, items };
-                setData({ ...data, [kind]: nextGroups });
-              }}
-              onMove={(dir) => {
-                const nextGroups = [...groups];
-                nextGroups[gi] = { ...group, items: move(group.items, ii, dir) };
-                setData({ ...data, [kind]: nextGroups });
-              }}
-              onRemove={() => {
-                const nextGroups = [...groups];
-                nextGroups[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
-                setData({ ...data, [kind]: nextGroups });
-              }}
-              onUpload={(file) => void uploadSkillIcon(file, kind, gi, ii)}
-            />
-          ))}
-          <p>
-            <button
-              type="button"
-              className="wp-add"
-              onClick={() => {
-                const nextGroups = [...groups];
-                nextGroups[gi] = {
-                  ...group,
-                  items: [...group.items, { name: `New ${noun}`, icon: "empty", status: "draft" }],
-                };
-                setData({ ...data, [kind]: nextGroups });
-              }}
-            >
-              + Add {noun}
-            </button>
-            {" · "}
-            <button
-              type="button"
-              className="wp-add"
-              onClick={() => setData({ ...data, [kind]: move(groups, gi, -1) })}
-            >
-              Move up
-            </button>
-            {" · "}
-            <button
-              type="button"
-              className="wp-add"
-              onClick={() => setData({ ...data, [kind]: move(groups, gi, 1) })}
-            >
-              Move down
-            </button>
-            {" · "}
+          <div className="wp-skill-group-settings">
+            <div className="wp-skill-settings-field">
+              <span className="wp-skill-field-label">Group title</span>
+              <TextInput
+                value={group.title}
+                aria-label="Group title"
+                onChange={(groupTitle) => {
+                  const nextGroups = [...groups];
+                  nextGroups[gi] = { ...group, title: groupTitle };
+                  setData({ ...data, [kind]: nextGroups });
+                }}
+              />
+            </div>
+            <div className="wp-skill-settings-field">
+              <span className="wp-skill-field-label">Status</span>
+              <PublishStatusControl
+                compact
+                status={group.status}
+                label={`Publish status for ${group.title || `${noun} group`}`}
+                onChange={(status) => {
+                  const nextGroups = [...groups];
+                  nextGroups[gi] = { ...group, status };
+                  setData({ ...data, [kind]: nextGroups });
+                }}
+              />
+              <span className="wp-description">
+                Draft groups stay off the public site, including every item inside them.
+              </span>
+            </div>
+          </div>
+          {group.items.length === 0 ? (
+            <div className="wp-skill-empty">
+              <p>No {pluralNoun} in this group yet.</p>
+              <button type="button" className="wp-btn wp-btn-small" onClick={() => addItem(gi)}>
+                + Add {noun}
+              </button>
+            </div>
+          ) : (
+            group.items.map((item, ii) => (
+              <SkillItemRow
+                key={`${kind}-item-${gi}-${ii}`}
+                item={item}
+                index={ii}
+                total={group.items.length}
+                uploading={uploading}
+                noun={noun}
+                onChange={(next: SkillItem) => {
+                  const nextGroups = [...groups];
+                  const items = [...group.items];
+                  items[ii] = next;
+                  nextGroups[gi] = { ...group, items };
+                  setData({ ...data, [kind]: nextGroups });
+                }}
+                onMove={(dir) => {
+                  const nextGroups = [...groups];
+                  nextGroups[gi] = { ...group, items: move(group.items, ii, dir) };
+                  setData({ ...data, [kind]: nextGroups });
+                }}
+                onRemove={() => {
+                  const nextGroups = [...groups];
+                  nextGroups[gi] = { ...group, items: group.items.filter((_, j) => j !== ii) };
+                  setData({ ...data, [kind]: nextGroups });
+                }}
+                onUpload={(file) => void uploadSkillIcon(file, kind, gi, ii)}
+              />
+            ))
+          )}
+          <div className="wp-skill-group-footer">
+            {group.items.length > 0 ? (
+              <button type="button" className="wp-btn wp-btn-small" onClick={() => addItem(gi)}>
+                + Add {noun}
+              </button>
+            ) : null}
             <ConfirmButton
-              className="wp-btn-link"
+              className="wp-btn wp-btn-small wp-btn-danger-outline"
               title={`Trash “${group.title || `this ${noun} group`}”?`}
               message="This removes the group and everything in it. Save to update the live site."
               confirmLabel="Trash group"
-              onConfirm={() =>
-                setData({ ...data, [kind]: groups.filter((_, j) => j !== gi) })
-              }
+              onConfirm={() => setData({ ...data, [kind]: groups.filter((_, j) => j !== gi) })}
             >
               Trash group
             </ConfirmButton>
-          </p>
+          </div>
         </Metabox>
       ))}
       <p>

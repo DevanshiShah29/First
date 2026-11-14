@@ -10,6 +10,7 @@ import {
   MAX_CUSTOM_SEASONS,
   parseSeasons,
   resolveActiveSeason,
+  seasonForIsoDate,
   seasonOrnamentImageUrl,
   seasonsMatchingToday,
   themeWithSeason,
@@ -26,7 +27,7 @@ const ZONE = "Asia/Kolkata";
  * @example calendar(DEFAULT_SEASONS.items) // SeasonsSettings
  */
 function calendar(items: SeasonConfig[]): SeasonsSettings {
-  return { mode: "schedule", manualId: null, timezone: ZONE, items };
+  return { mode: "schedule", manualId: null, timezone: ZONE, items, ornaments: [] };
 }
 
 describe("annual windows", () => {
@@ -44,6 +45,14 @@ describe("annual windows", () => {
     assert.equal(inAnnualWindow("01-02", "12-20", "01-06"), true);
     assert.equal(inAnnualWindow("01-07", "12-20", "01-06"), false);
     assert.equal(inAnnualWindow("12-19", "12-20", "01-06"), false);
+  });
+
+  it("covers the New Year window at both calendar boundaries", () => {
+    assert.equal(inAnnualWindow("12-30", "12-31", "01-02"), false);
+    assert.equal(inAnnualWindow("12-31", "12-31", "01-02"), true);
+    assert.equal(inAnnualWindow("01-01", "12-31", "01-02"), true);
+    assert.equal(inAnnualWindow("01-02", "12-31", "01-02"), true);
+    assert.equal(inAnnualWindow("01-03", "12-31", "01-02"), false);
   });
 });
 
@@ -102,7 +111,7 @@ describe("resolveActiveSeason", () => {
   it("forces a season outside its dates", () => {
     const now = new Date("2026-03-01T06:30:00.000Z");
     const active = resolveActiveSeason(
-      { mode: "manual", manualId: "christmas", timezone: ZONE, items: DEFAULT_SEASONS.items },
+      { mode: "manual", manualId: "christmas", timezone: ZONE, items: DEFAULT_SEASONS.items, ornaments: [] },
       now,
     );
     assert.equal(active?.id, "christmas");
@@ -113,20 +122,29 @@ describe("resolveActiveSeason", () => {
       item.id === "christmas" ? { ...item, enabled: false } : item,
     );
     const active = resolveActiveSeason(
-      { mode: "manual", manualId: "christmas", timezone: ZONE, items },
+      { mode: "manual", manualId: "christmas", timezone: ZONE, items, ornaments: [] },
       new Date("2026-07-01T06:30:00.000Z"),
     );
     assert.equal(active?.id, "christmas");
   });
 });
 
+describe("seasonForIsoDate", () => {
+  it("reads the calendar for a date regardless of the saved mode", () => {
+    const settings = { ...calendar(DEFAULT_SEASONS.items), mode: "off" as const };
+    assert.equal(seasonForIsoDate(settings, "2026-10-26")?.id, "halloween");
+    assert.equal(seasonForIsoDate(settings, "2026-12-25")?.id, "christmas");
+    assert.equal(seasonForIsoDate(settings, "2026-07-01"), null);
+  });
+});
+
 describe("parseSeasons", () => {
-  it("fills the three packs and stays off when nothing is stored", () => {
+  it("fills the eight packs and stays off when nothing is stored", () => {
     const parsed = parseSeasons(undefined);
     assert.equal(parsed.mode, "off");
     assert.deepEqual(
       parsed.items.map((item) => item.id),
-      ["halloween", "diwali", "christmas"],
+      ["newyear", "valentine", "holi", "rakhi", "navratri", "halloween", "diwali", "christmas"],
     );
   });
 
@@ -151,13 +169,6 @@ describe("parseSeasons", () => {
     assert.equal(parsed.items.find((item) => item.id === "christmas")?.palette.brandFrom, "#123456");
   });
 
-  it("keeps a saved ornament color", () => {
-    const parsed = parseSeasons({
-      items: [{ id: "halloween", ornaments: { bat: "#112233" } }],
-    });
-    assert.equal(parsed.items.find((item) => item.id === "halloween")?.ornaments.bat, "#112233");
-  });
-
   it("keeps uploaded ornament images and drops unsafe addresses", () => {
     const parsed = parseSeasons({
       items: [
@@ -180,7 +191,22 @@ describe("parseSeasons", () => {
     assert.equal(seasonOrnamentImageUrl("data:image/svg+xml,x"), null);
   });
 
-  it("keeps an added festival after the three packs", () => {
+  it("keeps the shared ornament catalog and drops unsafe or duplicate rows", () => {
+    const parsed = parseSeasons({
+      ornaments: [
+        { id: "orn-1", name: "  Diya  ", imageUrl: "/uploads/artifacts/diya.png" },
+        { id: "orn-2", name: "Duplicate", imageUrl: "/uploads/artifacts/diya.png" },
+        { id: "orn-3", name: "Unsafe", imageUrl: "javascript:alert(1)" },
+        { id: "orn-4", name: "Pending", imageUrl: "" },
+      ],
+    });
+    assert.deepEqual(parsed.ornaments, [
+      { id: "orn-1", name: "Diya", imageUrl: "/uploads/artifacts/diya.png" },
+      { id: "orn-4", name: "Pending", imageUrl: "" },
+    ]);
+  });
+
+  it("preserves the saved item order and fills missing packs", () => {
     const parsed = parseSeasons({
       mode: "manual",
       manualId: "fest-ab12cd34ef56",
@@ -196,9 +222,9 @@ describe("parseSeasons", () => {
     });
     assert.deepEqual(
       parsed.items.map((item) => item.id),
-      ["halloween", "diwali", "christmas", "fest-ab12cd34ef56"],
+      ["fest-ab12cd34ef56", "newyear", "valentine", "holi", "rakhi", "navratri", "halloween", "diwali", "christmas"],
     );
-    const holi = parsed.items[3];
+    const holi = parsed.items[0];
     assert.equal(holi?.name, "Holi");
     assert.equal(holi?.schedule.kind, "dated");
     assert.equal(holi?.palette.brandFrom, "#ABCDEF");
@@ -206,16 +232,49 @@ describe("parseSeasons", () => {
     assert.equal(parsed.manualId, "fest-ab12cd34ef56");
   });
 
+  it("keeps a reordered list so a festival can outrank a built-in", () => {
+    const parsed = parseSeasons({
+      mode: "schedule",
+      items: [
+        { id: "fest-ab12cd34ef56", name: "Holi", schedule: { kind: "annual", start: "10-25", end: "11-01" } },
+        { id: "halloween" },
+        { id: "diwali" },
+        { id: "christmas" },
+      ],
+    });
+    assert.deepEqual(
+      parsed.items.map((item) => item.id),
+      ["fest-ab12cd34ef56", "halloween", "diwali", "christmas", "newyear", "valentine", "holi", "rakhi", "navratri"],
+    );
+    const active = resolveActiveSeason(parsed, new Date("2026-10-26T06:30:00.000Z"));
+    assert.equal(active?.id, "fest-ab12cd34ef56");
+  });
+
+  it("keeps a festival reordered between two built-in packs", () => {
+    const parsed = parseSeasons({
+      mode: "schedule",
+      items: [
+        { id: "halloween" },
+        { id: "fest-ab12cd34ef56", name: "Holi", schedule: { kind: "annual", start: "10-25", end: "11-01" } },
+        { id: "christmas" },
+      ],
+    });
+    assert.deepEqual(
+      parsed.items.map((item) => item.id),
+      ["halloween", "fest-ab12cd34ef56", "christmas", "newyear", "valentine", "holi", "rakhi", "navratri", "diwali"],
+    );
+  });
+
   it("drops a festival with a bad id or date window", () => {
     const parsed = parseSeasons({
       items: [
-        { id: "holi", name: "Holi", schedule: { kind: "annual", start: "03-01", end: "03-02" } },
+        { id: "not-a-festival", name: "Holi", schedule: { kind: "annual", start: "03-01", end: "03-02" } },
         { id: "fest-ab12cd34ef56", name: "Holi", schedule: { kind: "annual", start: "13-01", end: "03-02" } },
       ],
     });
     assert.deepEqual(
       parsed.items.map((item) => item.id),
-      ["halloween", "diwali", "christmas"],
+      ["newyear", "valentine", "holi", "rakhi", "navratri", "halloween", "diwali", "christmas"],
     );
   });
 
@@ -227,7 +286,8 @@ describe("parseSeasons", () => {
     }));
     const parsed = parseSeasons({ items });
     assert.equal(parsed.items.length, SEASON_PRESETS.length + MAX_CUSTOM_SEASONS);
-    assert.equal(parsed.items.at(-1)?.id, "fest-000000000011");
+    assert.equal(parsed.items.filter((item) => isCustomSeasonId(item.id)).length, MAX_CUSTOM_SEASONS);
+    assert.equal(parsed.items[11]?.id, "fest-000000000011");
   });
 });
 

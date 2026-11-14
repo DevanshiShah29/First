@@ -1,6 +1,15 @@
 import type { ThemePalette } from "@/content/types";
 
-export const SEASON_IDS = ["halloween", "diwali", "christmas"] as const;
+export const SEASON_IDS = [
+  "newyear",
+  "valentine",
+  "holi",
+  "rakhi",
+  "navratri",
+  "halloween",
+  "diwali",
+  "christmas",
+] as const;
 
 export type SeasonId = (typeof SEASON_IDS)[number];
 
@@ -18,49 +27,6 @@ export type SeasonPalette = {
   dark: ThemePalette;
 };
 
-export type SeasonOrnamentKey =
-  | "bat"
-  | "pumpkin"
-  | "pumpkinLeft"
-  | "pumpkinRight"
-  | "stem"
-  | "bowl"
-  | "flame"
-  | "flameCore"
-  | "leaf"
-  | "leafLight"
-  | "berry"
-  | "berryLight"
-  | "snow";
-
-/** Named fills for one season's corner marks. Unused keys stay unset. */
-export type SeasonOrnamentColors = Partial<Record<SeasonOrnamentKey, string>>;
-
-export const SEASON_ORNAMENT_FIELDS: Record<
-  SeasonId,
-  { key: SeasonOrnamentKey; label: string }[]
-> = {
-  halloween: [
-    { key: "bat", label: "Bat" },
-    { key: "pumpkin", label: "Pumpkin" },
-    { key: "pumpkinLeft", label: "Pumpkin side" },
-    { key: "pumpkinRight", label: "Pumpkin edge" },
-    { key: "stem", label: "Stem" },
-  ],
-  diwali: [
-    { key: "bowl", label: "Diya" },
-    { key: "flame", label: "Flame" },
-    { key: "flameCore", label: "Flame core" },
-  ],
-  christmas: [
-    { key: "leaf", label: "Holly" },
-    { key: "leafLight", label: "Holly highlight" },
-    { key: "berry", label: "Berries" },
-    { key: "berryLight", label: "Berry highlight" },
-    { key: "snow", label: "Snowflake" },
-  ],
-};
-
 export type SeasonPreset = {
   id: SeasonId;
   name: string;
@@ -68,18 +34,163 @@ export type SeasonPreset = {
   schedule: SeasonSchedule;
   intensity: SeasonIntensity;
   palette: SeasonPalette;
-  ornaments: SeasonOrnamentColors;
 };
 
 /**
  * Built-in festive packs. Edits live in the CMS; these are the reset point.
- * Diwali is dated because the lunar festival does not repeat on a fixed month-day.
+ * Lunar festivals (Holi, Rakhi, Navratri, Diwali) are dated because they do
+ * not repeat on a fixed month-day.
  */
 export const SEASON_PRESETS: SeasonPreset[] = [
   {
+    id: "newyear",
+    name: "New Year",
+    description: "Midnight navy and champagne gold. Ornaments sit in an even row under the header, like string lights.",
+    schedule: { kind: "annual", start: "12-31", end: "01-02" },
+    intensity: "full",
+    palette: {
+      brandFrom: "#1E3A8A",
+      brandTo: "#D97706",
+      light: {
+        background: "#EEF2F9",
+        foreground: "#101A2E",
+        card: "#FFFFFF",
+        chip: "#DCE3F1",
+        accentText: "#1D4ED8",
+        accentHover: "#1E3A8A",
+        badge: "#B45309",
+      },
+      dark: {
+        background: "#0A0F1E",
+        foreground: "#EAF0FB",
+        card: "#131A2E",
+        chip: "#1F2A45",
+        accentText: "#93C5FD",
+        accentHover: "#BFDBFE",
+        badge: "#FCD34D",
+      },
+    },
+  },
+  {
+    id: "valentine",
+    name: "Valentine's Day",
+    description: "Rose and blush pink. Ornaments rise in the side margins, not across the page.",
+    schedule: { kind: "annual", start: "02-13", end: "02-15" },
+    intensity: "full",
+    palette: {
+      brandFrom: "#BE123C",
+      brandTo: "#F472B6",
+      light: {
+        background: "#FBEEF0",
+        foreground: "#2A0F14",
+        card: "#FFFBFB",
+        chip: "#F6DCE0",
+        accentText: "#BE123C",
+        accentHover: "#9F1239",
+        badge: "#E11D48",
+      },
+      dark: {
+        background: "#160A0D",
+        foreground: "#FBE9EC",
+        card: "#291218",
+        chip: "#3A1A22",
+        accentText: "#FDA4AF",
+        accentHover: "#FECDD3",
+        badge: "#F9A8D4",
+      },
+    },
+  },
+  {
+    id: "holi",
+    name: "Holi",
+    description: "Festival of colors — pink, teal, and gold. Ornaments stay on the outer edges. Dates are a placeholder — set this year's verified dates.",
+    schedule: { kind: "dated", start: "2027-03-21", end: "2027-03-23" },
+    intensity: "full",
+    palette: {
+      brandFrom: "#DB2777",
+      brandTo: "#0D9488",
+      light: {
+        background: "#F7ECF4",
+        foreground: "#2A1223",
+        card: "#FFFBFD",
+        chip: "#F0D6E6",
+        accentText: "#BE185D",
+        accentHover: "#9D174D",
+        badge: "#0D9488",
+      },
+      dark: {
+        background: "#150B12",
+        foreground: "#F8EAF2",
+        card: "#2A1624",
+        chip: "#3A1F33",
+        accentText: "#F472B6",
+        accentHover: "#FBCFE8",
+        badge: "#5EEAD4",
+      },
+    },
+  },
+  {
+    id: "rakhi",
+    name: "Raksha Bandhan",
+    description: "Marigold gold and rakhi red. Ornaments sit in the upper corners, like a tied rakhi. Dates are a placeholder — set this year's verified dates.",
+    schedule: { kind: "dated", start: "2027-08-28", end: "2027-08-29" },
+    intensity: "full",
+    palette: {
+      brandFrom: "#CA8A04",
+      brandTo: "#DC2626",
+      light: {
+        background: "#FBF4E6",
+        foreground: "#241A08",
+        card: "#FFFDF7",
+        chip: "#F6E6C4",
+        accentText: "#A16207",
+        accentHover: "#854D0E",
+        badge: "#DC2626",
+      },
+      dark: {
+        background: "#140F06",
+        foreground: "#F8EED6",
+        card: "#281F0D",
+        chip: "#382B12",
+        accentText: "#FBBF24",
+        accentHover: "#FDE68A",
+        badge: "#F87171",
+      },
+    },
+  },
+  {
+    id: "navratri",
+    name: "Navratri / Durga Puja",
+    description: "Saffron and festival red. Ornaments frame the left and right edges, like a doorway. Dates are a placeholder — set this year's verified dates.",
+    schedule: { kind: "dated", start: "2027-10-07", end: "2027-10-15" },
+    intensity: "full",
+    palette: {
+      brandFrom: "#EA580C",
+      brandTo: "#BE123C",
+      light: {
+        background: "#F9EFE6",
+        foreground: "#2A150A",
+        card: "#FFFBF6",
+        chip: "#F4E0CA",
+        accentText: "#C2410C",
+        accentHover: "#9A3412",
+        badge: "#BE123C",
+      },
+      dark: {
+        background: "#160B05",
+        foreground: "#F9EBDD",
+        card: "#2B1A0C",
+        chip: "#3C2716",
+        accentText: "#FDBA74",
+        accentHover: "#FED7AA",
+        badge: "#FB7185",
+      },
+    },
+  },
+  {
     id: "halloween",
     name: "Halloween",
-    description: "Deep plum and amber. Corner ornaments are images you add.",
+    description: "Deep plum and amber. Ornaments stay along the top, like decorations on the eaves.",
     schedule: { kind: "annual", start: "10-25", end: "11-01" },
     intensity: "full",
     palette: {
@@ -104,18 +215,11 @@ export const SEASON_PRESETS: SeasonPreset[] = [
         badge: "#C4B5FD",
       },
     },
-    ornaments: {
-      bat: "#7C3AED",
-      pumpkin: "#C2410C",
-      pumpkinLeft: "#EA580C",
-      pumpkinRight: "#F97316",
-      stem: "#166534",
-    },
   },
   {
     id: "diwali",
     name: "Diwali",
-    description: "Warm gold and maroon. Corner ornaments are images you add. Set this year’s dates.",
+    description: "Warm gold and maroon. Ornaments sit on the floor at the left and right edges, like diyas. Set this year's dates.",
     schedule: { kind: "dated", start: "2026-11-06", end: "2026-11-12" },
     intensity: "full",
     palette: {
@@ -140,16 +244,11 @@ export const SEASON_PRESETS: SeasonPreset[] = [
         badge: "#FB7185",
       },
     },
-    ornaments: {
-      bowl: "#B45309",
-      flame: "#FDE68A",
-      flameCore: "#F59E0B",
-    },
   },
   {
     id: "christmas",
     name: "Christmas",
-    description: "Forest green and red. Corner ornaments are images you add.",
+    description: "Forest green and red. Ornaments hang under the header, like a garland.",
     schedule: { kind: "annual", start: "12-20", end: "12-26" },
     intensity: "full",
     palette: {
@@ -173,13 +272,6 @@ export const SEASON_PRESETS: SeasonPreset[] = [
         accentHover: "#BBF7D0",
         badge: "#FCA5A5",
       },
-    },
-    ornaments: {
-      leaf: "#166534",
-      leafLight: "#15803D",
-      berry: "#B91C1C",
-      berryLight: "#DC2626",
-      snow: "#E0F2FE",
     },
   },
 ];

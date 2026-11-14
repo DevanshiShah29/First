@@ -3,17 +3,15 @@ import { normalizeHex } from "@/lib/hex";
 import { asRecord, bool, str } from "./parse-fields";
 import {
   getSeasonPreset,
-  SEASON_ORNAMENT_FIELDS,
   SEASON_PRESETS,
   type SeasonId,
   type SeasonIntensity,
-  type SeasonOrnamentColors,
   type SeasonPalette,
   type SeasonPreset,
   type SeasonSchedule,
 } from "./season-presets";
 
-export type { SeasonId, SeasonIntensity, SeasonOrnamentColors, SeasonPalette, SeasonSchedule };
+export type { SeasonId, SeasonIntensity, SeasonPalette, SeasonSchedule };
 
 export const DEFAULT_SEASON_TIMEZONE = "Asia/Kolkata";
 
@@ -31,8 +29,20 @@ export const SEASON_TIMEZONES = [
 
 export type SeasonMode = "off" | "manual" | "schedule";
 
-/** Corner photos per season. Extra files are dropped on save. */
+/** Ornament photos per season. Extra files are dropped on save. */
 export const MAX_SEASON_ORNAMENT_IMAGES = 12;
+
+/** Shared ornament catalogue cap. */
+export const MAX_SEASON_ORNAMENTS = 120;
+
+/** One image in the shared ornament catalogue, reused across seasons. */
+export type SeasonOrnament = {
+  id: string;
+  /** Blank until the editor names it. */
+  name: string;
+  /** Uploaded or pasted image address. Empty rows are kept until an image is added. */
+  imageUrl: string;
+};
 
 export type SeasonConfig = {
   id: string;
@@ -42,8 +52,7 @@ export type SeasonConfig = {
   schedule: SeasonSchedule;
   intensity: SeasonIntensity;
   palette: SeasonPalette;
-  ornaments: SeasonOrnamentColors;
-  /** Uploaded or pasted image addresses. Empty shows no corner ornaments. */
+  /** Catalogue image addresses mapped to this season. Empty shows no ornaments. */
   ornamentImages: string[];
 };
 
@@ -52,6 +61,8 @@ export type SeasonsSettings = {
   manualId: string | null;
   timezone: string;
   items: SeasonConfig[];
+  /** Shared ornament catalogue. Seasons map to these by image URL. */
+  ornaments: SeasonOrnament[];
 };
 
 /** Extra festivals beyond Halloween, Diwali, and Christmas. */
@@ -100,7 +111,20 @@ export const DEFAULT_SEASONS: SeasonsSettings = {
   manualId: null,
   timezone: DEFAULT_SEASON_TIMEZONE,
   items: SEASON_PRESETS.map((preset) => configFromPreset(preset, true)),
+  ornaments: [],
 };
+
+/**
+ * Creates an empty catalogue row. The editor fills in the name and image.
+ * @example createSeasonOrnament() // { id: "orn-…", name: "", imageUrl: "" }
+ */
+export function createSeasonOrnament(): SeasonOrnament {
+  return {
+    id: `orn-${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`,
+    name: "",
+    imageUrl: "",
+  };
+}
 
 /**
  * Copies a preset into an editable season row.
@@ -114,7 +138,6 @@ function configFromPreset(preset: SeasonPreset, enabled: boolean): SeasonConfig 
     schedule: { ...preset.schedule },
     intensity: preset.intensity,
     palette: clonePalette(preset.palette),
-    ornaments: { ...preset.ornaments },
     ornamentImages: [],
   };
 }
@@ -139,7 +162,6 @@ export function createCustomSeason(now: Date, timeZone: string): SeasonConfig {
     schedule: { kind: "dated", start: isoFromParts(start), end: isoFromParts(end) },
     intensity: "full",
     palette: clonePalette(CUSTOM_SEASON_PALETTE),
-    ornaments: {},
     ornamentImages: [],
   };
 }
@@ -191,6 +213,35 @@ function parseOrnamentImages(value: unknown): string[] {
 }
 
 /**
+ * Reads the shared ornament catalogue. Rows without an image stay so they can be filled in.
+ * @example parseSeasonOrnaments([{ id: "orn-1", imageUrl: "/a.png" }]) // SeasonOrnament[]
+ */
+function parseSeasonOrnaments(value: unknown): SeasonOrnament[] {
+  if (!Array.isArray(value)) return [];
+  const ornaments: SeasonOrnament[] = [];
+  const ids = new Set<string>();
+  const urls = new Set<string>();
+  for (const item of value) {
+    if (ornaments.length >= MAX_SEASON_ORNAMENTS) break;
+    const row = asRecord(item);
+    const id = str(row.id).trim().slice(0, 64);
+    if (!id || ids.has(id)) continue;
+    const rawUrl = str(row.imageUrl).trim();
+    const imageUrl = rawUrl ? (seasonOrnamentImageUrl(rawUrl) ?? "") : "";
+    if (rawUrl && !imageUrl) continue;
+    if (imageUrl && urls.has(imageUrl)) continue;
+    ids.add(id);
+    if (imageUrl) urls.add(imageUrl);
+    ornaments.push({
+      id,
+      name: parseSeasonName(row.name),
+      imageUrl,
+    });
+  }
+  return ornaments;
+}
+
+/**
  * Copies palette fields so later edits do not change the preset.
  * @example clonePalette(preset.palette) // SeasonPalette
  */
@@ -201,19 +252,6 @@ function clonePalette(palette: SeasonPalette): SeasonPalette {
     light: { ...palette.light },
     dark: { ...palette.dark },
   };
-}
-
-/**
- * Reads ornament fills, filling gaps from the preset.
- * @example parseOrnaments({}, preset) // SeasonOrnamentColors
- */
-function parseOrnaments(value: unknown, preset: SeasonPreset): SeasonOrnamentColors {
-  const row = asRecord(value);
-  const colors: SeasonOrnamentColors = {};
-  for (const field of SEASON_ORNAMENT_FIELDS[preset.id]) {
-    colors[field.key] = normalizeHex(row[field.key], preset.ornaments[field.key] ?? "#000000");
-  }
-  return colors;
 }
 
 /**
@@ -337,6 +375,7 @@ function parseSeasonPalette(value: unknown, fallback: SeasonPalette): SeasonPale
 
 /**
  * Reads stored season JSON. Missing data stays off and keeps the three packs.
+ * Saved item order is preserved: the first matching card wins on the site.
  * @example parseSeasons(undefined) // DEFAULT_SEASONS
  */
 export function parseSeasons(value: unknown): SeasonsSettings {
@@ -346,45 +385,72 @@ export function parseSeasons(value: unknown): SeasonsSettings {
     modeRaw === "manual" || modeRaw === "schedule" || modeRaw === "off" ? modeRaw : "off";
   const manualRaw = str(row.manualId);
   const timezoneRaw = str(row.timezone);
+
+  // Read the saved array once, keyed by id, in the order it was stored.
   const saved = new Map<string, Record<string, unknown>>();
+  const order: string[] = [];
   if (Array.isArray(row.items)) {
     for (const item of row.items) {
       const entry = asRecord(item);
       const id = str(entry.id);
-      if (id) saved.set(id, entry);
+      if (id && !saved.has(id)) {
+        saved.set(id, entry);
+        order.push(id);
+      }
     }
   }
-  const items: SeasonConfig[] = SEASON_PRESETS.map((preset) => {
-    const entry = saved.get(preset.id);
-    if (!entry) return configFromPreset(preset, true);
-    const intensityRaw = str(entry.intensity);
-    const intensity: SeasonIntensity = intensityRaw === "subtle" ? "subtle" : "full";
-    return {
-      id: preset.id,
-      name: preset.name,
-      enabled: bool(entry.enabled, true),
-      schedule: parseSchedule(entry.schedule, preset),
-      intensity: intensityRaw === "full" || intensityRaw === "subtle" ? intensity : preset.intensity,
-      palette: parseSeasonPalette(entry.palette, preset.palette),
-      ornaments: parseOrnaments(entry.ornaments, preset),
-      ornamentImages: parseOrnamentImages(entry.ornamentImages),
-    };
-  });
-  const seen = new Set(items.map((item) => item.id));
-  if (Array.isArray(row.items)) {
-    for (const item of row.items) {
-      if (items.length >= SEASON_PRESETS.length + MAX_CUSTOM_SEASONS) break;
-      const season = parseCustomSeason(asRecord(item));
-      if (!season || seen.has(season.id)) continue;
-      seen.add(season.id);
+
+  // Rebuild items in saved order so reordering survives a round trip.
+  const items: SeasonConfig[] = [];
+  const seen = new Set<string>();
+  let customs = 0;
+  for (const id of order) {
+    const entry = saved.get(id);
+    if (!entry) continue;
+    const preset = getSeasonPreset(id);
+    if (preset) {
+      items.push(parseBuiltInSeason(entry, preset));
+      seen.add(id);
+    } else if (isCustomSeasonId(id) && customs < MAX_CUSTOM_SEASONS) {
+      const season = parseCustomSeason(entry);
+      if (!season) continue;
       items.push(season);
+      seen.add(id);
+      customs += 1;
     }
   }
+
+  // Any built-in pack that was not stored still exists, appended after the saved order.
+  for (const preset of SEASON_PRESETS) {
+    if (seen.has(preset.id)) continue;
+    items.push(configFromPreset(preset, true));
+    seen.add(preset.id);
+  }
+
   return {
     mode,
     manualId: items.some((item) => item.id === manualRaw) ? manualRaw : null,
     timezone: isTimeZone(timezoneRaw) ? timezoneRaw : DEFAULT_SEASON_TIMEZONE,
     items,
+    ornaments: parseSeasonOrnaments(row.ornaments),
+  };
+}
+
+/**
+ * Reads one built-in pack, keeping its preset name and schedule kind.
+ * @example parseBuiltInSeason({}, getSeasonPreset("halloween")!) // SeasonConfig
+ */
+function parseBuiltInSeason(entry: Record<string, unknown>, preset: SeasonPreset): SeasonConfig {
+  const intensityRaw = str(entry.intensity);
+  const intensity: SeasonIntensity = intensityRaw === "subtle" ? "subtle" : "full";
+  return {
+    id: preset.id,
+    name: preset.name,
+    enabled: bool(entry.enabled, true),
+    schedule: parseSchedule(entry.schedule, preset),
+    intensity: intensityRaw === "full" || intensityRaw === "subtle" ? intensity : preset.intensity,
+    palette: parseSeasonPalette(entry.palette, preset.palette),
+    ornamentImages: parseOrnamentImages(entry.ornamentImages),
   };
 }
 
@@ -405,7 +471,6 @@ function parseCustomSeason(entry: Record<string, unknown>): SeasonConfig | null 
     schedule,
     intensity: intensityRaw === "subtle" ? "subtle" : "full",
     palette: parseSeasonPalette(entry.palette, CUSTOM_SEASON_PALETTE),
-    ornaments: {},
     ornamentImages: parseOrnamentImages(entry.ornamentImages),
   };
 }
@@ -502,7 +567,7 @@ export function datedWindowEnded(
 }
 
 /**
- * Enabled seasons whose windows contain this instant, in preset order.
+ * Enabled seasons whose windows contain this instant, in item (priority) order.
  * @example seasonsMatchingToday(settings, now) // SeasonConfig[]
  */
 export function seasonsMatchingToday(settings: SeasonsSettings, now: Date): SeasonConfig[] {
@@ -526,6 +591,15 @@ export function resolveActiveSeason(
     return seasons.items.find((season) => season.id === seasons.manualId) ?? null;
   }
   return seasonsMatchingToday(seasons, now)[0] ?? null;
+}
+
+/**
+ * The season the calendar would pick on an ISO date in the season timezone.
+ * Forces schedule mode so a preview date always reads the calendar, not the saved switch.
+ * @example seasonForIsoDate(settings, "2026-12-25") // christmas | null
+ */
+export function seasonForIsoDate(settings: SeasonsSettings, iso: string): SeasonConfig | null {
+  return resolveActiveSeason({ ...settings, mode: "schedule" }, new Date(`${iso}T12:00:00Z`));
 }
 
 /**

@@ -161,23 +161,29 @@ const product: Record<string, ReactNode> = {
 const MARK_SIZE = 28;
 
 /**
- * True when src points at an SVG asset.
- * @example isSvgSrc("/icons/react.svg") // true
+ * True when src points at an SVG asset, including Simple Icons' extensionless CDN.
+ * @example isSvgIconSrc("/icons/react.svg") // true
  */
-function isSvgSrc(src: string) {
-  return /\.svg(\?|#|$)/i.test(src) || /^data:image\/svg/i.test(src);
+export function isSvgIconSrc(src: string) {
+  const clean = src.trim();
+  return (
+    /\.svg(\?|#|$)/i.test(clean) ||
+    /^data:image\/svg/i.test(clean) ||
+    /^https?:\/\/cdn\.simpleicons\.org\//i.test(clean) ||
+    /^\/\/cdn\.simpleicons\.org\//i.test(clean)
+  );
 }
 
 /**
- * True when src is a local path or data URL.
- * @example isLocalSrc("/icons/a.svg") // true
+ * True when an icon src is served from this site or embedded inline.
+ * @example isLocalIconSrc("data:image/svg+xml,…") // true
  */
-function isLocalSrc(src: string) {
-  return src.startsWith("/") || src.startsWith("data:");
+function isLocalIconSrc(src: string) {
+  return (src.startsWith("/") && !src.startsWith("//")) || src.startsWith("data:");
 }
 
 /**
- * Renders a CMS-uploaded skill mark (masked SVG or image).
+ * Renders a CMS skill mark (masked SVG or image).
  * @example <CustomSkillMark src="/a.svg" color="#7c3aed" />
  */
 function CustomSkillMark({
@@ -189,21 +195,59 @@ function CustomSkillMark({
   color?: string;
   className?: string;
 }) {
-  if (color && isSvgSrc(src) && isLocalSrc(src)) {
+  if (color && isSvgIconSrc(src)) {
+    const mask = {
+      backgroundColor: resolvedSkillColor(color),
+      WebkitMask: `url("${src}") center / contain no-repeat`,
+      mask: `url("${src}") center / contain no-repeat`,
+    } as const;
+
+    if (isLocalIconSrc(src)) {
+      return (
+        <span
+          aria-hidden="true"
+          className={className}
+          style={{
+            width: MARK_SIZE,
+            height: MARK_SIZE,
+            display: "inline-block",
+            flexShrink: 0,
+            ...mask,
+          }}
+        />
+      );
+    }
+
     return (
       <span
         aria-hidden="true"
         className={className}
         style={{
+          position: "relative",
           width: MARK_SIZE,
           height: MARK_SIZE,
           display: "inline-block",
           flexShrink: 0,
-          backgroundColor: resolvedSkillColor(color),
-          WebkitMask: `url("${src}") center / contain no-repeat`,
-          mask: `url("${src}") center / contain no-repeat`,
         }}
-      />
+      >
+        {/* Shows the original icon if the host blocks cross-origin masking. */}
+        <MediaImage
+          src={src}
+          alt=""
+          width={MARK_SIZE}
+          height={MARK_SIZE}
+          loading="lazy"
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+          }}
+        />
+        <span style={{ position: "absolute", inset: 0, ...mask }} />
+      </span>
     );
   }
   return (

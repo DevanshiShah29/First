@@ -11,6 +11,7 @@ export type Screen =
   | "appearance"
   | "seasons"
   | "titles"
+  | "pages"
   | "experience"
   | "experience-edit"
   | "projects"

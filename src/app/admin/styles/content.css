@@ -255,18 +255,22 @@
   padding: 0;
 }
 
+.wp-section-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #dcdcde;
+}
+
+.wp-section-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
 .wp-section-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 10px 0;
-  border-bottom: 1px solid #dcdcde;
-}
-
-.wp-section-row:last-child {
-  border-bottom: 0;
-  padding-bottom: 0;
+  padding: 2px 0;
 }
 
 .wp-section-row > div > button {
@@ -284,6 +288,52 @@
   margin-top: 2px;
   color: #646970;
   font-size: 12px;
+}
+
+.wp-section-titles {
+  margin-top: 10px;
+  padding: 12px 14px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wp-section-title-field {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.wp-section-title-label {
+  width: 140px;
+  flex: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1d2327;
+}
+
+.wp-section-title-field .wp-input {
+  flex: 1;
+  max-width: 360px;
+}
+
+@media (max-width: 600px) {
+  .wp-section-title-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .wp-section-title-label {
+    width: auto;
+  }
+
+  .wp-section-title-field .wp-input {
+    max-width: 100%;
+  }
 }
 
 .wp-switch {

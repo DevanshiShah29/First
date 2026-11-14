@@ -43,7 +43,7 @@ import {
 import { SeasonsScreen } from "./screens/SeasonsScreen";
 import { SiteScreen } from "./screens/SiteScreen";
 import { SkillGroupsScreen } from "./screens/SkillsScreens";
-import { TitlesScreen } from "./screens/TitlesScreen";
+import { PagesScreen } from "./screens/PagesScreen";
 
 // Icons
 import {
@@ -136,7 +136,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   }
 
   // Match homepage section order (Hero → About → Experience → Projects → Skills → Contact),
-  // then Craft / Memories / Appearance / Page titles / Settings.
+  // then Craft / Memories / Appearance / Pages / Settings.
   const menu: MenuItem[] = [
     { id: "dashboard", label: "Dashboard", icon: <IconDash />, match: screen === "dashboard" },
     { id: "analytics", label: "Analytics", icon: <IconAnalytics />, match: screen === "analytics" },
@@ -152,7 +152,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "artifacts", label: "Shelf", icon: <IconShelf />, match: screen.startsWith("artifacts") },
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
     { id: "seasons", label: "Seasons", icon: <IconSeasons />, match: screen === "seasons" },
-    { id: "titles", label: "Page titles", icon: <IconTitles />, match: screen === "titles" },
+    { id: "pages", label: "Pages", icon: <IconTitles />, match: screen === "pages" || screen === "titles" },
     { id: "site", label: "Settings", icon: <IconSettings />, match: screen === "site" },
   ];
 
@@ -283,10 +283,11 @@ export function AdminApp({ initial }: { initial: ContentData }) {
             />
           )}
 
-          {screen === "titles" && (
-            <TitlesScreen
+          {(screen === "pages" || screen === "titles") && (
+            <PagesScreen
               data={data}
               setData={setData}
+              go={go}
               save={save}
               dirty={dirty}
               status={status}

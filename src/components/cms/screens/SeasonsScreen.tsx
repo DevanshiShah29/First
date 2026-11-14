@@ -1,25 +1,39 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { ContentData } from "@/content/types";
+import { seasonForIsoDate } from "@/content/seasons";
 import { SeasonsPanel } from "../appearance/SeasonsPanel";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
 
 /**
- * Preview copy that paints one season without changing the saved schedule.
- * @example withPreviewSeason(data, "diwali") // ContentData
+ * Forces one season (or the year-round theme) without changing the saved schedule.
+ * @example withManualSeason(data, "diwali") // ContentData
  */
-function withPreviewSeason(data: ContentData, previewId: string | null): ContentData {
-  if (!previewId) return data;
+function withManualSeason(data: ContentData, manualId: string | null): ContentData {
   return {
     ...data,
     site: {
       ...data.site,
-      seasons: { ...data.site.seasons, mode: "manual", manualId: previewId },
+      seasons: { ...data.site.seasons, mode: "manual", manualId },
     },
   };
+}
+
+/**
+ * Preview copy for the current selection: a forced season, a date, or live today.
+ * A date resolves what the calendar would pick on that day in the season timezone.
+ * @example withPreview(data, null, "2026-12-25") // ContentData
+ */
+function withPreview(data: ContentData, previewId: string | null, previewDate: string | null): ContentData {
+  if (previewId) return withManualSeason(data, previewId);
+  if (previewDate) {
+    const resolved = seasonForIsoDate(data.site.seasons, previewDate);
+    return withManualSeason(data, resolved?.id ?? null);
+  }
+  return data;
 }
 
 /**
@@ -34,22 +48,27 @@ export function SeasonsScreen({
   status,
 }: {
   data: ContentData;
-  setData: (data: ContentData) => void;
+  setData: Dispatch<SetStateAction<ContentData>>;
   save: () => Promise<void>;
   dirty: boolean;
   status: CmsSaveStatus;
 }) {
   const [previewId, setPreviewId] = useState<string | null>(null);
+  const [previewDate, setPreviewDate] = useState<string | null>(null);
   const [previewTick, setPreviewTick] = useState(0);
-  const previewData = useMemo(() => withPreviewSeason(data, previewId), [data, previewId]);
+  const previewData = useMemo(
+    () => withPreview(data, previewId, previewDate),
+    [data, previewId, previewDate],
+  );
 
   return (
     <>
       <h1 className="wp-screen-title">Seasons</h1>
       <p className="wp-sub">
         Halloween, Diwali, and Christmas sit on top of the Appearance theme. Add a festival for any
-        other dates. Pick a card to edit it. Preview paints that season without changing the saved
-        schedule.
+        other dates. Pick a season to edit its dates, palette, and ornaments. Preview paints that
+        season or a chosen date without changing the saved schedule. Shared ornament images live in
+        the Ornaments tab of any season.
       </p>
       <EditorTabs
         previewTick={previewTick}
@@ -59,9 +78,15 @@ export function SeasonsScreen({
           data={data}
           setData={setData}
           previewId={previewId}
+          previewDate={previewDate}
           onPreviewSeason={(id, options) => {
             setPreviewId(id);
+            if (id) setPreviewDate(null);
             if (options?.openTab) setPreviewTick((tick) => tick + 1);
+          }}
+          onPreviewDate={(iso) => {
+            setPreviewDate(iso);
+            if (iso) setPreviewId(null);
           }}
         />
         <p>

@@ -7,26 +7,12 @@ import {
   sectionEnabled,
   type ContentData,
   type PublishStatus,
-  type SiteSectionId,
   type SkillGroup,
 } from "@/content/types";
 import type { Screen } from "../types";
 
 // UI components
 import { Metabox } from "../components/Metabox";
-
-const SECTION_SCREEN: Record<SiteSectionId, Screen> = {
-  hero: "hero",
-  about: "about",
-  experience: "experience",
-  projects: "projects",
-  skills: "skills",
-  technologies: "technologies",
-  contact: "contact",
-  craft: "craft",
-  memories: "memories",
-  reading: "artifacts",
-};
 
 /**
  * Counts entries whose status is draft.
@@ -75,7 +61,7 @@ function withDrafts(label: string, drafts: number) {
 
 interface DashboardScreenProps {
   data: ContentData;
-  setData: (data: ContentData) => void;
+  setData?: (data: ContentData) => void;
   go: (screen: Screen) => void;
   addExperience: () => void;
   addProject: () => void;
@@ -88,7 +74,6 @@ interface DashboardScreenProps {
  */
 export function DashboardScreen({
   data,
-  setData,
   go,
   addExperience,
   addProject,
@@ -97,23 +82,9 @@ export function DashboardScreen({
   const site = data.site;
   const memoriesList = data.memories ?? [];
   const sections = normalizeSections(site.sections);
-  const shownCount = SITE_SECTIONS.filter(
-    (section) => sections[section.id],
+  const shownCount = SITE_SECTIONS.filter((section) =>
+    sectionEnabled(sections, section.id),
   ).length;
-
-  /**
-   * Flips one live-site section. The admin bar Save applies it.
-   * @example setShown("hero", false) // hero hidden locally
-   */
-  function setShown(id: SiteSectionId, shown: boolean) {
-    setData({
-      ...data,
-      site: {
-        ...site,
-        sections: { ...sections, [id]: shown },
-      },
-    });
-  }
 
   return (
     <>
@@ -125,6 +96,11 @@ export function DashboardScreen({
             <li>
               <button type="button" onClick={() => go("analytics")}>
                 Site analytics
+              </button>
+            </li>
+            <li>
+              <button type="button" onClick={() => go("pages")}>
+                Pages ({shownCount} of {SITE_SECTIONS.length} live)
               </button>
             </li>
             <li>
@@ -240,46 +216,6 @@ export function DashboardScreen({
           <button type="button" className="wp-btn" onClick={addMemory}>
             Add memory
           </button>
-        </Metabox>
-
-        <Metabox
-          id="dash_sections"
-          className="wp-widget-wide"
-          title="Live website"
-          badge={`${shownCount} of ${SITE_SECTIONS.length} shown`}>
-          <p className="wp-sub" style={{ marginTop: 0 }}>
-            Turn a section off to hide it on the live site. It stays editable
-            here. Save to apply.
-          </p>
-          <ul className="wp-section-list">
-            {SITE_SECTIONS.map((section) => {
-              const shown = sectionEnabled(sections, section.id);
-              return (
-                <li key={section.id} className="wp-section-row">
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => go(SECTION_SCREEN[section.id])}>
-                      {section.label}
-                    </button>
-                    <span className="wp-section-where">{section.where}</span>
-                  </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    className={`wp-switch${shown ? " is-on" : ""}`}
-                    aria-checked={shown}
-                    aria-label={`${shown ? "Hide" : "Show"} ${section.label} on the live site`}
-                    onClick={() => setShown(section.id, !shown)}>
-                    <span className="wp-switch-track" aria-hidden="true">
-                      <span className="wp-switch-knob" />
-                    </span>
-                    {shown ? "Shown" : "Hidden"}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
         </Metabox>
       </div>
     </>

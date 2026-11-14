@@ -6,11 +6,88 @@
   pointer-events: none;
 }
 
+/* The string, wire, jamb, or floor glow the images belong to. */
+.season-layer--motif-garland::before,
+.season-layer--motif-lights::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--header-h) + 0.05rem);
+  left: 6%;
+  right: 6%;
+  height: 1px;
+  background: color-mix(in srgb, var(--brand-to, #d97706) 55%, transparent);
+}
+
+.season-layer--motif-lights::before {
+  height: 0;
+  background: none;
+  border-top: 1px dotted color-mix(in srgb, var(--brand-to, #d97706) 70%, transparent);
+}
+
+.season-layer--motif-doorway::before,
+.season-layer--motif-doorway::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--header-h) + 0.75rem);
+  bottom: 10%;
+  width: 1px;
+  background: color-mix(in srgb, var(--brand-from, #ea580c) 45%, transparent);
+}
+
+.season-layer--motif-doorway::before {
+  left: 0.35rem;
+}
+
+.season-layer--motif-doorway::after {
+  right: 0.35rem;
+}
+
+.season-layer--motif-diyas::before,
+.season-layer--motif-diyas::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 22%;
+  height: 5rem;
+  background: radial-gradient(
+    ellipse at center bottom,
+    color-mix(in srgb, var(--brand-from, #b45309) 32%, transparent),
+    transparent 72%
+  );
+}
+
+.season-layer--motif-diyas::before {
+  left: 0;
+}
+
+.season-layer--motif-diyas::after {
+  right: 0;
+}
+
+.season-layer--motif-color::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(11rem 14rem at 0% 32%, color-mix(in srgb, var(--brand-from, #db2777) 20%, transparent), transparent 70%),
+    radial-gradient(11rem 14rem at 100% 58%, color-mix(in srgb, var(--brand-to, #0d9488) 20%, transparent), transparent 70%),
+    radial-gradient(9rem 9rem at 0% 100%, color-mix(in srgb, var(--badge, #0d9488) 16%, transparent), transparent 72%),
+    radial-gradient(9rem 9rem at 100% 100%, color-mix(in srgb, var(--brand-from, #db2777) 16%, transparent), transparent 72%);
+}
+
+.season-layer--motif-rise::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(9rem 16rem at 0% 78%, color-mix(in srgb, var(--brand-to, #f472b6) 16%, transparent), transparent 72%),
+    radial-gradient(9rem 16rem at 100% 64%, color-mix(in srgb, var(--brand-from, #be123c) 16%, transparent), transparent 72%);
+}
+
 .season-ornament {
   position: absolute;
   width: 2.5rem;
   height: 2.5rem;
-  animation: season-float 5.5s ease-in-out infinite;
 }
 
 .season-ornament svg,
@@ -21,114 +98,139 @@
   object-fit: contain;
 }
 
-.season-ornament--photo {
-  width: 4.5rem;
-  height: 4.5rem;
+.season-ornament--photo.season-ornament--sm {
+  width: 2.25rem;
+  height: 2.25rem;
 }
 
-.season-ornament--p0 {
-  top: calc(var(--header-h) + 0.75rem);
-  right: 1rem;
-}
-
-.season-ornament--p1 {
-  bottom: 1.25rem;
-  left: 1rem;
-  animation-delay: -1.8s;
-}
-
-.season-ornament--p2 {
-  right: 1.5rem;
-  bottom: 1.75rem;
-  width: 3.25rem;
-  height: 3.25rem;
-  animation-delay: -3.2s;
-}
-
-.season-ornament--p3 {
-  top: 38%;
-  right: 0.75rem;
-  animation-delay: -0.8s;
-}
-
-.season-ornament--p4 {
-  top: 46%;
-  left: 0.75rem;
-  width: 3.5rem;
-  height: 3.5rem;
-  animation-delay: -2.4s;
-}
-
-.season-ornament--p5 {
-  bottom: 4.5rem;
-  left: 38%;
-  animation-delay: -1.2s;
-}
-
-.season-ornament--p6 {
-  top: calc(var(--header-h) + 0.5rem);
-  right: 28%;
+.season-ornament--photo.season-ornament--md {
   width: 3rem;
   height: 3rem;
-  animation-delay: -2.8s;
 }
 
-.season-ornament--p7 {
-  bottom: 2rem;
-  right: 32%;
-  width: 3.25rem;
-  height: 3.25rem;
-  animation-delay: -0.4s;
+.season-ornament--photo.season-ornament--lg {
+  width: 3.75rem;
+  height: 3.75rem;
 }
 
-.season-ornament--a {
-  top: calc(var(--header-h) + 0.75rem);
-  right: 1rem;
+.season-ornament--sway {
+  transform-origin: top center;
+  animation: season-sway 5.4s ease-in-out infinite;
 }
 
-.season-ornament--b {
-  bottom: 1.25rem;
-  left: 1rem;
-  animation-delay: -1.8s;
+.season-ornament--flicker {
+  transform-origin: center bottom;
+  animation: season-flicker 2.8s ease-in-out infinite;
 }
 
-.season-ornament--c {
-  right: 1.5rem;
-  bottom: 1.75rem;
-  width: 1.75rem;
-  height: 1.75rem;
-  opacity: 0.8;
-  animation-delay: -3.2s;
+.season-ornament--twinkle {
+  animation: season-twinkle 2.4s ease-in-out infinite;
 }
 
-@keyframes season-float {
+.season-ornament--drift {
+  animation: season-drift 7s ease-in-out infinite;
+}
+
+.season-ornament--rise {
+  animation: season-rise 11s linear infinite;
+}
+
+.season-ornament--burst {
+  animation: season-burst 5.6s ease-in-out infinite;
+}
+
+@keyframes season-sway {
   0%,
   100% {
-    transform: translateY(0);
+    transform: rotate(-5deg);
   }
   50% {
-    transform: translateY(6px);
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes season-flicker {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  45% {
+    opacity: 0.76;
+    transform: scale(0.96);
+  }
+  72% {
+    opacity: 0.92;
+    transform: scale(1.03);
+  }
+}
+
+@keyframes season-twinkle {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes season-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(var(--drift-x, 8px));
+  }
+}
+
+@keyframes season-rise {
+  0% {
+    transform: translateY(6vh);
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.92;
+  }
+  78% {
+    opacity: 0.92;
+  }
+  100% {
+    transform: translateY(-34vh);
+    opacity: 0;
+  }
+}
+
+@keyframes season-burst {
+  0%,
+  68%,
+  100% {
+    transform: translate(0, 0);
+  }
+  32% {
+    transform: translate(var(--burst-x, 8px), var(--burst-y, 0));
   }
 }
 
 @media (max-width: 40rem) {
-  .season-ornament {
-    width: 2rem;
-    height: 2rem;
+  .season-ornament.is-quiet {
+    display: none;
   }
 
-  .season-ornament--c,
-  .season-ornament--p2,
-  .season-ornament--p4,
-  .season-ornament--p6,
-  .season-ornament--p7 {
-    width: 1.4rem;
-    height: 1.4rem;
+  .season-ornament--photo.season-ornament--sm {
+    width: 1.75rem;
+    height: 1.75rem;
   }
 
-  .season-ornament--photo {
-    width: 3rem;
-    height: 3rem;
+  .season-ornament--photo.season-ornament--md {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .season-ornament--photo.season-ornament--lg {
+    width: 2.75rem;
+    height: 2.75rem;
   }
 }
 

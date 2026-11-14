@@ -133,3 +133,50 @@ function formatIso(value: string): string {
   const [year, month, day] = value.split("-");
   return `${MONTHS[Number(month) - 1] ?? ""} ${Number(day)}, ${year}`;
 }
+
+type DayParts = { year: number; month: number; day: number };
+
+/** YYYY-MM-DD into calendar parts. */
+function isoParts(value: string): DayParts {
+  const [year, month, day] = value.split("-").map(Number);
+  return { year, month, day };
+}
+
+/** MM-DD into calendar parts for a given year. */
+function monthDayParts(year: number, value: string): DayParts {
+  return { year, month: Number(value.slice(0, 2)), day: Number(value.slice(3, 5)) };
+}
+
+/** Whole days from a to b (positive when b is later). */
+function daysBetween(a: DayParts, b: DayParts): number {
+  return Math.round(
+    (Date.UTC(b.year, b.month - 1, b.day) - Date.UTC(a.year, a.month - 1, a.day)) / 86_400_000,
+  );
+}
+
+function pluralDays(n: number): string {
+  return `${n} day${n === 1 ? "" : "s"}`;
+}
+
+/**
+ * Short countdown for a season card, or null when there is nothing to say.
+ * @example seasonCountdown(christmas, { year: 2026, month: 12, day: 1 }) // "Starts in 19 days"
+ */
+export function seasonCountdown(item: SeasonConfig, parts: DayParts): string | null {
+  if (item.schedule.kind === "dated") {
+    const toStart = daysBetween(parts, isoParts(item.schedule.start));
+    const toEnd = daysBetween(parts, isoParts(item.schedule.end));
+    if (toStart > 0) return `Starts in ${pluralDays(toStart)}`;
+    if (toEnd >= 0) return toEnd === 0 ? "Ends today" : `Ends in ${pluralDays(toEnd)}`;
+    return null;
+  }
+  if (item.schedule.start > item.schedule.end) return null;
+  const start = monthDayParts(parts.year, item.schedule.start);
+  const end = monthDayParts(parts.year, item.schedule.end);
+  const toStart = daysBetween(parts, start);
+  const toEnd = daysBetween(parts, end);
+  if (toStart > 0) return `Starts in ${pluralDays(toStart)}`;
+  if (toEnd >= 0) return toEnd === 0 ? "Ends today" : `Ends in ${pluralDays(toEnd)}`;
+  const nextStart = monthDayParts(parts.year + 1, item.schedule.start);
+  return `Starts in ${pluralDays(daysBetween(parts, nextStart))}`;
+}

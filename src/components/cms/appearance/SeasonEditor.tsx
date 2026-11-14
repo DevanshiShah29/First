@@ -1,20 +1,44 @@
 "use client";
 
+import { useId, useState } from "react";
+import { ornamentPlacementCopy } from "@/content/season-layout";
 import { getSeasonPreset } from "@/content/season-presets";
-import { defaultSeasonPalette, type SeasonConfig, type SeasonPalette, type SeasonSchedule } from "@/content/seasons";
+import {
+  defaultSeasonPalette,
+  type SeasonConfig,
+  type SeasonOrnament,
+  type SeasonPalette,
+  type SeasonSchedule,
+} from "@/content/seasons";
 import { EditablePalette, PaletteColorRow } from "./EditablePalette";
 import { ConfirmButton } from "../components/ConfirmDialog";
-import { SeasonOrnamentsEditor } from "./SeasonOrnamentsEditor";
+import { SeasonAiPanel } from "./SeasonAiPanel";
+import { SeasonOrnamentPicker } from "./SeasonOrnamentPicker";
 import { seasonName } from "./season-labels";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+type EditorTab = "dates" | "palette" | "ornaments";
+
+const EDITOR_TABS: { id: EditorTab; label: string }[] = [
+  { id: "dates", label: "Dates" },
+  { id: "palette", label: "Palette" },
+  { id: "ornaments", label: "Ornaments" },
+];
+
+/** Adds one year to a YYYY-MM-DD date. */
+function shiftYear(iso: string): string {
+  return `${Number(iso.slice(0, 4)) + 1}${iso.slice(4)}`;
+}
+
 /**
- * Dates, look, palette, and ornaments for the season that is open.
- * @example <SeasonEditor item={item} ended={false} year={2026} onChange={patch} onPalette={setPalette} onImages={setImages} onClose={close} onPreview={preview} />
+ * Dates, palette, and ornaments for the season selected in the master list.
+ * Panels stay mounted while hidden so switching tabs keeps local drafts.
+ * @example <SeasonEditor item={item} … onOpenCatalog={openCatalog} />
  */
 export function SeasonEditor({
   item,
+  ornaments,
   ended,
   year,
   onChange,
@@ -22,9 +46,11 @@ export function SeasonEditor({
   onImages,
   onClose,
   onPreview,
+  onOpenCatalog,
   onRemove,
 }: {
   item: SeasonConfig;
+  ornaments: SeasonOrnament[];
   ended: boolean;
   year: number;
   onChange: (patch: Partial<SeasonConfig>) => void;
@@ -32,11 +58,31 @@ export function SeasonEditor({
   onImages: (images: string[]) => void;
   onClose: () => void;
   onPreview: () => void;
+  onOpenCatalog: () => void;
   onRemove?: () => void;
 }) {
   const preset = getSeasonPreset(item.id);
   const name = seasonName(item);
   const inverted = item.schedule.kind === "dated" && item.schedule.start > item.schedule.end;
+  const [tab, setTab] = useState<EditorTab>("dates");
+  const [aiNotes, setAiNotes] = useState<Record<string, string>>({});
+  const tabId = useId();
+  const aiNote = aiNotes[item.id] ?? "";
+
+  /**
+   * Rolls a dated window one year forward so it can run again.
+   * @example moveToNextYear() // void
+   */
+  const moveToNextYear = () => {
+    if (item.schedule.kind !== "dated") return;
+    onChange({
+      schedule: {
+        kind: "dated",
+        start: shiftYear(item.schedule.start),
+        end: shiftYear(item.schedule.end),
+      },
+    });
+  };
 
   return (
     <section className="wp-season-editor" aria-label={`Edit ${name}`}>
@@ -67,112 +113,125 @@ export function SeasonEditor({
         </div>
       </div>
 
-      {preset ? null : (
-        <label className="wp-season-name">
-          Name
-          <input
-            className="wp-input"
-            value={item.name}
-            maxLength={60}
-            placeholder="Festival"
-            aria-label="Festival name"
-            onChange={(event) => onChange({ name: event.target.value })}
-          />
-        </label>
-      )}
-
-      {preset ? null : (
-        <fieldset className="wp-media-choice">
-          <legend>Dates</legend>
-          <div className="wp-seg">
-            {(
-              [
-                ["annual", "Every year"],
-                ["dated", "These dates"],
-              ] as const
-            ).map(([kind, label]) => (
-              <label key={kind} className={item.schedule.kind === kind ? "is-selected" : undefined}>
-                <input
-                  type="radio"
-                  name={`season-dates-${item.id}`}
-                  checked={item.schedule.kind === kind}
-                  onChange={() => onChange({ schedule: scheduleOfKind(item.schedule, kind, year) })}
-                />
-                {label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      )}
-
-      {item.schedule.kind === "annual" ? (
-        <AnnualDates
-          start={item.schedule.start}
-          end={item.schedule.end}
-          onChange={(start, end) => onChange({ schedule: { kind: "annual", start, end } })}
-        />
-      ) : (
-        <div className="wp-season-dates">
-          <label>
-            Starts
-            <input
-              className="wp-input"
-              type="date"
-              value={item.schedule.start}
-              onChange={(event) =>
-                onChange({
-                  schedule: { kind: "dated", start: event.target.value, end: item.schedule.end },
-                })
-              }
-            />
-          </label>
-          <label>
-            Ends
-            <input
-              className="wp-input"
-              type="date"
-              value={item.schedule.end}
-              onChange={(event) =>
-                onChange({
-                  schedule: { kind: "dated", start: item.schedule.start, end: event.target.value },
-                })
-              }
-            />
-          </label>
-        </div>
-      )}
-      {inverted ? (
-        <p className="wp-season-note is-inline">End is before start, so this season cannot match.</p>
-      ) : null}
-      {ended ? (
-        <p className="wp-season-note is-inline">This window has ended. Set next year’s dates to run it again.</p>
-      ) : null}
-
-      <div className="wp-season-block">
-        <fieldset className="wp-media-choice">
-          <legend>Look</legend>
-          <div className="wp-seg">
-            {(
-              [
-                ["subtle", "Palette only"],
-                ["full", "Palette and ornaments"],
-              ] as const
-            ).map(([intensity, label]) => (
-              <label key={intensity} className={item.intensity === intensity ? "is-selected" : undefined}>
-                <input
-                  type="radio"
-                  name={`season-intensity-${item.id}`}
-                  checked={item.intensity === intensity}
-                  onChange={() => onChange({ intensity })}
-                />
-                {label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+      <div className="wp-editor-tablist wp-season-editor-tabs" role="tablist" aria-label="Season editor sections">
+        {EDITOR_TABS.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            role="tab"
+            id={`${tabId}-${entry.id}-tab`}
+            aria-selected={tab === entry.id}
+            aria-controls={`${tabId}-${entry.id}-panel`}
+            tabIndex={tab === entry.id ? 0 : -1}
+            className={`wp-editor-tab${tab === entry.id ? " is-active" : ""}`}
+            onClick={() => setTab(entry.id)}
+          >
+            {entry.label}
+          </button>
+        ))}
       </div>
 
-      <div className="wp-season-block wp-season-palette">
+      <div
+        role="tabpanel"
+        id={`${tabId}-dates-panel`}
+        aria-labelledby={`${tabId}-dates-tab`}
+        className="wp-season-editor-panel"
+        hidden={tab !== "dates"}
+      >
+        {preset ? null : (
+          <label className="wp-season-name">
+            Name
+            <input
+              className="wp-input"
+              value={item.name}
+              maxLength={60}
+              placeholder="Festival"
+              aria-label="Festival name"
+              onChange={(event) => onChange({ name: event.target.value })}
+            />
+          </label>
+        )}
+
+        {preset ? null : (
+          <fieldset className="wp-media-choice">
+            <legend>Dates</legend>
+            <div className="wp-seg">
+              {(
+                [
+                  ["annual", "Every year"],
+                  ["dated", "These dates"],
+                ] as const
+              ).map(([kind, label]) => (
+                <label key={kind} className={item.schedule.kind === kind ? "is-selected" : undefined}>
+                  <input
+                    type="radio"
+                    name={`season-dates-${item.id}`}
+                    checked={item.schedule.kind === kind}
+                    onChange={() => onChange({ schedule: scheduleOfKind(item.schedule, kind, year) })}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
+        {item.schedule.kind === "annual" ? (
+          <AnnualDates
+            start={item.schedule.start}
+            end={item.schedule.end}
+            onChange={(start, end) => onChange({ schedule: { kind: "annual", start, end } })}
+          />
+        ) : (
+          <div className="wp-season-dates">
+            <label>
+              Starts
+              <input
+                className="wp-input"
+                type="date"
+                value={item.schedule.start}
+                onChange={(event) =>
+                  onChange({
+                    schedule: { kind: "dated", start: event.target.value, end: item.schedule.end },
+                  })
+                }
+              />
+            </label>
+            <label>
+              Ends
+              <input
+                className="wp-input"
+                type="date"
+                value={item.schedule.end}
+                onChange={(event) =>
+                  onChange({
+                    schedule: { kind: "dated", start: item.schedule.start, end: event.target.value },
+                  })
+                }
+              />
+            </label>
+          </div>
+        )}
+        {inverted ? (
+          <p className="wp-season-note is-inline">End is before start, so this season cannot match.</p>
+        ) : null}
+        {ended ? (
+          <p className="wp-season-note is-inline">
+            This window has ended.{" "}
+            <button type="button" className="wp-btn wp-btn-small" onClick={moveToNextYear}>
+              Move to next year
+            </button>
+          </p>
+        ) : null}
+      </div>
+
+      <div
+        role="tabpanel"
+        id={`${tabId}-palette-panel`}
+        aria-labelledby={`${tabId}-palette-tab`}
+        className="wp-season-editor-panel"
+        hidden={tab !== "palette"}
+      >
         <p className="wp-description">
           Change a hex value or its color picker. The public site uses these colors only while this season
           is showing.
@@ -206,7 +265,57 @@ export function SeasonEditor({
             Reset palette
           </button>
         </div>
-        <SeasonOrnamentsEditor images={item.ornamentImages} onImages={onImages} />
+        <div className="wp-season-editor-sep">
+          <SeasonAiPanel
+            key={item.id}
+            item={item}
+            note={aiNote}
+            onNote={(note) =>
+              setAiNotes((current) => ({ ...current, [item.id]: note }))
+            }
+            onApply={onPalette}
+          />
+        </div>
+      </div>
+
+      <div
+        role="tabpanel"
+        id={`${tabId}-ornaments-panel`}
+        aria-labelledby={`${tabId}-ornaments-tab`}
+        className="wp-season-editor-panel"
+        hidden={tab !== "ornaments"}
+      >
+        <fieldset className="wp-media-choice">
+          <legend>Look</legend>
+          <div className="wp-seg">
+            {(
+              [
+                ["subtle", "Palette only"],
+                ["full", "Palette and ornaments"],
+              ] as const
+            ).map(([intensity, label]) => (
+              <label key={intensity} className={item.intensity === intensity ? "is-selected" : undefined}>
+                <input
+                  type="radio"
+                  name={`season-intensity-${item.id}`}
+                  checked={item.intensity === intensity}
+                  onChange={() => onChange({ intensity })}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <div className="wp-season-catalog-link">
+          <p className="wp-description">{ornamentPlacementCopy(item.id)}</p>
+          <p className="wp-description">
+            Pick images from the shared catalog. Upload or rename them once, then reuse them here.
+          </p>
+          <button type="button" className="wp-btn wp-btn-small" onClick={onOpenCatalog}>
+            Manage catalog
+          </button>
+        </div>
+        <SeasonOrnamentPicker images={item.ornamentImages} ornaments={ornaments} onImages={onImages} />
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import {
   createCustomSeason,
   datedWindowEnded,
@@ -16,25 +16,30 @@ import {
 } from "@/content/seasons";
 import type { ContentData } from "@/content/types";
 import { Metabox } from "../components/Metabox";
-import { SeasonAiPanel } from "./SeasonAiPanel";
+import { SeasonCalendar } from "./SeasonCalendar";
+import { SeasonCatalogDrawer } from "./SeasonCatalogDrawer";
 import { SeasonEditor } from "./SeasonEditor";
-import { SeasonSummaryCard } from "./SeasonSummaryCard";
-import { formatZonedDate, seasonName, seasonStatusCopy } from "./season-labels";
+import { SeasonListRow } from "./SeasonListRow";
+import { formatZonedDate, seasonCountdown, seasonName, seasonStatusCopy } from "./season-labels";
 
 /**
- * Festive-season controls. The saved Appearance theme stays underneath.
+ * Festive-season master list with a detail editor. The saved Appearance theme stays underneath.
  * @example <SeasonsPanel data={data} setData={setData} />
  */
 export function SeasonsPanel({
   data,
   setData,
   previewId,
+  previewDate,
   onPreviewSeason,
+  onPreviewDate,
 }: {
   data: ContentData;
-  setData: (data: ContentData) => void;
+  setData: Dispatch<SetStateAction<ContentData>>;
   previewId?: SeasonConfig["id"] | null;
+  previewDate?: string | null;
   onPreviewSeason?: (id: string | null, options?: { openTab?: boolean }) => void;
+  onPreviewDate?: (iso: string | null) => void;
 }) {
   const seasons = data.site.seasons;
   const now = new Date();
@@ -45,14 +50,14 @@ export function SeasonsPanel({
   const zones = SEASON_TIMEZONES.includes(seasons.timezone as (typeof SEASON_TIMEZONES)[number])
     ? [...SEASON_TIMEZONES]
     : [seasons.timezone, ...SEASON_TIMEZONES];
-  const [openId, setOpenId] = useState<SeasonConfig["id"] | null>(null);
-  const [aiId, setAiId] = useState<SeasonConfig["id"]>(seasons.items[0]?.id ?? "halloween");
-  const editorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!openId) return;
-    editorRef.current?.scrollIntoView({ block: "nearest" });
-  }, [openId]);
+  const [selectedId, setSelectedId] = useState<SeasonConfig["id"] | null>(
+    () => active?.id ?? seasons.items[0]?.id ?? null,
+  );
+  const [adding, setAdding] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newStart, setNewStart] = useState("");
+  const [newEnd, setNewEnd] = useState("");
+  const [catalogOpen, setCatalogOpen] = useState(false);
 
   /**
    * Replaces the season document on the site draft.
@@ -66,7 +71,7 @@ export function SeasonsPanel({
   }
 
   /**
-   * Replaces one season card.
+   * Replaces one season row.
    * @example updateItem("diwali", { enabled: false }) // void
    */
   function updateItem(id: SeasonConfig["id"], patch: Partial<SeasonConfig>) {
@@ -93,21 +98,75 @@ export function SeasonsPanel({
     onPreviewSeason?.(id);
   }
 
-  const openItem = seasons.items.find((item) => item.id === openId) ?? null;
-  const aiTargetId = openId ?? aiId;
+  /**
+   * Moves one season up or down. Order is priority: the first matching row wins.
+   * @example moveItem("diwali", -1) // void
+   */
+  function moveItem(id: SeasonConfig["id"], direction: -1 | 1) {
+    const index = seasons.items.findIndex((item) => item.id === id);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= seasons.items.length) return;
+    const items = [...seasons.items];
+    [items[index], items[target]] = [items[target], items[index]];
+    update({ items });
+  }
+
+  /**
+   * Opens one season beside the list and paints it in the preview.
+   * On stacked layouts, brings the editor into view after selection.
+   * @example selectSeason("diwali") // void
+   */
+  function selectSeason(id: SeasonConfig["id"]) {
+    setSelectedId(id);
+    onPreviewSeason?.(id);
+    if (!window.matchMedia("(max-width: 1100px)").matches) return;
+    window.setTimeout(() => {
+      const editor = document.getElementById("season-editor");
+      if (!editor) return;
+      const top = editor.getBoundingClientRect().top;
+      if (top >= 0 && top < window.innerHeight) return;
+      editor.scrollIntoView({ block: "start" });
+    }, 0);
+  }
+
+  const selectedItem = seasons.items.find((item) => item.id === selectedId) ?? null;
   const customCount = seasons.items.filter((item) => isCustomSeasonId(item.id)).length;
 
   /**
-   * Appends an unnamed festival and opens it.
-   * @example addFestival() // void
+   * Opens the inline add form with defaults for the next seven days.
+   * @example beginAdd() // void
    */
-  function addFestival() {
+  function beginAdd() {
     if (customCount >= MAX_CUSTOM_SEASONS) return;
+    const draft = createCustomSeason(new Date(), seasons.timezone);
+    setNewName("");
+    setNewStart(draft.schedule.kind === "dated" ? draft.schedule.start : "");
+    setNewEnd(draft.schedule.kind === "dated" ? draft.schedule.end : "");
+    setAdding(true);
+  }
+
+  /**
+   * Appends a named festival from the inline form and selects it.
+   * @example submitNewFestival() // void
+   */
+  function submitNewFestival() {
+    if (customCount >= MAX_CUSTOM_SEASONS) return;
+    const start = newStart.trim();
+    const end = newEnd.trim();
+    if (!start || !end || start > end) return;
     const season = createCustomSeason(new Date(), seasons.timezone);
-    update({ items: [...seasons.items, season] });
-    setAiId(season.id);
-    setOpenId(season.id);
-    onPreviewSeason?.(season.id);
+    const next: SeasonConfig = {
+      ...season,
+      name: newName.trim(),
+      schedule: { kind: "dated", start, end },
+    };
+    update({ items: [...seasons.items, next] });
+    setAdding(false);
+    setNewName("");
+    setNewStart("");
+    setNewEnd("");
+    setSelectedId(next.id);
+    onPreviewSeason?.(next.id);
   }
 
   /**
@@ -120,191 +179,263 @@ export function SeasonsPanel({
       items: seasons.items.filter((item) => item.id !== id),
       manualId: seasons.manualId === id ? null : seasons.manualId,
     });
-    if (openId === id) setOpenId(null);
+    if (selectedId === id) setSelectedId(null);
     if (previewId === id) onPreviewSeason?.(null);
-    if (aiId === id) setAiId(seasons.items.find((item) => item.id !== id)?.id ?? "halloween");
-  }
-
-  /**
-   * Points Generate with AI at a season. An open editor follows that choice.
-   * @example chooseSeason("christmas") // void
-   */
-  function chooseSeason(id: SeasonConfig["id"]) {
-    setAiId(id);
-    if (!openId) return;
-    setOpenId(id);
-    onPreviewSeason?.(id);
-  }
-
-  /**
-   * Writes a generated palette onto one season and opens it.
-   * @example applyGenerated("diwali", palette) // void
-   */
-  function applyGenerated(id: SeasonConfig["id"], palette: SeasonPalette) {
-    updateItem(id, { palette });
-    setAiId(id);
-    setOpenId(id);
-    onPreviewSeason?.(id);
   }
 
   return (
-    <Metabox id="app_seasons" title="Festive seasons" badge={active ? seasonName(active) : "Off"}>
-      <div className={`wp-season-status${status.quiet ? " is-quiet" : ""}`}>
-        <div>
-          <p className="wp-season-status-title">{status.title}</p>
-          <p className="wp-season-status-detail">{status.detail}</p>
-        </div>
-        <p className="wp-season-status-today">
-          Today is {formatZonedDate(parts)}
-          <span>{seasons.timezone.replaceAll("_", " ")}</span>
-        </p>
-      </div>
+    <>
+      <Metabox id="app_seasons" title="Festive seasons" badge={active ? seasonName(active) : "Off"}>
+        <div className={`wp-season-toolbar${status.quiet ? " is-quiet" : ""}`}>
+          <div className="wp-season-toolbar-status">
+            <p className="wp-season-toolbar-title">{status.title}</p>
+            <p className="wp-season-toolbar-detail">{status.detail}</p>
+          </div>
+          <div className="wp-season-toolbar-controls">
+            <div className="wp-seg" role="group" aria-label="Season mode">
+              {(
+                [
+                  ["off", "Off"],
+                  ["schedule", "Calendar"],
+                  ["manual", "Force one"],
+                ] as const
+              ).map(([mode, label]) => (
+                <label key={mode} className={seasons.mode === mode ? "is-selected" : undefined}>
+                  <input
+                    type="radio"
+                    name="seasonMode"
+                    checked={seasons.mode === mode}
+                    onChange={() => update({ mode })}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
 
-      <fieldset className="wp-media-choice">
-        <legend>When</legend>
-        <div className="wp-seg">
-          {(
-            [
-              ["off", "Off"],
-              ["schedule", "Follow the calendar"],
-              ["manual", "Force one season"],
-            ] as const
-          ).map(([mode, label]) => (
-            <label key={mode} className={seasons.mode === mode ? "is-selected" : undefined}>
-              <input
-                type="radio"
-                name="seasonMode"
-                checked={seasons.mode === mode}
-                onChange={() => update({ mode })}
+            {seasons.mode === "manual" ? (
+              <label className="wp-season-toolbar-field" htmlFor="season-force">
+                Force
+                <select
+                  id="season-force"
+                  className="wp-select"
+                  value={seasons.manualId ?? ""}
+                  onChange={(event) => update({ manualId: event.target.value || null })}
+                >
+                  <option value="">None</option>
+                  {seasons.items.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {seasonName(item)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            {seasons.mode === "schedule" ? (
+              <label className="wp-season-toolbar-field" htmlFor="season-zone">
+                Timezone
+                <select
+                  id="season-zone"
+                  className="wp-select"
+                  value={seasons.timezone}
+                  onChange={(event) => update({ timezone: event.target.value })}
+                >
+                  {zones.map((zone) => (
+                    <option key={zone} value={zone}>
+                      {zone.replaceAll("_", " ")}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+
+            <p className="wp-season-toolbar-today">
+              Today is {formatZonedDate(parts)}
+              <span>{seasons.timezone.replaceAll("_", " ")}</span>
+            </p>
+          </div>
+        </div>
+
+        {seasons.mode === "schedule" && matches.length > 1 ? (
+          <p className="wp-season-note">
+            More than one season matches today. {seasonName(matches[0])} is the one that shows.
+          </p>
+        ) : null}
+
+        <div className="wp-season-workspace">
+          <div className="wp-season-workspace-head">
+            <div className="wp-season-master-head">
+              <div>
+                <h3 className="wp-palette-column-title">Seasons</h3>
+                <p className="wp-description">
+                  Priority order — the first matching row wins. Use ↑ and ↓ to reorder.
+                </p>
+              </div>
+              {adding ? null : (
+                <button
+                  type="button"
+                  className="wp-btn wp-btn-primary"
+                  disabled={customCount >= MAX_CUSTOM_SEASONS}
+                  onClick={beginAdd}
+                >
+                  Add festival
+                </button>
+              )}
+            </div>
+
+            {adding ? (
+              <form
+                className="wp-season-add-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  submitNewFestival();
+                }}
+              >
+                <label className="wp-season-add-field">
+                  Name
+                  <input
+                    className="wp-input"
+                    value={newName}
+                    maxLength={60}
+                    placeholder="Festival"
+                    autoFocus
+                    onChange={(event) => setNewName(event.target.value)}
+                  />
+                </label>
+                <label className="wp-season-add-field">
+                  Starts
+                  <input
+                    className="wp-input"
+                    type="date"
+                    value={newStart}
+                    onChange={(event) => setNewStart(event.target.value)}
+                  />
+                </label>
+                <label className="wp-season-add-field">
+                  Ends
+                  <input
+                    className="wp-input"
+                    type="date"
+                    value={newEnd}
+                    onChange={(event) => setNewEnd(event.target.value)}
+                  />
+                </label>
+                <div className="wp-season-add-actions">
+                  <button
+                    type="submit"
+                    className="wp-btn wp-btn-primary"
+                    disabled={!newStart.trim() || !newEnd.trim() || newStart.trim() > newEnd.trim()}
+                  >
+                    Add festival
+                  </button>
+                  <button type="button" className="wp-btn" onClick={() => setAdding(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="wp-description">
+                {customCount >= MAX_CUSTOM_SEASONS
+                  ? `${MAX_CUSTOM_SEASONS} added festivals is the limit.`
+                  : "Name and dates first; colors and ornament images come next."}
+              </p>
+            )}
+          </div>
+
+          <div className="wp-season-master">
+            <ul className="wp-season-list">
+              {seasons.items.map((item, index) => {
+                const covered =
+                  seasons.mode === "schedule" &&
+                  active &&
+                  active.id !== item.id &&
+                  matches.some((match) => match.id === item.id);
+                const forcedWhileOff =
+                  seasons.mode === "manual" && active?.id === item.id && !item.enabled;
+                const notice = forcedWhileOff
+                  ? "Forced on, so the switch is ignored until you follow the calendar."
+                  : covered && active
+                    ? `${seasonName(active)} is higher, so it wins today.`
+                    : null;
+                return (
+                  <SeasonListRow
+                    key={item.id}
+                    item={item}
+                    rank={index + 1}
+                    kind={isCustomSeasonId(item.id) ? "custom" : "builtin"}
+                    selected={selectedId === item.id}
+                    showing={active?.id === item.id}
+                    ended={datedWindowEnded(item, parts)}
+                    previewing={previewId === item.id}
+                    previewDate={previewDate ?? null}
+                    notice={notice}
+                    countdown={seasonCountdown(item, parts)}
+                    overlap={Boolean(covered)}
+                    today={parts}
+                    canMoveUp={index > 0}
+                    canMoveDown={index < seasons.items.length - 1}
+                    onSelect={() => selectSeason(item.id)}
+                    onToggle={(enabled) => updateItem(item.id, { enabled })}
+                    onPreview={() => onPreviewSeason?.(item.id, { openTab: true })}
+                    onMoveUp={() => moveItem(item.id, -1)}
+                    onMoveDown={() => moveItem(item.id, 1)}
+                  />
+                );
+              })}
+            </ul>
+
+            <details className="wp-season-overview">
+              <summary>
+                <span>Year overview</span>
+                <span className="wp-season-overview-hint">Windows in {parts.year}</span>
+              </summary>
+              <SeasonCalendar
+                items={seasons.items}
+                parts={parts}
+                previewDate={previewDate ?? null}
+                onPreviewDate={(iso) => onPreviewDate?.(iso)}
               />
-              {label}
-            </label>
-          ))}
-        </div>
-      </fieldset>
+            </details>
+          </div>
 
-      {seasons.mode === "manual" ? (
-        <div className="wp-season-field">
-          <label htmlFor="season-force">Force</label>
-          <select
-            id="season-force"
-            className="wp-select"
-            value={seasons.manualId ?? ""}
-            onChange={(event) =>
-              update({ manualId: event.target.value || null })
-            }
-          >
-            <option value="">None</option>
-            {seasons.items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {seasonName(item)}
-              </option>
-            ))}
-          </select>
-          <span className="wp-description">Ignores the dates. The calendar still uses the on/off switch.</span>
-        </div>
-      ) : null}
-
-      {seasons.mode === "schedule" ? (
-        <div className="wp-season-field">
-          <label htmlFor="season-zone">Timezone</label>
-          <select
-            id="season-zone"
-            className="wp-select"
-            value={seasons.timezone}
-            onChange={(event) => update({ timezone: event.target.value })}
-          >
-            {zones.map((zone) => (
-              <option key={zone} value={zone}>
-                {zone.replaceAll("_", " ")}
-              </option>
-            ))}
-          </select>
-          <span className="wp-description">Dates are read in this timezone. The first matching card is the one that shows.</span>
-        </div>
-      ) : null}
-
-      {seasons.mode === "schedule" && matches.length > 1 ? (
-        <p className="wp-season-note">
-          More than one season matches today. {seasonName(matches[0])} is the one that shows.
-        </p>
-      ) : null}
-
-      <SeasonAiPanel
-        items={seasons.items}
-        selectedId={aiTargetId}
-        onSelect={chooseSeason}
-        onApply={applyGenerated}
-      />
-
-      <div className="wp-season-add">
-        <button
-          type="button"
-          className="wp-btn wp-btn-primary"
-          disabled={customCount >= MAX_CUSTOM_SEASONS}
-          onClick={addFestival}
-        >
-          Add festival
-        </button>
-        <p className="wp-description">
-          {customCount >= MAX_CUSTOM_SEASONS
-            ? `${MAX_CUSTOM_SEASONS} added festivals is the limit.`
-            : "Name, dates, colors, and ornament images. Save to publish."}
-        </p>
-      </div>
-
-      <div className="wp-season-grid">
-        {seasons.items.map((item) => {
-          const covered =
-            seasons.mode === "schedule" &&
-            active &&
-            active.id !== item.id &&
-            matches.some((match) => match.id === item.id);
-          const forcedWhileOff = seasons.mode === "manual" && active?.id === item.id && !item.enabled;
-          const notice = forcedWhileOff
-            ? "Forced on, so the switch is ignored until you follow the calendar."
-            : covered && active
-              ? `${seasonName(active)} is ahead of this one today.`
-              : null;
-          return (
-            <SeasonSummaryCard
-              key={item.id}
-              item={item}
-              showing={active?.id === item.id}
-              ended={datedWindowEnded(item, parts)}
-              open={openId === item.id}
-              previewing={previewId === item.id}
-              notice={notice}
-              onToggle={(enabled) => updateItem(item.id, { enabled })}
-              onEdit={() => {
-                const next = openId === item.id ? null : item.id;
-                setOpenId(next);
-                if (next) {
-                  setAiId(next);
-                  onPreviewSeason?.(next);
+          <div className="wp-season-detail" id="season-editor">
+            {selectedItem ? (
+              <SeasonEditor
+                item={selectedItem}
+                ornaments={seasons.ornaments ?? []}
+                ended={datedWindowEnded(selectedItem, parts)}
+                year={parts.year}
+                onChange={(patch) => updateItem(selectedItem.id, patch)}
+                onPalette={(palette) => changePalette(selectedItem.id, palette)}
+                onImages={(images) => changeImages(selectedItem.id, images)}
+                onClose={() => setSelectedId(null)}
+                onPreview={() => onPreviewSeason?.(selectedItem.id, { openTab: true })}
+                onOpenCatalog={() => setCatalogOpen(true)}
+                onRemove={
+                  isCustomSeasonId(selectedItem.id)
+                    ? () => removeFestival(selectedItem.id)
+                    : undefined
                 }
-              }}
-              onPreview={() => onPreviewSeason?.(item.id, { openTab: true })}
-            />
-          );
-        })}
-      </div>
-
-      {openItem ? (
-        <div ref={editorRef}>
-          <SeasonEditor
-            item={openItem}
-            ended={datedWindowEnded(openItem, parts)}
-            year={parts.year}
-            onChange={(patch) => updateItem(openItem.id, patch)}
-            onPalette={(palette) => changePalette(openItem.id, palette)}
-            onImages={(images) => changeImages(openItem.id, images)}
-            onClose={() => setOpenId(null)}
-            onPreview={() => onPreviewSeason?.(openItem.id, { openTab: true })}
-            onRemove={isCustomSeasonId(openItem.id) ? () => removeFestival(openItem.id) : undefined}
-          />
+              />
+            ) : (
+              <div className="wp-season-detail-empty">
+                <p className="wp-palette-column-title">No season selected</p>
+                <p className="wp-description">
+                  Pick a season from the list to edit its dates, palette, and ornaments.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
+      </Metabox>
+
+      {catalogOpen ? (
+        <SeasonCatalogDrawer
+          data={data}
+          setData={setData}
+          onClose={() => setCatalogOpen(false)}
+        />
       ) : null}
-    </Metabox>
+    </>
   );
 }

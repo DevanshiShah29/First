@@ -8,37 +8,37 @@ import { Field, TextArea } from "../fields";
 import { seasonName } from "./season-labels";
 
 /**
- * Generate with AI for one festive season. Writes the palette.
- * @example <SeasonAiPanel items={items} selectedId="diwali" onSelect={setId} onApply={apply} />
+ * Generate with AI for the season open in the editor. Writes its palette.
+ * The note is controlled so switching seasons keeps each season's draft note.
+ * @example <SeasonAiPanel item={item} note={note} onNote={setNote} onApply={applyPalette} />
  */
 export function SeasonAiPanel({
-  items,
-  selectedId,
-  onSelect,
+  item,
+  note,
+  onNote,
   onApply,
 }: {
-  items: SeasonConfig[];
-  selectedId: SeasonConfig["id"];
-  onSelect: (id: SeasonConfig["id"]) => void;
-  onApply: (id: SeasonConfig["id"], palette: SeasonPalette) => void;
+  item: SeasonConfig;
+  note: string;
+  onNote: (note: string) => void;
+  onApply: (palette: SeasonPalette) => void;
 }) {
-  const item = items.find((season) => season.id === selectedId) ?? items[0];
-  const [note, setNote] = useState("");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasNote = Boolean(note.trim());
+  const name = seasonName(item);
 
   /**
-   * Requests a new palette, then writes it onto the season.
+   * Requests a new palette, then writes it onto the open season.
    * @example void onGenerate() // Promise
    */
   async function onGenerate() {
-    if (!item || generating) return;
+    if (generating) return;
     setError(null);
     setGenerating(true);
     const result = await generateSeasonLook({
       seasonId: item.id,
-      name: seasonName(item),
+      name,
       note,
       palette: item.palette,
     });
@@ -47,22 +47,20 @@ export function SeasonAiPanel({
       setError(result.error);
       return;
     }
-    onApply(item.id, result.data.palette);
+    onApply(result.data.palette);
   }
-
-  if (!item) return null;
 
   return (
     <div className="wp-ai-stack wp-season-ai">
       <AiFormSection
         step={1}
-        title="Sources for AI"
-        description="Uses this season and its current colors. A look note is optional."
+        title="Generate a palette"
+        description={`Restyle ${name} from its current colors. A look note is optional.`}
       >
         <ul className="wp-ai-source-summary">
           <li>
             <strong>Season</strong>
-            <span>{seasonName(item)}</span>
+            <span>{name}</span>
           </li>
           <li>
             <strong>Current palette</strong>
@@ -73,23 +71,14 @@ export function SeasonAiPanel({
         </ul>
         <table className="wp-form-table">
           <tbody>
-            <Field label="Season">
-              <select
-                className="wp-select"
-                value={item.id}
-                onChange={(event) => onSelect(event.target.value)}
-              >
-                {items.map((season) => (
-                  <option key={season.id} value={season.id}>
-                    {seasonName(season)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Look note" wide hint="Optional. Leave blank to restyle this season from its current colors.">
+            <Field
+              label="Look note"
+              wide
+              hint="Optional. Leave blank to restyle this season from its current colors."
+            >
               <TextArea
                 value={note}
-                onChange={setNote}
+                onChange={onNote}
                 rows={3}
                 placeholder="e.g. Softer gold, less maroon"
               />
@@ -100,7 +89,7 @@ export function SeasonAiPanel({
 
       <AiGeneratePanel
         basisItems={[
-          { label: seasonName(item), ready: true },
+          { label: name, ready: true },
           { label: "Current palette", ready: true },
           { label: "Look note", ready: hasNote, optional: true },
         ]}

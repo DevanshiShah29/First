@@ -174,10 +174,11 @@ export function useCmsNavigation(
           { label: "Dashboard", onClick: () => go("dashboard") },
           { label: "Seasons", current: true },
         ];
+      case "pages":
       case "titles":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },
-          { label: "Page titles", current: true },
+          { label: "Pages", current: true },
         ];
       case "experience":
         return [

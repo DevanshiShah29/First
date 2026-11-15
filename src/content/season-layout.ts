@@ -4,6 +4,12 @@
  * doorway — instead of the same scatter across the page.
  */
 
+import {
+  defaultOrnamentPosition,
+  VALID_ORNAMENT_POSITIONS,
+  type OrnamentPosition,
+} from "@/content/seasons";
+
 export type SeasonMotif =
   | "garland"
   | "lights"
@@ -39,6 +45,7 @@ export type OrnamentSpot = {
   corner: "tl" | "tr" | "bl" | "br" | null;
   shiftX: string;
   shiftY: string;
+  customStyle?: Partial<SpotStyle>;
 };
 
 export type SpotStyle = {
@@ -122,6 +129,215 @@ export function ornamentSpots(seasonId: string, count: number): OrnamentSpot[] {
 }
 
 /**
+ * Creates one spot for a user-chosen screen position.
+ * @example spotForPosition("top-left", 0, 1, 0) // OrnamentSpot
+ */
+export function spotForPosition(
+  pos: OrnamentPosition,
+  slot: number,
+  totalInPos: number,
+  index: number,
+): OrnamentSpot {
+  const delayVal = delay(index);
+  switch (pos) {
+    case "top-left":
+      return {
+        motif: "frame",
+        edge: "top",
+        side: "left",
+        along: 4,
+        drop: 0.35,
+        size: slot === 0 ? "md" : "sm",
+        motion: "sway",
+        delay: delayVal,
+        quiet: slot >= 2,
+        anchor: "corner",
+        corner: "tl",
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          top: "calc(var(--header-h) + 0.35rem)",
+          left: `calc(0.8rem + ${slot * 3.5}rem)`,
+        },
+      };
+    case "top-right":
+      return {
+        motif: "frame",
+        edge: "top",
+        side: "right",
+        along: 4,
+        drop: 0.35,
+        size: slot === 0 ? "md" : "sm",
+        motion: "sway",
+        delay: delayVal,
+        quiet: slot >= 2,
+        anchor: "corner",
+        corner: "tr",
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          top: "calc(var(--header-h) + 0.35rem)",
+          right: `calc(0.8rem + ${slot * 3.5}rem)`,
+        },
+      };
+    case "top-center":
+      return {
+        motif: "garland",
+        edge: "top",
+        side: "none",
+        along: 50,
+        drop: 0.35,
+        size: "md",
+        motion: "sway",
+        delay: delayVal,
+        quiet: slot >= 3,
+        anchor: "rim",
+        corner: null,
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          top: "calc(var(--header-h) + 0.35rem)",
+          left: `calc(50% - 1.5rem + ${(slot - (totalInPos - 1) / 2) * 3.5}rem)`,
+        },
+      };
+    case "bottom-left":
+      return {
+        motif: "diyas",
+        edge: "bottom",
+        side: "left",
+        along: 4,
+        drop: 0.2,
+        size: slot === 0 ? "md" : "sm",
+        motion: "flicker",
+        delay: delayVal,
+        quiet: slot >= 2,
+        anchor: "corner",
+        corner: "bl",
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          bottom: "0.75rem",
+          left: `calc(0.8rem + ${slot * 3.5}rem)`,
+        },
+      };
+    case "bottom-right":
+      return {
+        motif: "diyas",
+        edge: "bottom",
+        side: "right",
+        along: 4,
+        drop: 0.2,
+        size: slot === 0 ? "md" : "sm",
+        motion: "flicker",
+        delay: delayVal,
+        quiet: slot >= 2,
+        anchor: "corner",
+        corner: "br",
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          bottom: "0.75rem",
+          right: `calc(0.8rem + ${slot * 3.5}rem)`,
+        },
+      };
+    case "bottom-center":
+      return {
+        motif: "diyas",
+        edge: "bottom",
+        side: "none",
+        along: 50,
+        drop: 0.2,
+        size: "md",
+        motion: "flicker",
+        delay: delayVal,
+        quiet: slot >= 3,
+        anchor: "rim",
+        corner: null,
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          bottom: "0.75rem",
+          left: `calc(50% - 1.5rem + ${(slot - (totalInPos - 1) / 2) * 3.5}rem)`,
+        },
+      };
+    case "left-center":
+      return {
+        motif: "doorway",
+        edge: "left",
+        side: "none",
+        along: 50,
+        drop: 0,
+        size: "md",
+        motion: "sway",
+        delay: delayVal,
+        quiet: slot >= 2,
+        anchor: "rim",
+        corner: null,
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          left: "0.75rem",
+          top: `calc(50% - 1.5rem + ${(slot - (totalInPos - 1) / 2) * 4}rem)`,
+        },
+      };
+    case "right-center":
+      return {
+        motif: "doorway",
+        edge: "right",
+        side: "none",
+        along: 50,
+        drop: 0,
+        size: "md",
+        motion: "sway",
+        delay: delayVal,
+        quiet: slot >= 2,
+        anchor: "rim",
+        corner: null,
+        shiftX: "0px",
+        shiftY: "0px",
+        customStyle: {
+          right: "0.75rem",
+          top: `calc(50% - 1.5rem + ${(slot - (totalInPos - 1) / 2) * 4}rem)`,
+        },
+      };
+  }
+}
+
+/**
+ * Places ornament images according to user-selected positions.
+ * @example positionedOrnamentSpots(["/a.png"], { "/a.png": "top-right" })
+ */
+export function positionedOrnamentSpots(
+  photos: string[],
+  positions?: Record<string, OrnamentPosition>,
+): OrnamentSpot[] {
+  if (!photos.length) return [];
+
+  const assigned = photos.map((src, index) => {
+    const pos =
+      positions?.[src] && VALID_ORNAMENT_POSITIONS.has(positions[src])
+        ? positions[src]
+        : defaultOrnamentPosition(index);
+    return { src, pos, index };
+  });
+
+  const counts: Record<string, number> = {};
+  for (const item of assigned) {
+    counts[item.pos] = (counts[item.pos] ?? 0) + 1;
+  }
+
+  const slots: Record<string, number> = {};
+
+  return assigned.map(({ pos, index }) => {
+    const slot = slots[pos] ?? 0;
+    slots[pos] = slot + 1;
+    const totalInPos = counts[pos] ?? 1;
+
+    return spotForPosition(pos, slot, totalInPos, index);
+  });
+}
+
+/**
  * Inline position for one spot. Left and right rims stay below the header.
  * @example spotStyle(ornamentSpots("christmas", 1)[0]).top // "calc(var(--header-h) + 0.15rem)"
  */
@@ -132,6 +348,10 @@ export function spotStyle(spot: OrnamentSpot): SpotStyle {
       : spot.motion === "burst"
         ? { animationDelay: spot.delay, "--burst-x": spot.shiftX, "--burst-y": spot.shiftY }
         : { animationDelay: spot.delay };
+
+  if (spot.customStyle) {
+    return { ...motion, ...spot.customStyle };
+  }
 
   if (spot.edge === "top") {
     const y = { top: `calc(var(--header-h) + ${spot.drop}rem)` };

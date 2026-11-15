@@ -114,7 +114,12 @@ export default function AdminPreviewPage() {
         <>
           <style dangerouslySetInnerHTML={{ __html: themeCss(themeWithSeason(preview.content.theme, season)) }} />
           {season?.intensity === "full" ? (
-            <SeasonLayer season={season.id} images={season.ornamentImages} placement="preview" />
+            <SeasonLayer
+              season={season.id}
+              images={season.ornamentImages}
+              positions={season.ornamentPositions}
+              placement="preview"
+            />
           ) : null}
           {preview.section === "memories" ? null : (
             <Cursor

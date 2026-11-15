@@ -2,21 +2,28 @@
 
 import { usePathname } from "next/navigation";
 import { useState, type CSSProperties } from "react";
-import { motifFor, ornamentSpots, spotStyle, type OrnamentSpot } from "@/content/season-layout";
-import { seasonOrnamentImageUrl } from "@/content/seasons";
+import {
+  motifFor,
+  positionedOrnamentSpots,
+  spotStyle,
+  type OrnamentSpot,
+} from "@/content/season-layout";
+import { seasonOrnamentImageUrl, type OrnamentPosition } from "@/content/seasons";
 
 /**
- * Ornament images for the active season, placed on that festival's edge.
+ * Ornament images for the active season, placed on chosen positions or festival edges.
  * Clicks pass through. The admin shell skips them; the preview iframe opts in.
  * @example <SeasonLayer season="diwali" images={["/uploads/artifacts/diya.png"]} placement="preview" />
  */
 export function SeasonLayer({
   season,
   images = [],
+  positions,
   placement = "site",
 }: {
   season: string;
   images?: string[];
+  positions?: Record<string, OrnamentPosition>;
   placement?: "site" | "preview";
 }) {
   const pathname = usePathname();
@@ -26,7 +33,7 @@ export function SeasonLayer({
     .filter((src): src is string => Boolean(src));
   if (!photos.length) return null;
   const motif = motifFor(season);
-  const spots = ornamentSpots(season, photos.length);
+  const spots = positionedOrnamentSpots(photos, positions);
   return (
     <div className={`season-layer season-layer--motif-${motif}`} data-motif={motif} aria-hidden="true">
       {photos.map((src, index) => (

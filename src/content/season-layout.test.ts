@@ -4,6 +4,7 @@ import {
   motifFor,
   ornamentPlacementCopy,
   ornamentSpots,
+  positionedOrnamentSpots,
   spotStyle,
   type OrnamentSpot,
 } from "./season-layout";
@@ -162,5 +163,74 @@ describe("ornamentPlacementCopy", () => {
     }
     assert.match(ornamentPlacementCopy("fest-ab12cd34"), /corners/);
     assert.match(ornamentPlacementCopy("fest-ab12cd34"), /still/);
+  });
+});
+
+describe("positionedOrnamentSpots", () => {
+  it("returns an empty array when there are no photos", () => {
+    assert.deepEqual(positionedOrnamentSpots([]), []);
+  });
+
+  it("places ornaments in their chosen positions", () => {
+    const photos = ["/a.png", "/b.png", "/c.png", "/d.png"];
+    const positions = {
+      "/a.png": "top-left" as const,
+      "/b.png": "bottom-right" as const,
+      "/c.png": "top-center" as const,
+      "/d.png": "left-center" as const,
+    };
+    const spots = positionedOrnamentSpots(photos, positions);
+    assert.equal(spots.length, 4);
+
+    // /a.png in top-left
+    assert.equal(spots[0]?.edge, "top");
+    assert.equal(spots[0]?.corner, "tl");
+    assert.equal(spots[0]?.anchor, "corner");
+    const styleA = spotStyle(spots[0]!);
+    assert.match(styleA.top ?? "", /var\(--header-h\)/);
+    assert.match(styleA.left ?? "", /0\.8rem/);
+
+    // /b.png in bottom-right
+    assert.equal(spots[1]?.edge, "bottom");
+    assert.equal(spots[1]?.corner, "br");
+    assert.equal(spots[1]?.anchor, "corner");
+    const styleB = spotStyle(spots[1]!);
+    assert.match(styleB.bottom ?? "", /0\.75rem/);
+    assert.match(styleB.right ?? "", /0\.8rem/);
+
+    // /c.png in top-center
+    assert.equal(spots[2]?.edge, "top");
+    assert.equal(spots[2]?.anchor, "rim");
+    assert.equal(spots[2]?.corner, null);
+    const styleC = spotStyle(spots[2]!);
+    assert.match(styleC.left ?? "", /50%/);
+
+    // /d.png in left-center
+    assert.equal(spots[3]?.edge, "left");
+    assert.equal(spots[3]?.anchor, "rim");
+    assert.equal(spots[3]?.corner, null);
+    const styleD = spotStyle(spots[3]!);
+    assert.match(styleD.top ?? "", /50%/);
+  });
+
+  it("offsets multiple ornaments configured in the same position", () => {
+    const photos = ["/a.png", "/b.png"];
+    const positions = {
+      "/a.png": "top-left" as const,
+      "/b.png": "top-left" as const,
+    };
+    const spots = positionedOrnamentSpots(photos, positions);
+    const styleA = spotStyle(spots[0]!);
+    const styleB = spotStyle(spots[1]!);
+    assert.notEqual(styleA.left, styleB.left);
+  });
+
+  it("falls back to default distribution when positions are omitted", () => {
+    const photos = ["/a.png", "/b.png"];
+    const spots = positionedOrnamentSpots(photos);
+    assert.equal(spots.length, 2);
+    // 0 defaults to top-right, 1 defaults to top-left
+    assert.equal(spots[0]?.corner, "tr");
+    assert.equal(spots[1]?.corner, "tl");
   });
 });

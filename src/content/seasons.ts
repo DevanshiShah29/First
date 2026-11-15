@@ -29,6 +29,50 @@ export const SEASON_TIMEZONES = [
 
 export type SeasonMode = "off" | "manual" | "schedule";
 
+export type OrnamentPosition =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "left-center"
+  | "right-center"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
+
+export const ORNAMENT_POSITIONS: { id: OrnamentPosition; label: string; icon: string }[] = [
+  { id: "top-left", label: "Top Left", icon: "↖" },
+  { id: "top-center", label: "Top Center", icon: "↑" },
+  { id: "top-right", label: "Top Right", icon: "↗" },
+  { id: "left-center", label: "Left Side", icon: "←" },
+  { id: "right-center", label: "Right Side", icon: "→" },
+  { id: "bottom-left", label: "Bottom Left", icon: "↙" },
+  { id: "bottom-center", label: "Bottom Center", icon: "↓" },
+  { id: "bottom-right", label: "Bottom Right", icon: "↘" },
+];
+
+export const VALID_ORNAMENT_POSITIONS = new Set<string>(
+  ORNAMENT_POSITIONS.map((pos) => pos.id),
+);
+
+export const DEFAULT_ORNAMENT_POSITIONS: OrnamentPosition[] = [
+  "top-right",
+  "top-left",
+  "bottom-right",
+  "bottom-left",
+  "top-center",
+  "bottom-center",
+  "right-center",
+  "left-center",
+];
+
+export function defaultOrnamentPosition(index: number): OrnamentPosition {
+  return DEFAULT_ORNAMENT_POSITIONS[index % DEFAULT_ORNAMENT_POSITIONS.length];
+}
+
+export function isOrnamentPosition(value: unknown): value is OrnamentPosition {
+  return typeof value === "string" && VALID_ORNAMENT_POSITIONS.has(value);
+}
+
 /** Ornament photos per season. Extra files are dropped on save. */
 export const MAX_SEASON_ORNAMENT_IMAGES = 12;
 
@@ -56,6 +100,8 @@ export type SeasonConfig = {
   ornamentImages: string[];
   /** Optional ornament image URL to use as cursor when this festival/season is live. */
   cursorOrnament?: string | null;
+  /** User-chosen screen positions for each ornament image address. */
+  ornamentPositions?: Record<string, OrnamentPosition>;
 };
 
 export type SeasonsSettings = {
@@ -65,6 +111,8 @@ export type SeasonsSettings = {
   items: SeasonConfig[];
   /** Shared ornament catalogue. Seasons map to these by image URL. */
   ornaments: SeasonOrnament[];
+  /** Presets or festivals deleted by the user so they stay removed on save. */
+  deletedIds?: string[];
 };
 
 /** Extra festivals beyond Halloween, Diwali, and Christmas. */
@@ -142,6 +190,7 @@ function configFromPreset(preset: SeasonPreset, enabled: boolean): SeasonConfig 
     palette: clonePalette(preset.palette),
     ornamentImages: [],
     cursorOrnament: null,
+    ornamentPositions: {},
   };
 }
 
@@ -167,6 +216,7 @@ export function createCustomSeason(now: Date, timeZone: string): SeasonConfig {
     palette: clonePalette(CUSTOM_SEASON_PALETTE),
     ornamentImages: [],
     cursorOrnament: null,
+    ornamentPositions: {},
   };
 }
 
@@ -425,8 +475,11 @@ export function parseSeasons(value: unknown): SeasonsSettings {
   }
 
   // Any built-in pack that was not stored still exists, appended after the saved order.
+  const deletedIds = Array.isArray(row.deletedIds)
+    ? row.deletedIds.map((id) => str(id)).filter(Boolean)
+    : [];
   for (const preset of SEASON_PRESETS) {
-    if (seen.has(preset.id)) continue;
+    if (seen.has(preset.id) || deletedIds.includes(preset.id)) continue;
     items.push(configFromPreset(preset, true));
     seen.add(preset.id);
   }
@@ -437,7 +490,27 @@ export function parseSeasons(value: unknown): SeasonsSettings {
     timezone: isTimeZone(timezoneRaw) ? timezoneRaw : DEFAULT_SEASON_TIMEZONE,
     items,
     ornaments: parseSeasonOrnaments(row.ornaments),
+    deletedIds,
   };
+}
+
+/**
+ * Reads user-chosen positions for ornament images, dropping unmapped or invalid positions.
+ * @example parseOrnamentPositions({ "/a.png": "top-left" }, ["/a.png"]) // { "/a.png": "top-left" }
+ */
+export function parseOrnamentPositions(
+  value: unknown,
+  allowedImages: string[],
+): Record<string, OrnamentPosition> {
+  const row = asRecord(value);
+  const result: Record<string, OrnamentPosition> = {};
+  for (const img of allowedImages) {
+    const raw = str(row[img]).trim();
+    if (isOrnamentPosition(raw)) {
+      result[img] = raw;
+    }
+  }
+  return result;
 }
 
 /**
@@ -449,15 +522,17 @@ function parseBuiltInSeason(entry: Record<string, unknown>, preset: SeasonPreset
   const intensity: SeasonIntensity = intensityRaw === "subtle" ? "subtle" : "full";
   const ornamentImages = parseOrnamentImages(entry.ornamentImages);
   const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
+  const ornamentPositions = parseOrnamentPositions(entry.ornamentPositions, ornamentImages);
   return {
     id: preset.id,
-    name: preset.name,
+    name: parseSeasonName(entry.name) || preset.name,
     enabled: bool(entry.enabled, true),
     schedule: parseSchedule(entry.schedule, preset),
     intensity: intensityRaw === "full" || intensityRaw === "subtle" ? intensity : preset.intensity,
     palette: parseSeasonPalette(entry.palette, preset.palette),
     ornamentImages,
     cursorOrnament: rawCursor && ornamentImages.includes(rawCursor) ? rawCursor : null,
+    ornamentPositions,
   };
 }
 
@@ -473,6 +548,7 @@ function parseCustomSeason(entry: Record<string, unknown>): SeasonConfig | null 
   const intensityRaw = str(entry.intensity);
   const ornamentImages = parseOrnamentImages(entry.ornamentImages);
   const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
+  const ornamentPositions = parseOrnamentPositions(entry.ornamentPositions, ornamentImages);
   return {
     id,
     name: parseSeasonName(entry.name),
@@ -482,6 +558,7 @@ function parseCustomSeason(entry: Record<string, unknown>): SeasonConfig | null 
     palette: parseSeasonPalette(entry.palette, CUSTOM_SEASON_PALETTE),
     ornamentImages,
     cursorOrnament: rawCursor && ornamentImages.includes(rawCursor) ? rawCursor : null,
+    ornamentPositions,
   };
 }
 

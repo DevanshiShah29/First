@@ -78,16 +78,23 @@ export function SeasonOrnamentCatalog({
       );
       const items =
         oldUrl && oldUrl !== imageUrl
-          ? currentSeasons.items.map((item) =>
-              item.ornamentImages.includes(oldUrl)
-                ? {
-                    ...item,
-                    ornamentImages: Array.from(
-                      new Set(item.ornamentImages.map((src) => (src === oldUrl ? imageUrl : src))),
-                    ),
-                  }
-                : item,
-            )
+          ? currentSeasons.items.map((item) => {
+              if (!item.ornamentImages.includes(oldUrl)) return item;
+              const ornamentPositions = item.ornamentPositions
+                ? { ...item.ornamentPositions }
+                : {};
+              if (ornamentPositions[oldUrl]) {
+                ornamentPositions[imageUrl] = ornamentPositions[oldUrl];
+                delete ornamentPositions[oldUrl];
+              }
+              return {
+                ...item,
+                ornamentImages: Array.from(
+                  new Set(item.ornamentImages.map((src) => (src === oldUrl ? imageUrl : src))),
+                ),
+                ornamentPositions,
+              };
+            })
           : currentSeasons.items;
       return {
         ...current,
@@ -107,14 +114,18 @@ export function SeasonOrnamentCatalog({
     setData((current) => {
       const currentSeasons: SeasonsSettings = current.site.seasons;
       const items = ornament.imageUrl
-        ? currentSeasons.items.map((item) =>
-            item.ornamentImages.includes(ornament.imageUrl)
-              ? {
-                  ...item,
-                  ornamentImages: item.ornamentImages.filter((src) => src !== ornament.imageUrl),
-                }
-              : item,
-          )
+        ? currentSeasons.items.map((item) => {
+            if (!item.ornamentImages.includes(ornament.imageUrl)) return item;
+            const ornamentPositions = item.ornamentPositions
+              ? { ...item.ornamentPositions }
+              : {};
+            delete ornamentPositions[ornament.imageUrl];
+            return {
+              ...item,
+              ornamentImages: item.ornamentImages.filter((src) => src !== ornament.imageUrl),
+              ornamentPositions,
+            };
+          })
         : currentSeasons.items;
       return {
         ...current,
@@ -267,7 +278,7 @@ export function SeasonOrnamentCatalog({
             <th style={{ width: 64 }}>Preview</th>
             <th>Ornament</th>
             <th>Used in</th>
-            <th style={{ textAlign: "right" }}>Image</th>
+            <th style={{ textAlign: "right" }}>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -307,17 +318,6 @@ export function SeasonOrnamentCatalog({
                       aria-label="Ornament name"
                       onChange={(event) => patchOrnament(item.id, { name: event.target.value })}
                     />
-                    <div className="wp-row-actions">
-                      <ConfirmButton
-                        className="trash"
-                        title={`Remove “${item.name || "this ornament"}”?`}
-                        message="It is removed from the catalog and from every season that uses it. Save to update the live site."
-                        confirmLabel="Remove"
-                        onConfirm={() => removeOrnament(item)}
-                      >
-                        Trash
-                      </ConfirmButton>
-                    </div>
                   </td>
                   <td>
                     {mapped.length ? (
@@ -334,26 +334,38 @@ export function SeasonOrnamentCatalog({
                     )}
                   </td>
                   <td style={{ textAlign: "right" }}>
-                    <label className="wp-skill-file" style={{ margin: 0 }}>
-                      <span className="wp-btn wp-btn-small">
-                        {uploadingId === item.id
-                          ? "…"
-                          : item.imageUrl
-                            ? "Replace"
-                            : "+ Image"}
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
+                    <div className="wp-season-catalog-row-actions">
+                      <label className="wp-skill-file" style={{ margin: 0 }}>
+                        <span className="wp-btn wp-btn-small">
+                          {uploadingId === item.id
+                            ? "…"
+                            : item.imageUrl
+                              ? "Replace"
+                              : "+ Image"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={busy}
+                          aria-label={`Upload image for ${item.name || "ornament"}`}
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            if (file) void uploadImage(file, item);
+                            event.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <ConfirmButton
+                        className="wp-btn wp-btn-small wp-btn-danger-outline"
+                        title={`Remove “${item.name || "this ornament"}”?`}
+                        message="It is removed from the catalog and from every season that uses it. Save to update the live site."
+                        confirmLabel="Remove"
                         disabled={busy}
-                        aria-label={`Upload image for ${item.name || "ornament"}`}
-                        onChange={(event) => {
-                          const file = event.target.files?.[0];
-                          if (file) void uploadImage(file, item);
-                          event.target.value = "";
-                        }}
-                      />
-                    </label>
+                        onConfirm={() => removeOrnament(item)}
+                      >
+                        Trash
+                      </ConfirmButton>
+                    </div>
                   </td>
                 </tr>
               );

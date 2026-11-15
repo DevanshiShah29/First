@@ -5,9 +5,13 @@ import {
   createCustomSeason,
   CUSTOM_SEASON_PALETTE,
   DEFAULT_SEASONS,
+  defaultOrnamentPosition,
   inAnnualWindow,
   isCustomSeasonId,
+  isOrnamentPosition,
   MAX_CUSTOM_SEASONS,
+  ORNAMENT_POSITIONS,
+  parseOrnamentPositions,
   parseSeasons,
   resolveActiveCursorOrnament,
   resolveActiveSeason,
@@ -310,6 +314,72 @@ describe("parseSeasons", () => {
     assert.equal(halloween?.cursorOrnament, "/uploads/artifacts/bat.png");
     const christmas = parsed.items.find((item) => item.id === "christmas");
     assert.equal(christmas?.cursorOrnament, null);
+  });
+
+  it("keeps valid ornamentPositions matching ornamentImages and drops invalid ones", () => {
+    const parsed = parseSeasons({
+      items: [
+        {
+          id: "diwali",
+          ornamentImages: ["/uploads/artifacts/diya.png", "/uploads/artifacts/lantern.png"],
+          ornamentPositions: {
+            "/uploads/artifacts/diya.png": "bottom-left",
+            "/uploads/artifacts/lantern.png": "top-right",
+            "/uploads/artifacts/unmapped.png": "top-center",
+            "/uploads/artifacts/diya.png-bad": "invalid-position",
+          },
+        },
+      ],
+    });
+    const diwali = parsed.items.find((item) => item.id === "diwali");
+    assert.deepEqual(diwali?.ornamentPositions, {
+      "/uploads/artifacts/diya.png": "bottom-left",
+      "/uploads/artifacts/lantern.png": "top-right",
+    });
+  });
+
+  it("does not resurrect deleted presets when deletedIds is stored", () => {
+    const parsed = parseSeasons({
+      items: [{ id: "christmas" }],
+      deletedIds: ["halloween", "diwali"],
+    });
+    assert.equal(parsed.items.some((item) => item.id === "halloween"), false);
+    assert.equal(parsed.items.some((item) => item.id === "diwali"), false);
+    assert.equal(parsed.items.some((item) => item.id === "christmas"), true);
+  });
+});
+
+describe("parseOrnamentPositions", () => {
+  it("extracts positions only for allowed images with valid position ids", () => {
+    const result = parseOrnamentPositions(
+      {
+        "/a.png": "top-left",
+        "/b.png": "bottom-center",
+        "/c.png": "not-a-position",
+        "/d.png": "top-right",
+      },
+      ["/a.png", "/b.png", "/c.png"],
+    );
+    assert.deepEqual(result, {
+      "/a.png": "top-left",
+      "/b.png": "bottom-center",
+    });
+  });
+
+  it("validates ornament position identifiers", () => {
+    assert.equal(isOrnamentPosition("top-left"), true);
+    assert.equal(isOrnamentPosition("bottom-right"), true);
+    assert.equal(isOrnamentPosition("random"), false);
+    assert.equal(isOrnamentPosition(null), false);
+    assert.equal(ORNAMENT_POSITIONS.length, 8);
+  });
+
+  it("cycles through default positions by index", () => {
+    assert.equal(defaultOrnamentPosition(0), "top-right");
+    assert.equal(defaultOrnamentPosition(1), "top-left");
+    assert.equal(defaultOrnamentPosition(2), "bottom-right");
+    assert.equal(defaultOrnamentPosition(3), "bottom-left");
+    assert.equal(defaultOrnamentPosition(8), "top-right");
   });
 });
 

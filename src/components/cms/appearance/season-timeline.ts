@@ -51,3 +51,22 @@ export function seasonSegments(item: SeasonConfig, year: number): SeasonSegment[
   if (s > e) return null;
   return [{ start: s, end: e }];
 }
+
+/**
+ * True when two seasons have overlapping windows in `year`.
+ * @example seasonsOverlap(halloween, diwali, 2026) // false
+ */
+export function seasonsOverlap(a: SeasonConfig, b: SeasonConfig, year: number): boolean {
+  if (a.id === b.id) return false;
+  const segsA = seasonSegments(a, year);
+  const segsB = seasonSegments(b, year);
+  if (!segsA || !segsB) return false;
+  for (const sa of segsA) {
+    for (const sb of segsB) {
+      if (sa.start <= sb.end && sb.start <= sa.end) {
+        return true;
+      }
+    }
+  }
+  return false;
+}

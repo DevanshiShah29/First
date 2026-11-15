@@ -1,32 +1,30 @@
 "use client";
 
 import type { SeasonConfig } from "@/content/seasons";
-import { ConfirmButton } from "../components/ConfirmDialog";
 import { SeasonTrack } from "./SeasonTrack";
-import {
-  scheduleSummary,
-  seasonCardFlag,
-  seasonName,
-  type SeasonCardFlag,
-} from "./season-labels";
+import { scheduleSummary, seasonBadges, seasonName } from "./season-labels";
 import type { DayParts } from "./season-timeline";
 
-const FLAG_LABEL: Record<SeasonCardFlag, string> = {
-  showing: "Showing",
-  off: "Off",
-  ended: "Ended",
-  dates: "Check dates",
-};
+/**
+ * Converts a 3- or 6-digit hex code to an rgba() string.
+ */
+function hexToRgba(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
+  const r = parseInt(full.slice(0, 2), 16) || 0;
+  const g = parseInt(full.slice(2, 4), 16) || 0;
+  const b = parseInt(full.slice(4, 6), 16) || 0;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 /**
- * Master-list row: priority, status, dates, mini timeline, and switch.
- * Selecting the row opens its editor; the row itself keeps priority order.
+ * Master-list row: chronological rank, status badges, dates, mini timeline, switch, and preview button.
+ * Selecting the row opens its editor; rows are sorted by nearest date.
  * @example <SeasonListRow item={item} rank={1} selected onSelect={select} … />
  */
 export function SeasonListRow({
   item,
   rank,
-  kind,
   selected,
   showing,
   ended,
@@ -36,18 +34,12 @@ export function SeasonListRow({
   countdown,
   overlap,
   today,
-  canMoveUp,
-  canMoveDown,
   onSelect,
   onToggle,
   onPreview,
-  onMoveUp,
-  onMoveDown,
-  onDelete,
 }: {
   item: SeasonConfig;
   rank: number;
-  kind: "builtin" | "custom";
   selected: boolean;
   showing: boolean;
   ended: boolean;
@@ -57,23 +49,36 @@ export function SeasonListRow({
   countdown: string | null;
   overlap: boolean;
   today: DayParts;
-  canMoveUp: boolean;
-  canMoveDown: boolean;
   onSelect: () => void;
   onToggle: (enabled: boolean) => void;
   onPreview: () => void;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
-  onDelete?: () => void;
 }) {
   const name = seasonName(item);
   const inverted = item.schedule.kind === "dated" && item.schedule.start > item.schedule.end;
-  const flag = seasonCardFlag(item, showing, ended, inverted);
+  const badges = seasonBadges(item, showing, ended, inverted, overlap, today);
 
   return (
     <li
-      className={`wp-season-item${selected ? " is-selected" : ""}${showing ? " is-showing" : ""}`}
+      className={`wp-season-item${selected ? " is-selected" : ""}${showing ? " is-showing" : ""}${!item.enabled ? " is-off" : ""}`}
+      style={{
+        background: item.enabled
+          ? `linear-gradient(115deg, ${hexToRgba(item.palette.brandFrom, 0.12)} 0%, ${hexToRgba(item.palette.brandTo, 0.06)} 40%, #ffffff 80%)`
+          : undefined,
+        borderColor: selected
+          ? undefined
+          : item.enabled
+            ? hexToRgba(item.palette.brandFrom, 0.35)
+            : undefined,
+      }}
     >
+      <div
+        className="wp-season-color-bar"
+        style={{
+          background: `linear-gradient(180deg, ${item.palette.brandFrom}, ${item.palette.brandTo})`,
+        }}
+        aria-hidden="true"
+      />
+
       <button
         type="button"
         className="wp-season-item-main"
@@ -81,23 +86,36 @@ export function SeasonListRow({
         aria-controls="season-editor"
         onClick={onSelect}
       >
-        <span className="wp-season-rank" title="Priority — the first match wins" aria-label={`Priority ${rank}`}>
+        <span
+          className="wp-season-rank"
+          style={{
+            background: item.enabled
+              ? `linear-gradient(135deg, ${item.palette.brandFrom}, ${item.palette.brandTo})`
+              : undefined,
+            color: item.enabled ? "#ffffff" : undefined,
+          }}
+          title={`Order #${rank} by date`}
+          aria-label={`Order ${rank}`}
+        >
           {rank}
         </span>
         <span className="wp-season-item-copy">
           <span className="wp-season-item-title">
             <span className="wp-season-item-name">{name}</span>
-            <span className={`wp-season-kind is-${kind}`}>
-              {kind === "custom" ? "Festival" : "Built-in"}
-            </span>
-            {flag ? <span className={`wp-season-pill is-${flag}`}>{FLAG_LABEL[flag]}</span> : null}
-            {item.cursorOrnament ? (
-              <span className="wp-season-pill is-cursor" title="Ornament cursor configured">
-                Cursor
+            <span
+              className="wp-season-color-badge"
+              style={{
+                background: `linear-gradient(90deg, ${item.palette.brandFrom}, ${item.palette.brandTo})`,
+              }}
+              title={`Theme colors: ${item.palette.brandFrom} → ${item.palette.brandTo}`}
+              aria-label={`Theme colors: ${item.palette.brandFrom} to ${item.palette.brandTo}`}
+            />
+            {badges.map((b) => (
+              <span key={b.id} className={`wp-season-pill is-${b.id}`}>
+                {b.label}
               </span>
-            ) : null}
+            ))}
             {previewing ? <span className="wp-season-pill is-previewing">Preview</span> : null}
-            {overlap && !showing ? <span className="wp-season-pill is-overlap">Overlaps</span> : null}
           </span>
           <span className="wp-season-item-meta">
             {scheduleSummary(item.schedule)}
@@ -133,49 +151,15 @@ export function SeasonListRow({
           </span>
           {item.enabled ? "On" : "Off"}
         </button>
-        <div className="wp-season-item-move">
-          <button
-            type="button"
-            className="wp-btn wp-btn-small wp-btn-icon"
-            aria-label={`Move ${name} up`}
-            title="Move up (higher priority)"
-            disabled={!canMoveUp}
-            onClick={onMoveUp}
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            className="wp-btn wp-btn-small wp-btn-icon"
-            aria-label={`Move ${name} down`}
-            title="Move down"
-            disabled={!canMoveDown}
-            onClick={onMoveDown}
-          >
-            ↓
-          </button>
-          <button
-            type="button"
-            className="wp-btn wp-btn-small"
-            aria-label={`Preview ${name}`}
-            title="Show this season in preview"
-            onClick={onPreview}
-          >
-            Preview
-          </button>
-          {onDelete ? (
-            <ConfirmButton
-              className="wp-btn wp-btn-small wp-btn-danger-outline"
-              ariaLabel={`Delete ${name}`}
-              buttonTitle={`Delete ${name}`}
-              title={`Delete ${name}?`}
-              confirmLabel="Delete"
-              onConfirm={onDelete}
-            >
-              Delete
-            </ConfirmButton>
-          ) : null}
-        </div>
+        <button
+          type="button"
+          className="wp-btn wp-btn-small"
+          aria-label={`Preview ${name}`}
+          title="Show this season in preview"
+          onClick={onPreview}
+        >
+          Preview
+        </button>
       </div>
     </li>
   );

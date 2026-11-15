@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ornamentPlacementCopy } from "@/content/season-layout";
 import { getSeasonPreset } from "@/content/season-presets";
 import {
   defaultSeasonPalette,
@@ -34,7 +33,7 @@ function shiftYear(iso: string): string {
 /**
  * Dates, palette, and ornaments for the season selected in the master list.
  * Panels stay mounted while hidden so switching tabs keeps local drafts.
- * @example <SeasonEditor item={item} … onOpenCatalog={openCatalog} />
+ * @example <SeasonEditor item={item} … />
  */
 export function SeasonEditor({
   item,
@@ -46,7 +45,6 @@ export function SeasonEditor({
   onImages,
   onClose,
   onPreview,
-  onOpenCatalog,
   onRemove,
 }: {
   item: SeasonConfig;
@@ -58,7 +56,6 @@ export function SeasonEditor({
   onImages: (images: string[]) => void;
   onClose: () => void;
   onPreview: () => void;
-  onOpenCatalog: () => void;
   onRemove?: () => void;
 }) {
   const preset = getSeasonPreset(item.id);
@@ -71,7 +68,6 @@ export function SeasonEditor({
 
   /**
    * Rolls a dated window one year forward so it can run again.
-   * @example moveToNextYear() // void
    */
   const moveToNextYear = () => {
     if (item.schedule.kind !== "dated") return;
@@ -90,7 +86,9 @@ export function SeasonEditor({
         <div>
           <h3 className="wp-theme-card-name">Edit {name}</h3>
           <p className="wp-theme-card-desc">
-            {preset ? preset.description : "Set the name, dates, colors, and ornament images. Save to publish."}
+            {preset
+              ? preset.description
+              : "Set the name, dates, colors, and ornament images. Save to publish."}
           </p>
         </div>
         <div className="wp-theme-card-actions">
@@ -113,7 +111,11 @@ export function SeasonEditor({
         </div>
       </div>
 
-      <div className="wp-editor-tablist wp-season-editor-tabs" role="tablist" aria-label="Season editor sections">
+      <div
+        className="wp-editor-tablist wp-season-editor-tabs"
+        role="tablist"
+        aria-label="Season editor sections"
+      >
         {EDITOR_TABS.map((entry) => (
           <button
             key={entry.id}
@@ -138,43 +140,41 @@ export function SeasonEditor({
         className="wp-season-editor-panel"
         hidden={tab !== "dates"}
       >
-        {preset ? null : (
-          <label className="wp-season-name">
-            Name
-            <input
-              className="wp-input"
-              value={item.name}
-              maxLength={60}
-              placeholder="Festival"
-              aria-label="Festival name"
-              onChange={(event) => onChange({ name: event.target.value })}
-            />
-          </label>
-        )}
+        <label className="wp-season-name">
+          Festival name
+          <input
+            className="wp-input"
+            value={item.name}
+            maxLength={60}
+            placeholder={preset?.name ?? "Festival"}
+            aria-label="Festival name"
+            onChange={(event) => onChange({ name: event.target.value })}
+          />
+        </label>
 
-        {preset ? null : (
-          <fieldset className="wp-media-choice">
-            <legend>Dates</legend>
-            <div className="wp-seg">
-              {(
-                [
-                  ["annual", "Every year"],
-                  ["dated", "These dates"],
-                ] as const
-              ).map(([kind, label]) => (
-                <label key={kind} className={item.schedule.kind === kind ? "is-selected" : undefined}>
-                  <input
-                    type="radio"
-                    name={`season-dates-${item.id}`}
-                    checked={item.schedule.kind === kind}
-                    onChange={() => onChange({ schedule: scheduleOfKind(item.schedule, kind, year) })}
-                  />
-                  {label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-        )}
+        <fieldset className="wp-media-choice">
+          <legend>Dates</legend>
+          <div className="wp-seg">
+            {(
+              [
+                ["annual", "Every year"],
+                ["dated", "These dates"],
+              ] as const
+            ).map(([kind, label]) => (
+              <label key={kind} className={item.schedule.kind === kind ? "is-selected" : undefined}>
+                <input
+                  type="radio"
+                  name={`season-dates-${item.id}`}
+                  checked={item.schedule.kind === kind}
+                  onChange={() =>
+                    onChange({ schedule: scheduleOfKind(item.schedule, kind, year) })
+                  }
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         {item.schedule.kind === "annual" ? (
           <AnnualDates
@@ -221,6 +221,14 @@ export function SeasonEditor({
             <button type="button" className="wp-btn wp-btn-small" onClick={moveToNextYear}>
               Move to next year
             </button>
+            {" or "}
+            <button
+              type="button"
+              className="wp-btn wp-btn-small"
+              onClick={() => onChange({ schedule: scheduleOfKind(item.schedule, "annual", year) })}
+            >
+              Repeat every year
+            </button>
           </p>
         ) : null}
       </div>
@@ -261,7 +269,11 @@ export function SeasonEditor({
           onChange={(mode, next) => onPalette({ ...item.palette, [mode]: next })}
         />
         <div className="wp-theme-edit-actions">
-          <button type="button" className="wp-btn wp-btn-small" onClick={() => onPalette(defaultSeasonPalette(item.id))}>
+          <button
+            type="button"
+            className="wp-btn wp-btn-small"
+            onClick={() => onPalette(defaultSeasonPalette(item.id))}
+          >
             Reset palette
           </button>
         </div>
@@ -307,19 +319,32 @@ export function SeasonEditor({
           </div>
         </fieldset>
         <div className="wp-season-catalog-link">
-          <p className="wp-description">{ornamentPlacementCopy(item.id)}</p>
+          <p className="wp-description">
+            Choose the screen position for each ornament (corners, top header, bottom floor, or side edges).
+          </p>
           <p className="wp-description">
             Pick images from the shared catalog. Upload or rename them once, then reuse them here.
           </p>
-          <button type="button" className="wp-btn wp-btn-small" onClick={onOpenCatalog}>
-            Manage catalog
-          </button>
         </div>
         <SeasonOrnamentPicker
           images={item.ornamentImages}
+          positions={item.ornamentPositions ?? {}}
           ornaments={ornaments}
           cursorOrnament={item.cursorOrnament ?? null}
-          onImages={onImages}
+          onImages={(images) => {
+            const nextPositions: Record<string, import("@/content/seasons").OrnamentPosition> = {};
+            for (const img of images) {
+              if (item.ornamentPositions?.[img]) {
+                nextPositions[img] = item.ornamentPositions[img];
+              }
+            }
+            onChange({ ornamentImages: images, ornamentPositions: nextPositions });
+            onImages(images);
+          }}
+          onPositions={(ornamentPositions) => {
+            onChange({ ornamentPositions });
+            onPreview();
+          }}
           onCursorOrnament={(cursorOrnament) => onChange({ cursorOrnament })}
         />
       </div>
@@ -421,7 +446,11 @@ function joinMonthDay(month: number, day: number): string {
  * Switches a window between a repeating month-day and a dated year.
  * @example scheduleOfKind(schedule, "annual", 2026) // SeasonSchedule
  */
-function scheduleOfKind(schedule: SeasonSchedule, kind: SeasonSchedule["kind"], year: number): SeasonSchedule {
+function scheduleOfKind(
+  schedule: SeasonSchedule,
+  kind: SeasonSchedule["kind"],
+  year: number,
+): SeasonSchedule {
   if (schedule.kind === kind) return schedule;
   if (kind === "annual") {
     return { kind: "annual", start: schedule.start.slice(5), end: schedule.end.slice(5) };

@@ -3,8 +3,10 @@
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { ContentData } from "@/content/types";
 import { seasonForIsoDate } from "@/content/seasons";
+import { SeasonOrnamentCatalog } from "../appearance/SeasonOrnamentCatalog";
 import { SeasonsPanel } from "../appearance/SeasonsPanel";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { Metabox } from "../components/Metabox";
 import { EditorTabs } from "../preview/EditorTabs";
 import { LivePreviewShell } from "../preview/LivePreviewShell";
 
@@ -65,13 +67,25 @@ export function SeasonsScreen({
     <>
       <h1 className="wp-screen-title">Seasons</h1>
       <p className="wp-sub">
-        Halloween, Diwali, and Christmas sit on top of the Appearance theme. Add a festival for any
-        other dates. Pick a season to edit its dates, palette, and ornaments. Preview paints that
-        season or a chosen date without changing the saved schedule. Shared ornament images live in
-        the Ornaments tab of any season.
+        Festive themes sit on top of the Appearance theme during holidays or custom dates.
+        Pick a season to edit its dates, color palette, and ornaments.
       </p>
       <EditorTabs
         previewTick={previewTick}
+        middleTab={{
+          id: "catalogue",
+          label: "Manage catalogue",
+          content: (
+            <>
+              <Metabox id="season_ornament_catalog" title="Ornament catalogue">
+                <SeasonOrnamentCatalog data={data} setData={setData} />
+              </Metabox>
+              <p className="wp-season-save-bar">
+                <CmsSaveButton save={save} dirty={dirty} status={status} />
+              </p>
+            </>
+          ),
+        }}
         preview={<LivePreviewShell data={previewData} dirty={dirty} section="seasons" />}
       >
         <SeasonsPanel
@@ -89,7 +103,7 @@ export function SeasonsScreen({
             if (iso) setPreviewId(null);
           }}
         />
-        <p>
+        <p className="wp-season-save-bar">
           <CmsSaveButton save={save} dirty={dirty} status={status} />
         </p>
       </EditorTabs>

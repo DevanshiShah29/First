@@ -71,7 +71,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: themeInitScript(theme.defaultMode) }}
         />
         {season?.intensity === "full" ? (
-          <SeasonLayer season={season.id} images={season.ornamentImages} />
+          <SeasonLayer
+            season={season.id}
+            images={season.ornamentImages}
+            positions={season.ornamentPositions}
+          />
         ) : null}
         <GoogleAnalytics />
         <AnalyticsTracker />

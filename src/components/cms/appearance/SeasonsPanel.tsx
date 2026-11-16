@@ -8,7 +8,6 @@ import {
   SEASON_TIMEZONES,
   seasonsMatchingToday,
   zonedDateParts,
-  type OrnamentPosition,
   type SeasonConfig,
   type SeasonPalette,
   type SeasonsSettings,
@@ -57,7 +56,7 @@ export function SeasonsPanel({
     : [seasons.timezone, ...SEASON_TIMEZONES];
 
   const [selectedId, setSelectedId] = useState<SeasonConfig["id"] | null>(
-    () => active?.id ?? seasons.items[0]?.id ?? null,
+    () => previewId ?? active?.id ?? seasons.items[0]?.id ?? null,
   );
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
@@ -97,6 +96,7 @@ export function SeasonsPanel({
    * Replaces one season row.
    */
   function updateItem(id: SeasonConfig["id"], patch: Partial<SeasonConfig>) {
+    onPreviewSeason?.(id);
     update({
       items: seasons.items.map((item) => (item.id === id ? { ...item, ...patch } : item)),
     });
@@ -107,27 +107,6 @@ export function SeasonsPanel({
    */
   function changePalette(id: SeasonConfig["id"], palette: SeasonPalette) {
     updateItem(id, { palette });
-    onPreviewSeason?.(id);
-  }
-
-  /**
-   * Saves ornament images and keeps that season painted in the preview.
-   */
-  function changeImages(id: SeasonConfig["id"], ornamentImages: string[]) {
-    const item = seasons.items.find((s) => s.id === id);
-    const cursorOrnament =
-      item?.cursorOrnament && ornamentImages.includes(item.cursorOrnament)
-        ? item.cursorOrnament
-        : null;
-    const ornamentPositions: Record<string, OrnamentPosition> = {};
-    if (item?.ornamentPositions) {
-      for (const src of ornamentImages) {
-        if (item.ornamentPositions[src]) {
-          ornamentPositions[src] = item.ornamentPositions[src];
-        }
-      }
-    }
-    updateItem(id, { ornamentImages, ornamentPositions, cursorOrnament });
     onPreviewSeason?.(id);
   }
 
@@ -431,9 +410,12 @@ export function SeasonsPanel({
                 ornaments={seasons.ornaments ?? []}
                 ended={datedWindowEnded(selectedItem, parts)}
                 year={parts.year}
+                rank={sortedItems.findIndex((item) => item.id === selectedItem.id) + 1}
+                totalCount={sortedItems.length}
+                data={data}
+                setData={setData}
                 onChange={(patch) => updateItem(selectedItem.id, patch)}
                 onPalette={(palette) => changePalette(selectedItem.id, palette)}
-                onImages={(images) => changeImages(selectedItem.id, images)}
                 onClose={() => setSelectedId(null)}
                 onPreview={() => onPreviewSeason?.(selectedItem.id, { openTab: true })}
                 onRemove={() => removeFestival(selectedItem.id)}

@@ -29,6 +29,142 @@ export const SEASON_TIMEZONES = [
 
 export type SeasonMode = "off" | "manual" | "schedule";
 
+export type PlacementPosition =
+  | "header"
+  | "top-edge"
+  | "bottom-edge"
+  | "left-edge"
+  | "right-edge"
+  | "corners"
+  | "center"
+  | "custom";
+
+export type PlacementAlignment = "left" | "center" | "right" | "stretch";
+
+export type PlacementOrientation = "horizontal" | "vertical" | "diagonal" | "free";
+
+export type PlacementSize = "small" | "medium" | "large" | "custom";
+
+export type PlacementAnimation = "sway" | "float" | "twinkle" | "flicker" | "drift" | "none";
+
+export type PlacementAnimationIntensity = "subtle" | "normal" | "energetic";
+
+export type PlacementVisibility = "all" | "desktop" | "mobile";
+
+export type PlacementCoordinates = {
+  top?: string;
+  bottom?: string;
+  left?: string;
+  right?: string;
+};
+
+export type PlacementGroup = {
+  id: string;
+  name: string;
+  position: PlacementPosition;
+  alignment: PlacementAlignment;
+  orientation: PlacementOrientation;
+  assets: string[];
+  repeat: number;
+  spacing: number;
+  size: PlacementSize;
+  customSize?: number;
+  animation: PlacementAnimation;
+  animationIntensity: PlacementAnimationIntensity;
+  visibility: PlacementVisibility;
+  customCoordinates?: PlacementCoordinates;
+};
+
+export const PLACEMENT_POSITIONS: { id: PlacementPosition; label: string; icon: string; description: string }[] = [
+  { id: "header", label: "Header", icon: "📌", description: "Hangs along the top header area" },
+  { id: "top-edge", label: "Top Edge", icon: "⬆️", description: "Along the top edge of the screen" },
+  { id: "bottom-edge", label: "Bottom Edge", icon: "⬇️", description: "Along the bottom floor of the screen" },
+  { id: "left-edge", label: "Left Edge", icon: "⬅️", description: "Running down the left border" },
+  { id: "right-edge", label: "Right Edge", icon: "➡️", description: "Running down the right border" },
+  { id: "corners", label: "Corners", icon: "📐", description: "Distributed in the screen corners" },
+  { id: "center", label: "Center", icon: "🎯", description: "Centered on the screen" },
+  { id: "custom", label: "Custom", icon: "✨", description: "Custom positioning coordinates" },
+];
+
+export const PLACEMENT_ALIGNMENTS: { id: PlacementAlignment; label: string }[] = [
+  { id: "left", label: "Left" },
+  { id: "center", label: "Center" },
+  { id: "right", label: "Right" },
+  { id: "stretch", label: "Stretch" },
+];
+
+export const PLACEMENT_ORIENTATIONS: { id: PlacementOrientation; label: string }[] = [
+  { id: "horizontal", label: "Horizontal" },
+  { id: "vertical", label: "Vertical" },
+  { id: "diagonal", label: "Diagonal" },
+  { id: "free", label: "Free" },
+];
+
+export const PLACEMENT_SIZES: { id: PlacementSize; label: string; rem: number }[] = [
+  { id: "small", label: "Small", rem: 2 },
+  { id: "medium", label: "Medium", rem: 3 },
+  { id: "large", label: "Large", rem: 4 },
+  { id: "custom", label: "Custom", rem: 3 },
+];
+
+export const PLACEMENT_ANIMATIONS: { id: PlacementAnimation; label: string }[] = [
+  { id: "sway", label: "Sway" },
+  { id: "float", label: "Float" },
+  { id: "twinkle", label: "Twinkle" },
+  { id: "flicker", label: "Flicker" },
+  { id: "drift", label: "Drift" },
+  { id: "none", label: "None" },
+];
+
+export const PLACEMENT_INTENSITIES: { id: PlacementAnimationIntensity; label: string; description: string }[] = [
+  { id: "subtle", label: "Subtle", description: "Gentle, relaxed movement" },
+  { id: "normal", label: "Normal", description: "Standard speed & movement" },
+  { id: "energetic", label: "Energetic", description: "Faster dynamic movement" },
+];
+
+export const PLACEMENT_VISIBILITIES: { id: PlacementVisibility; label: string }[] = [
+  { id: "all", label: "Desktop & Mobile" },
+  { id: "desktop", label: "Desktop only" },
+  { id: "mobile", label: "Mobile only" },
+];
+
+export const VALID_PLACEMENT_POSITIONS = new Set<string>([
+  "header",
+  "top-edge",
+  "bottom-edge",
+  "left-edge",
+  "right-edge",
+  "corners",
+  "center",
+  "custom",
+]);
+
+export const VALID_PLACEMENT_ALIGNMENTS = new Set<string>(["left", "center", "right", "stretch"]);
+export const VALID_PLACEMENT_ORIENTATIONS = new Set<string>(["horizontal", "vertical", "diagonal", "free"]);
+export const VALID_PLACEMENT_SIZES = new Set<string>(["small", "medium", "large", "custom"]);
+export const VALID_PLACEMENT_ANIMATIONS = new Set<string>(["sway", "float", "twinkle", "flicker", "drift", "none"]);
+export const VALID_PLACEMENT_INTENSITIES = new Set<string>(["subtle", "normal", "energetic"]);
+export const VALID_PLACEMENT_VISIBILITIES = new Set<string>(["all", "desktop", "mobile"]);
+
+export function createPlacementGroup(preset?: Partial<PlacementGroup>): PlacementGroup {
+  return {
+    id: `pg-${crypto.randomUUID().replace(/-/g, "").slice(0, 10)}`,
+    name: preset?.name?.trim() || "Header Garland",
+    position: preset?.position && VALID_PLACEMENT_POSITIONS.has(preset.position) ? preset.position : "header",
+    alignment: preset?.alignment && VALID_PLACEMENT_ALIGNMENTS.has(preset.alignment) ? preset.alignment : "center",
+    orientation: preset?.orientation && VALID_PLACEMENT_ORIENTATIONS.has(preset.orientation) ? preset.orientation : "horizontal",
+    assets: Array.isArray(preset?.assets) ? [...preset.assets] : [],
+    repeat: Math.max(1, Math.min(20, preset?.repeat ?? 1)),
+    spacing: Math.max(0, Math.min(20, preset?.spacing ?? 2)),
+    size: preset?.size && VALID_PLACEMENT_SIZES.has(preset.size) ? preset.size : "medium",
+    customSize: preset?.customSize != null ? Math.max(0.5, Math.min(15, preset.customSize)) : 3,
+    animation: preset?.animation && VALID_PLACEMENT_ANIMATIONS.has(preset.animation) ? preset.animation : "sway",
+    animationIntensity: preset?.animationIntensity && VALID_PLACEMENT_INTENSITIES.has(preset.animationIntensity) ? preset.animationIntensity : "normal",
+    visibility: preset?.visibility && VALID_PLACEMENT_VISIBILITIES.has(preset.visibility) ? preset.visibility : "all",
+    customCoordinates: preset?.customCoordinates ? { ...preset.customCoordinates } : undefined,
+  };
+}
+
 export type OrnamentPosition =
   | "top-left"
   | "top-center"
@@ -102,6 +238,8 @@ export type SeasonConfig = {
   cursorOrnament?: string | null;
   /** User-chosen screen positions for each ornament image address. */
   ornamentPositions?: Record<string, OrnamentPosition>;
+  /** Flexible placement groups for this season. */
+  placements?: PlacementGroup[];
 };
 
 export type SeasonsSettings = {
@@ -191,6 +329,7 @@ function configFromPreset(preset: SeasonPreset, enabled: boolean): SeasonConfig 
     ornamentImages: [],
     cursorOrnament: null,
     ornamentPositions: {},
+    placements: [],
   };
 }
 
@@ -217,6 +356,7 @@ export function createCustomSeason(now: Date, timeZone: string): SeasonConfig {
     ornamentImages: [],
     cursorOrnament: null,
     ornamentPositions: {},
+    placements: [],
   };
 }
 
@@ -514,6 +654,210 @@ export function parseOrnamentPositions(
 }
 
 /**
+ * Reads placement groups, validating each property and sanitizing asset URLs.
+ * @example parsePlacements([{ name: "Header Garland", position: "header" }])
+ */
+export function parsePlacements(value: unknown): PlacementGroup[] {
+  if (!Array.isArray(value)) return [];
+  const groups: PlacementGroup[] = [];
+  const seenIds = new Set<string>();
+
+  for (const item of value) {
+    const row = asRecord(item);
+    let id = str(row.id).trim().slice(0, 64);
+    if (!id || seenIds.has(id)) {
+      id = `pg-${crypto.randomUUID().replace(/-/g, "").slice(0, 10)}`;
+    }
+    seenIds.add(id);
+
+    const name = str(row.name).replace(/[\u0000-\u001F]/g, "").trim().slice(0, 60) || "Placement";
+
+    const posRaw = str(row.position);
+    const position: PlacementPosition = VALID_PLACEMENT_POSITIONS.has(posRaw)
+      ? (posRaw as PlacementPosition)
+      : "header";
+
+    const alignRaw = str(row.alignment);
+    const alignment: PlacementAlignment = VALID_PLACEMENT_ALIGNMENTS.has(alignRaw)
+      ? (alignRaw as PlacementAlignment)
+      : "center";
+
+    const orientRaw = str(row.orientation);
+    const orientation: PlacementOrientation = VALID_PLACEMENT_ORIENTATIONS.has(orientRaw)
+      ? (orientRaw as PlacementOrientation)
+      : "horizontal";
+
+    const rawAssets = Array.isArray(row.assets) ? row.assets : [];
+    const assets: string[] = [];
+    for (const a of rawAssets) {
+      if (typeof a !== "string") continue;
+      const url = seasonOrnamentImageUrl(a);
+      if (url) {
+        assets.push(url);
+      }
+      if (assets.length >= 24) break;
+    }
+
+    const repeatNum = Number(row.repeat);
+    const repeat = Number.isFinite(repeatNum) ? Math.max(1, Math.min(20, Math.floor(repeatNum))) : 1;
+
+    const spacingNum = Number(row.spacing);
+    const spacing = Number.isFinite(spacingNum) ? Math.max(0, Math.min(20, Number(spacingNum.toFixed(2)))) : 2;
+
+    const sizeRaw = str(row.size);
+    const size: PlacementSize = VALID_PLACEMENT_SIZES.has(sizeRaw) ? (sizeRaw as PlacementSize) : "medium";
+
+    const customSizeNum = Number(row.customSize);
+    const customSize = Number.isFinite(customSizeNum) ? Math.max(0.5, Math.min(15, Number(customSizeNum.toFixed(2)))) : 3;
+
+    const animRaw = str(row.animation);
+    const animation: PlacementAnimation = VALID_PLACEMENT_ANIMATIONS.has(animRaw)
+      ? (animRaw as PlacementAnimation)
+      : "sway";
+
+    const intenRaw = str(row.animationIntensity);
+    const animationIntensity: PlacementAnimationIntensity = VALID_PLACEMENT_INTENSITIES.has(intenRaw)
+      ? (intenRaw as PlacementAnimationIntensity)
+      : "normal";
+
+    const visRaw = str(row.visibility);
+    const visibility: PlacementVisibility = VALID_PLACEMENT_VISIBILITIES.has(visRaw)
+      ? (visRaw as PlacementVisibility)
+      : "all";
+
+    let customCoordinates: PlacementCoordinates | undefined;
+    if (row.customCoordinates && typeof row.customCoordinates === "object") {
+      const coords = asRecord(row.customCoordinates);
+      const top = str(coords.top).trim().slice(0, 32);
+      const bottom = str(coords.bottom).trim().slice(0, 32);
+      const left = str(coords.left).trim().slice(0, 32);
+      const right = str(coords.right).trim().slice(0, 32);
+      if (top || bottom || left || right) {
+        customCoordinates = {
+          ...(top ? { top } : {}),
+          ...(bottom ? { bottom } : {}),
+          ...(left ? { left } : {}),
+          ...(right ? { right } : {}),
+        };
+      }
+    }
+
+    groups.push({
+      id,
+      name,
+      position,
+      alignment,
+      orientation,
+      assets,
+      repeat,
+      spacing,
+      size,
+      customSize,
+      animation,
+      animationIntensity,
+      visibility,
+      customCoordinates,
+    });
+
+    if (groups.length >= 30) break;
+  }
+
+  return groups;
+}
+
+/**
+ * Synthesizes placement groups from legacy ornamentPositions and ornamentImages.
+ */
+export function synthesizePlacementsFromLegacy(
+  positions: Record<string, OrnamentPosition>,
+  images: string[],
+): PlacementGroup[] {
+  const groups: PlacementGroup[] = [];
+  const headerAssets: string[] = [];
+  const bottomAssets: string[] = [];
+  const sideAssets: string[] = [];
+  const cornerAssets: string[] = [];
+
+  for (const img of images) {
+    const pos = positions[img] || "top-center";
+    if (pos === "top-center") {
+      headerAssets.push(img);
+    } else if (pos === "top-left" || pos === "top-right") {
+      cornerAssets.push(img);
+    } else if (pos === "bottom-left" || pos === "bottom-right" || pos === "bottom-center") {
+      bottomAssets.push(img);
+    } else if (pos === "left-center" || pos === "right-center") {
+      sideAssets.push(img);
+    } else {
+      headerAssets.push(img);
+    }
+  }
+
+  if (headerAssets.length > 0) {
+    groups.push(
+      createPlacementGroup({
+        name: "Header Garland",
+        position: "header",
+        alignment: "center",
+        orientation: "horizontal",
+        assets: headerAssets,
+        repeat: 1,
+        spacing: 2,
+        size: "medium",
+        animation: "sway",
+      }),
+    );
+  }
+  if (bottomAssets.length > 0) {
+    groups.push(
+      createPlacementGroup({
+        name: "Floor Diyas",
+        position: "bottom-edge",
+        alignment: "center",
+        orientation: "horizontal",
+        assets: bottomAssets,
+        repeat: 1,
+        spacing: 2.5,
+        size: "medium",
+        animation: "flicker",
+      }),
+    );
+  }
+  if (sideAssets.length > 0) {
+    groups.push(
+      createPlacementGroup({
+        name: "Side Borders",
+        position: "left-edge",
+        alignment: "center",
+        orientation: "vertical",
+        assets: sideAssets,
+        repeat: 1,
+        spacing: 3,
+        size: "medium",
+        animation: "twinkle",
+      }),
+    );
+  }
+  if (cornerAssets.length > 0) {
+    groups.push(
+      createPlacementGroup({
+        name: "Corners",
+        position: "corners",
+        alignment: "stretch",
+        orientation: "horizontal",
+        assets: cornerAssets,
+        repeat: 1,
+        spacing: 2,
+        size: "medium",
+        animation: "sway",
+      }),
+    );
+  }
+
+  return groups;
+}
+
+/**
  * Reads one built-in pack, keeping its preset name and schedule kind.
  * @example parseBuiltInSeason({}, getSeasonPreset("halloween")!) // SeasonConfig
  */
@@ -521,8 +865,23 @@ function parseBuiltInSeason(entry: Record<string, unknown>, preset: SeasonPreset
   const intensityRaw = str(entry.intensity);
   const intensity: SeasonIntensity = intensityRaw === "subtle" ? "subtle" : "full";
   const ornamentImages = parseOrnamentImages(entry.ornamentImages);
-  const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
   const ornamentPositions = parseOrnamentPositions(entry.ornamentPositions, ornamentImages);
+  let placements = entry.placements !== undefined ? parsePlacements(entry.placements) : undefined;
+  if (placements === undefined && (ornamentImages.length > 0 || Object.keys(ornamentPositions).length > 0)) {
+    placements = synthesizePlacementsFromLegacy(ornamentPositions, ornamentImages);
+  } else if (placements === undefined) {
+    placements = [];
+  }
+
+  for (const group of placements) {
+    for (const a of group.assets) {
+      if (!ornamentImages.includes(a)) {
+        ornamentImages.push(a);
+      }
+    }
+  }
+
+  const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
   return {
     id: preset.id,
     name: parseSeasonName(entry.name) || preset.name,
@@ -533,6 +892,7 @@ function parseBuiltInSeason(entry: Record<string, unknown>, preset: SeasonPreset
     ornamentImages,
     cursorOrnament: rawCursor && ornamentImages.includes(rawCursor) ? rawCursor : null,
     ornamentPositions,
+    placements,
   };
 }
 
@@ -547,8 +907,23 @@ function parseCustomSeason(entry: Record<string, unknown>): SeasonConfig | null 
   if (!schedule) return null;
   const intensityRaw = str(entry.intensity);
   const ornamentImages = parseOrnamentImages(entry.ornamentImages);
-  const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
   const ornamentPositions = parseOrnamentPositions(entry.ornamentPositions, ornamentImages);
+  let placements = entry.placements !== undefined ? parsePlacements(entry.placements) : undefined;
+  if (placements === undefined && (ornamentImages.length > 0 || Object.keys(ornamentPositions).length > 0)) {
+    placements = synthesizePlacementsFromLegacy(ornamentPositions, ornamentImages);
+  } else if (placements === undefined) {
+    placements = [];
+  }
+
+  for (const group of placements) {
+    for (const a of group.assets) {
+      if (!ornamentImages.includes(a)) {
+        ornamentImages.push(a);
+      }
+    }
+  }
+
+  const rawCursor = seasonOrnamentImageUrl(str(entry.cursorOrnament));
   return {
     id,
     name: parseSeasonName(entry.name),
@@ -559,6 +934,7 @@ function parseCustomSeason(entry: Record<string, unknown>): SeasonConfig | null 
     ornamentImages,
     cursorOrnament: rawCursor && ornamentImages.includes(rawCursor) ? rawCursor : null,
     ornamentPositions,
+    placements,
   };
 }
 

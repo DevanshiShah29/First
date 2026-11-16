@@ -1167,6 +1167,474 @@ details[open] .wp-season-overview-chevron {
   color: #646970;
 }
 
+/* Schedule Tab: Validation, Next Year, Priority */
+.wp-season-validation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.wp-season-validation.is-valid {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.wp-season-validation.is-error {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.wp-season-validation.is-warning {
+  background: #fefce8;
+  color: #854d0e;
+  border: 1px solid #fef08a;
+}
+
+.wp-season-validation-icon {
+  font-weight: 700;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.wp-season-validation-text {
+  flex: 1;
+}
+
+.wp-season-next-year-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f6f7f7;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  margin-top: 4px;
+}
+
+.wp-season-next-year-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.wp-season-next-year-meta .wp-description {
+  margin: 0;
+  font-size: 11px;
+}
+
+.wp-season-priority-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-top: 6px;
+}
+
+.wp-season-priority-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wp-season-priority-head .wp-palette-column-title {
+  margin: 0;
+}
+
+.wp-season-rank-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #2271b1;
+  color: #fff;
+}
+
+.wp-season-priority-status {
+  font-size: 11px;
+  color: #64748b;
+  margin: 0;
+}
+
+.wp-season-priority-status.is-highest {
+  color: #0f766e;
+  font-weight: 600;
+}
+
+/* Decorations Tab: Catalog Bar */
+.wp-season-catalog-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dcdcde;
+}
+
+.wp-season-catalog-bar .wp-palette-column-title {
+  margin: 0;
+}
+
+.wp-season-catalog-bar .wp-description {
+  margin: 2px 0 0;
+}
+
+/* Screen Wireframe & Positioning-First Editor */
+.wp-season-wireframe {
+  margin-top: 10px;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #f6f7f7;
+  overflow: hidden;
+}
+
+.wp-season-wireframe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #f0f0f1;
+  border-bottom: 1px solid #dcdcde;
+  font-size: 11px;
+  font-weight: 600;
+  color: #50575e;
+}
+
+.wp-season-wireframe-count {
+  font-weight: 400;
+  color: #646970;
+}
+
+.wp-season-wireframe-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: #fff;
+}
+
+.wp-season-wireframe-row {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.wp-season-wireframe-row.is-top,
+.wp-season-wireframe-row.is-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 8px;
+}
+
+.wp-season-wireframe-row.is-middle {
+  display: flex;
+  justify-content: space-between;
+  min-height: 44px;
+}
+
+.wp-season-wireframe-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px dashed #c3c4c7;
+  border-radius: 6px;
+  background: #f9f9f9;
+  cursor: pointer;
+  font-size: 11px;
+  color: #50575e;
+  transition: all 0.15s ease;
+  min-height: 38px;
+}
+
+.wp-season-wireframe-cell:hover {
+  border-color: #2271b1;
+  background: #f0f6fc;
+  color: #2271b1;
+}
+
+.wp-season-wireframe-cell.has-ornament {
+  border-style: solid;
+  border-color: #2271b1;
+  background: #f0f6fc;
+  color: #1d2327;
+  font-weight: 500;
+}
+
+.wp-season-wireframe-cell.is-active-region {
+  box-shadow: 0 0 0 1px #2271b1;
+}
+
+.wp-season-wireframe-cell img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.wp-season-wireframe-icon {
+  font-size: 12px;
+  color: #8c8f94;
+}
+
+.wp-season-wireframe-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Region selection bar */
+.wp-season-region-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.wp-season-region-bar .wp-palette-column-title {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* Position cards grid */
+.wp-season-pos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.wp-season-pos-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.wp-season-pos-card.is-assigned {
+  border-color: #c3c4c7;
+}
+
+.wp-season-pos-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: #f6f7f7;
+  border-bottom: 1px solid #dcdcde;
+}
+
+.wp-season-pos-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d2327;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wp-season-pos-icon {
+  font-size: 13px;
+  color: #2271b1;
+}
+
+.wp-season-pos-region-badge {
+  font-size: 10px;
+  color: #646970;
+  background: #ebebeb;
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.wp-season-pos-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.wp-season-pos-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wp-season-pos-ornament-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1d2327;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-season-pos-used-tag {
+  font-size: 10px;
+  color: #0c5460;
+  background: #d1ecf1;
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.wp-season-pos-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.wp-season-pos-empty-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 10px;
+  background: #fafafa;
+}
+
+.wp-season-pos-empty-icon {
+  font-size: 20px;
+  color: #c3c4c7;
+}
+
+.wp-season-pos-empty-text {
+  font-size: 11px;
+  color: #8c8f94;
+}
+
+/* Catalogue Chooser Modal */
+.wp-shelf-modal-backdrop.wp-season-picker-backdrop {
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 100050;
+}
+
+.wp-season-picker-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 100%);
+  max-height: min(85vh, 600px);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.wp-season-picker-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid #dcdcde;
+}
+
+.wp-season-picker-modal-head .wp-palette-column-title {
+  margin: 0 0 2px;
+  font-size: 14px;
+}
+
+.wp-season-picker-modal-head .wp-description {
+  margin: 0;
+  font-size: 12px;
+}
+
+.wp-season-picker-modal-body {
+  flex: 1 1 auto;
+  padding: 16px 18px;
+  overflow-y: auto;
+}
+
+.wp-season-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wp-season-picker-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid #dcdcde;
+  border-radius: 6px;
+  background: #fff;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.wp-season-picker-card:hover {
+  border-color: #2271b1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.wp-season-picker-card.is-current {
+  border-color: #2271b1;
+  background: #f0f6fc;
+}
+
+.wp-season-picker-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1d2327;
+  max-width: 96px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wp-season-picker-used-badge {
+  font-size: 9px;
+  color: #0c5460;
+  background: #d1ecf1;
+  padding: 1px 4px;
+  border-radius: 3px;
+  line-height: 1.2;
+}
+
+.wp-season-picker-modal-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 18px;
+  border-top: 1px solid #dcdcde;
+  background: #f6f7f7;
+}
+
 .wp-season-note {
   margin: 12px 0 0;
   color: #996800;

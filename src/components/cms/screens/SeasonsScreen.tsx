@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import type { ContentData } from "@/content/types";
-import { seasonForIsoDate } from "@/content/seasons";
+import { resolveActiveSeason, seasonForIsoDate } from "@/content/seasons";
 import { SeasonOrnamentCatalog } from "../appearance/SeasonOrnamentCatalog";
 import { SeasonsPanel } from "../appearance/SeasonsPanel";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
@@ -55,7 +55,10 @@ export function SeasonsScreen({
   dirty: boolean;
   status: CmsSaveStatus;
 }) {
-  const [previewId, setPreviewId] = useState<string | null>(null);
+  const activeSeason = resolveActiveSeason(data.site.seasons, new Date());
+  const [previewId, setPreviewId] = useState<string | null>(
+    () => data.site.seasons.manualId ?? activeSeason?.id ?? data.site.seasons.items[0]?.id ?? null,
+  );
   const [previewDate, setPreviewDate] = useState<string | null>(null);
   const [previewTick, setPreviewTick] = useState(0);
   const previewData = useMemo(

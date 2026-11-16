@@ -1,7 +1,7 @@
 .season-layer {
   position: fixed;
   inset: 0;
-  z-index: 30;
+  z-index: 60;
   overflow: hidden;
   pointer-events: none;
 }
@@ -86,8 +86,10 @@
 
 .season-ornament {
   position: absolute;
+  display: inline-block;
   width: 2.5rem;
   height: 2.5rem;
+  flex-shrink: 0;
 }
 
 .season-ornament svg,
@@ -118,6 +120,11 @@
   animation: season-sway 5.4s ease-in-out infinite;
 }
 
+/* Inside placement groups ornaments are flex items, so sway from center looks better */
+.season-placement-group .season-ornament--sway {
+  transform-origin: center;
+}
+
 .season-ornament--flicker {
   transform-origin: center bottom;
   animation: season-flicker 2.8s ease-in-out infinite;
@@ -137,6 +144,44 @@
 
 .season-ornament--burst {
   animation: season-burst 5.6s ease-in-out infinite;
+}
+
+.season-ornament--float {
+  animation: season-float 4.2s ease-in-out infinite;
+}
+
+.season-ornament--none {
+  animation: none !important;
+}
+
+.season-ornament--small {
+  width: 2rem;
+  height: 2rem;
+}
+
+.season-ornament--medium {
+  width: 3rem;
+  height: 3rem;
+}
+
+.season-ornament--large {
+  width: 4rem;
+  height: 4rem;
+}
+
+.season-ornament--custom {
+  width: var(--ornament-size, 3rem);
+  height: var(--ornament-size, 3rem);
+}
+
+@keyframes season-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 @keyframes season-sway {
@@ -272,5 +317,74 @@
 @media print {
   .season-layer {
     display: none;
+  }
+}
+
+/* Placement Groups */
+.season-placement-group {
+  position: fixed;
+  pointer-events: none;
+  z-index: 60;
+  box-sizing: border-box;
+  /* Ornaments inside a placement group are flex items, not absolutely positioned. */
+}
+
+/* Override the base absolute positioning so ornaments are flex/grid items */
+.season-placement-group .season-ornament {
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.season-placement-group.intensity-subtle .season-ornament {
+  animation-duration: 7.2s !important;
+}
+
+.season-placement-group.intensity-energetic .season-ornament {
+  animation-duration: 2.2s !important;
+}
+
+.season-placement-group.is-corners {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.season-placement-corner {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.season-placement-corner.is-tl {
+  top: calc(var(--header-h, 3.5rem) + 0.35rem);
+  left: 0.75rem;
+}
+
+.season-placement-corner.is-tr {
+  top: calc(var(--header-h, 3.5rem) + 0.35rem);
+  right: 0.75rem;
+}
+
+.season-placement-corner.is-bl {
+  bottom: 0.75rem;
+  left: 0.75rem;
+}
+
+.season-placement-corner.is-br {
+  bottom: 0.75rem;
+  right: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .season-placement-group.is-desktop-only {
+    display: none !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .season-placement-group.is-mobile-only {
+    display: none !important;
   }
 }

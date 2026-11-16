@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { SEASON_PRESETS } from "./season-presets";
 import {
   createCustomSeason,
+  createPlacementGroup,
   CUSTOM_SEASON_PALETTE,
   DEFAULT_SEASONS,
   defaultOrnamentPosition,
@@ -12,12 +13,14 @@ import {
   MAX_CUSTOM_SEASONS,
   ORNAMENT_POSITIONS,
   parseOrnamentPositions,
+  parsePlacements,
   parseSeasons,
   resolveActiveCursorOrnament,
   resolveActiveSeason,
   seasonForIsoDate,
   seasonOrnamentImageUrl,
   seasonsMatchingToday,
+  synthesizePlacementsFromLegacy,
   themeWithSeason,
   type SeasonConfig,
   type SeasonsSettings,
@@ -473,5 +476,165 @@ describe("season palettes", () => {
     }
     assert.deepEqual(checkPalette(CUSTOM_SEASON_PALETTE.light), []);
     assert.deepEqual(checkPalette(CUSTOM_SEASON_PALETTE.dark), []);
+  });
+});
+
+describe("placement groups", () => {
+  it("creates a placement group with defaults and overrides", () => {
+    const defaultGroup = createPlacementGroup();
+    assert.equal(defaultGroup.name, "Header Garland");
+    assert.equal(defaultGroup.position, "header");
+    assert.equal(defaultGroup.alignment, "center");
+    assert.equal(defaultGroup.orientation, "horizontal");
+    assert.equal(defaultGroup.size, "medium");
+    assert.equal(defaultGroup.animation, "sway");
+    assert.equal(defaultGroup.animationIntensity, "normal");
+    assert.equal(defaultGroup.visibility, "all");
+    assert.equal(defaultGroup.repeat, 1);
+    assert.equal(defaultGroup.spacing, 2);
+    assert.deepEqual(defaultGroup.assets, []);
+
+    const custom = createPlacementGroup({
+      name: "Left Floor Diyas",
+      position: "bottom-edge",
+      alignment: "left",
+      orientation: "horizontal",
+      size: "large",
+      animation: "flicker",
+      animationIntensity: "energetic",
+      visibility: "desktop",
+      repeat: 3,
+      spacing: 1.5,
+      assets: ["/uploads/artifacts/diya.png"],
+    });
+    assert.equal(custom.name, "Left Floor Diyas");
+    assert.equal(custom.position, "bottom-edge");
+    assert.equal(custom.alignment, "left");
+    assert.equal(custom.size, "large");
+    assert.equal(custom.animation, "flicker");
+    assert.equal(custom.animationIntensity, "energetic");
+    assert.equal(custom.visibility, "desktop");
+    assert.equal(custom.repeat, 3);
+    assert.equal(custom.spacing, 1.5);
+    assert.deepEqual(custom.assets, ["/uploads/artifacts/diya.png"]);
+  });
+
+  it("parses placement groups, allowing multiple groups, repeats, and same ornament in multiple groups", () => {
+    const raw = [
+      {
+        id: "pg-1",
+        name: "Top Garland",
+        position: "header",
+        alignment: "center",
+        orientation: "horizontal",
+        assets: ["/uploads/artifacts/star.png", "/uploads/artifacts/star.png", "/uploads/artifacts/bell.png"],
+        repeat: 2,
+        spacing: 2.5,
+        size: "medium",
+        animation: "sway",
+        animationIntensity: "subtle",
+        visibility: "all",
+      },
+      {
+        id: "pg-2",
+        name: "Floor Accents",
+        position: "bottom-edge",
+        alignment: "stretch",
+        orientation: "horizontal",
+        assets: ["/uploads/artifacts/star.png"], // Same ornament reused in second group
+        repeat: 4,
+        spacing: 3,
+        size: "small",
+        animation: "twinkle",
+        animationIntensity: "energetic",
+        visibility: "mobile",
+        customCoordinates: { bottom: "1rem" },
+      },
+    ];
+
+    const parsed = parsePlacements(raw);
+    assert.equal(parsed.length, 2);
+
+    // Group 1
+    assert.equal(parsed[0].name, "Top Garland");
+    assert.equal(parsed[0].position, "header");
+    assert.equal(parsed[0].repeat, 2);
+    assert.equal(parsed[0].spacing, 2.5);
+    assert.equal(parsed[0].animation, "sway");
+    assert.equal(parsed[0].animationIntensity, "subtle");
+    // Verifies same ornament can be repeated within one group
+    assert.deepEqual(parsed[0].assets, [
+      "/uploads/artifacts/star.png",
+      "/uploads/artifacts/star.png",
+      "/uploads/artifacts/bell.png",
+    ]);
+
+    // Group 2
+    assert.equal(parsed[1].name, "Floor Accents");
+    assert.equal(parsed[1].position, "bottom-edge");
+    assert.equal(parsed[1].alignment, "stretch");
+    assert.equal(parsed[1].visibility, "mobile");
+    assert.equal(parsed[1].repeat, 4);
+    // Verifies same ornament can be assigned to multiple placement groups
+    assert.deepEqual(parsed[1].assets, ["/uploads/artifacts/star.png"]);
+    assert.deepEqual(parsed[1].customCoordinates, { bottom: "1rem" });
+  });
+
+  it("handles custom festivals with exactly the same placement group capabilities", () => {
+    const raw = {
+      items: [
+        {
+          id: "fest-springcarnival",
+          name: "Spring Carnival",
+          enabled: true,
+          schedule: { kind: "annual", start: "04-01", end: "04-10" },
+          placements: [
+            {
+              id: "pg-carnival-1",
+              name: "Floating Balloons",
+              position: "center",
+              alignment: "center",
+              orientation: "free",
+              assets: ["/uploads/artifacts/balloon.png"],
+              repeat: 5,
+              spacing: 3,
+              size: "large",
+              animation: "float",
+              animationIntensity: "energetic",
+              visibility: "all",
+            },
+          ],
+        },
+      ],
+    };
+
+    const parsed = parseSeasons(raw);
+    const carnival = parsed.items.find((item) => item.id === "fest-springcarnival");
+    assert.ok(carnival);
+    assert.equal(carnival.placements?.length, 1);
+    assert.equal(carnival.placements?.[0].name, "Floating Balloons");
+    assert.equal(carnival.placements?.[0].position, "center");
+    assert.equal(carnival.placements?.[0].orientation, "free");
+    assert.equal(carnival.placements?.[0].animation, "float");
+    assert.deepEqual(carnival.placements?.[0].assets, ["/uploads/artifacts/balloon.png"]);
+    // Verifies assets in placements are collected into ornamentImages
+    assert.ok(carnival.ornamentImages.includes("/uploads/artifacts/balloon.png"));
+  });
+
+  it("synthesizes default placement groups from legacy ornament positions if placements missing", () => {
+    const synthesized = synthesizePlacementsFromLegacy(
+      {
+        "/uploads/artifacts/garland.png": "top-center",
+        "/uploads/artifacts/diya.png": "bottom-left",
+      },
+      ["/uploads/artifacts/garland.png", "/uploads/artifacts/diya.png"],
+    );
+    assert.ok(synthesized.length >= 2);
+    const headerGroup = synthesized.find((g) => g.position === "header");
+    const floorGroup = synthesized.find((g) => g.position === "bottom-edge");
+    assert.ok(headerGroup);
+    assert.ok(floorGroup);
+    assert.deepEqual(headerGroup?.assets, ["/uploads/artifacts/garland.png"]);
+    assert.deepEqual(floorGroup?.assets, ["/uploads/artifacts/diya.png"]);
   });
 });

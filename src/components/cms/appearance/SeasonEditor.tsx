@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, type Dispatch, type SetStateAction } from "react";
 import { getSeasonPreset } from "@/content/season-presets";
 import {
   defaultSeasonPalette,
@@ -9,20 +9,22 @@ import {
   type SeasonPalette,
   type SeasonSchedule,
 } from "@/content/seasons";
+import type { ContentData } from "@/content/types";
 import { EditablePalette, PaletteColorRow } from "./EditablePalette";
 import { ConfirmButton } from "../components/ConfirmDialog";
 import { SeasonAiPanel } from "./SeasonAiPanel";
-import { SeasonOrnamentPicker } from "./SeasonOrnamentPicker";
-import { seasonName } from "./season-labels";
+import { SeasonPlacementEditor } from "./SeasonPlacementEditor";
+import { SeasonCatalogDrawer } from "./SeasonCatalogDrawer";
+import { scheduleSummary, seasonName } from "./season-labels";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-type EditorTab = "dates" | "palette" | "ornaments";
+type EditorTab = "schedule" | "appearance" | "decorations";
 
 const EDITOR_TABS: { id: EditorTab; label: string }[] = [
-  { id: "dates", label: "Dates" },
-  { id: "palette", label: "Palette" },
-  { id: "ornaments", label: "Ornaments" },
+  { id: "schedule", label: "Schedule" },
+  { id: "appearance", label: "Appearance" },
+  { id: "decorations", label: "Decorations" },
 ];
 
 /** Adds one year to a YYYY-MM-DD date. */
@@ -30,19 +32,106 @@ function shiftYear(iso: string): string {
   return `${Number(iso.slice(0, 4)) + 1}${iso.slice(4)}`;
 }
 
+type DateValidationResult = {
+  isValid: boolean;
+  status: "valid" | "error" | "warning";
+  message: string;
+  diffDays?: number;
+};
+
 /**
- * Dates, palette, and ornaments for the season selected in the master list.
+ * Validates the season schedule dates and returns user-friendly feedback.
+ */
+function validateSeasonDates(schedule: SeasonSchedule, ended: boolean): DateValidationResult {
+  if (schedule.kind === "dated") {
+    if (!schedule.start || !schedule.end) {
+      return {
+        isValid: false,
+        status: "error",
+        message: "Start and end dates are required.",
+      };
+    }
+    if (schedule.start > schedule.end) {
+      return {
+        isValid: false,
+        status: "error",
+        message: "End date cannot be earlier than start date. This season cannot be activated.",
+      };
+    }
+    const startD = new Date(schedule.start + "T00:00:00");
+    const endD = new Date(schedule.end + "T00:00:00");
+    const diffDays = Math.round((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (ended) {
+      return {
+        isValid: true,
+        status: "warning",
+        message: `Date window ended in the past (${diffDays} ${diffDays === 1 ? "day" : "days"}). Move to next year to reactivate.`,
+        diffDays,
+      };
+    }
+    return {
+      isValid: true,
+      status: "valid",
+      message: `Valid date window: ${diffDays} ${diffDays === 1 ? "day" : "days"} (${schedule.start} to ${schedule.end}).`,
+      diffDays,
+    };
+  }
+
+  // Annual
+  const startMonth = Number(schedule.start.slice(0, 2));
+  const startDay = Number(schedule.start.slice(3, 5));
+  const endMonth = Number(schedule.end.slice(0, 2));
+  const endDay = Number(schedule.end.slice(3, 5));
+
+  if (!startMonth || !startDay || !endMonth || !endDay) {
+    return {
+      isValid: false,
+      status: "error",
+      message: "Please choose valid annual start and end dates.",
+    };
+  }
+
+  if (schedule.start === schedule.end) {
+    return {
+      isValid: true,
+      status: "valid",
+      message: `Valid annual schedule: Active for 1 day every year (${scheduleSummary(schedule)}).`,
+    };
+  }
+
+  if (schedule.start > schedule.end) {
+    return {
+      isValid: true,
+      status: "valid",
+      message: `Valid annual schedule: Spans across New Year (${scheduleSummary(schedule)}).`,
+    };
+  }
+
+  return {
+    isValid: true,
+    status: "valid",
+    message: `Valid annual schedule: Repeats every year (${scheduleSummary(schedule)}).`,
+  };
+}
+
+/**
+ * Right panel: Schedule, Appearance, and Decorations for the selected season.
  * Panels stay mounted while hidden so switching tabs keeps local drafts.
- * @example <SeasonEditor item={item} … />
+ * @example <SeasonEditor item={item} ornaments={ornaments} … />
  */
 export function SeasonEditor({
   item,
   ornaments,
   ended,
   year,
+  rank,
+  totalCount,
+  data,
+  setData,
+  onOpenCatalog,
   onChange,
   onPalette,
-  onImages,
   onClose,
   onPreview,
   onRemove,
@@ -51,20 +140,26 @@ export function SeasonEditor({
   ornaments: SeasonOrnament[];
   ended: boolean;
   year: number;
+  rank?: number;
+  totalCount?: number;
+  data?: ContentData;
+  setData?: Dispatch<SetStateAction<ContentData>>;
+  onOpenCatalog?: () => void;
   onChange: (patch: Partial<SeasonConfig>) => void;
   onPalette: (palette: SeasonPalette) => void;
-  onImages: (images: string[]) => void;
   onClose: () => void;
   onPreview: () => void;
   onRemove?: () => void;
 }) {
   const preset = getSeasonPreset(item.id);
   const name = seasonName(item);
-  const inverted = item.schedule.kind === "dated" && item.schedule.start > item.schedule.end;
-  const [tab, setTab] = useState<EditorTab>("dates");
+  const [tab, setTab] = useState<EditorTab>("schedule");
+  const [catalogOpen, setCatalogOpen] = useState(false);
   const [aiNotes, setAiNotes] = useState<Record<string, string>>({});
   const tabId = useId();
   const aiNote = aiNotes[item.id] ?? "";
+
+  const validation = validateSeasonDates(item.schedule, ended);
 
   /**
    * Rolls a dated window one year forward so it can run again.
@@ -78,6 +173,17 @@ export function SeasonEditor({
         end: shiftYear(item.schedule.end),
       },
     });
+  };
+
+  /**
+   * Opens the asset catalog drawer or notifies parent.
+   */
+  const handleOpenCatalog = () => {
+    if (onOpenCatalog) {
+      onOpenCatalog();
+    } else {
+      setCatalogOpen(true);
+    }
   };
 
   return (
@@ -133,12 +239,13 @@ export function SeasonEditor({
         ))}
       </div>
 
+      {/* Tab 1: Schedule */}
       <div
         role="tabpanel"
-        id={`${tabId}-dates-panel`}
-        aria-labelledby={`${tabId}-dates-tab`}
+        id={`${tabId}-schedule-panel`}
+        aria-labelledby={`${tabId}-schedule-tab`}
         className="wp-season-editor-panel"
-        hidden={tab !== "dates"}
+        hidden={tab !== "schedule"}
       >
         <label className="wp-season-name">
           Festival name
@@ -153,12 +260,12 @@ export function SeasonEditor({
         </label>
 
         <fieldset className="wp-media-choice">
-          <legend>Dates</legend>
+          <legend>Dates schedule</legend>
           <div className="wp-seg">
             {(
               [
-                ["annual", "Every year"],
-                ["dated", "These dates"],
+                ["annual", "Annual"],
+                ["dated", "Specific dates"],
               ] as const
             ).map(([kind, label]) => (
               <label key={kind} className={item.schedule.kind === kind ? "is-selected" : undefined}>
@@ -185,7 +292,7 @@ export function SeasonEditor({
         ) : (
           <div className="wp-season-dates">
             <label>
-              Starts
+              Start date
               <input
                 className="wp-input"
                 type="date"
@@ -198,7 +305,7 @@ export function SeasonEditor({
               />
             </label>
             <label>
-              Ends
+              End date
               <input
                 className="wp-input"
                 type="date"
@@ -212,33 +319,67 @@ export function SeasonEditor({
             </label>
           </div>
         )}
-        {inverted ? (
-          <p className="wp-season-note is-inline">End is before start, so this season cannot match.</p>
-        ) : null}
-        {ended ? (
-          <p className="wp-season-note is-inline">
-            This window has ended.{" "}
-            <button type="button" className="wp-btn wp-btn-small" onClick={moveToNextYear}>
-              Move to next year
-            </button>
-            {" or "}
+
+        {/* Date Validation Feedback */}
+        <div className={`wp-season-validation is-${validation.status}`} role="status">
+          <span className="wp-season-validation-icon" aria-hidden="true">
+            {validation.status === "valid" ? "✓" : validation.status === "error" ? "⚠" : "ℹ"}
+          </span>
+          <span className="wp-season-validation-text">{validation.message}</span>
+        </div>
+
+        {/* Move to next year action */}
+        {item.schedule.kind === "dated" ? (
+          <div className="wp-season-next-year-box">
+            <div className="wp-season-next-year-meta">
+              <strong>Move to next year</strong>
+              <span className="wp-description">
+                Advance dates to {shiftYear(item.schedule.start)} – {shiftYear(item.schedule.end)}
+              </span>
+            </div>
             <button
               type="button"
               className="wp-btn wp-btn-small"
-              onClick={() => onChange({ schedule: scheduleOfKind(item.schedule, "annual", year) })}
+              onClick={moveToNextYear}
             >
-              Repeat every year
+              Move to next year
             </button>
-          </p>
+          </div>
         ) : null}
+
+        {/* Priority information */}
+        <div className="wp-season-priority-box">
+          <div className="wp-season-priority-head">
+            <h4 className="wp-palette-column-title">Priority information</h4>
+            {rank != null && totalCount != null ? (
+              <span className="wp-season-rank-badge">
+                Priority #{rank} of {totalCount}
+              </span>
+            ) : null}
+          </div>
+          <p className="wp-description">
+            Festive seasons use priority ordering. When two or more festivals have overlapping dates,
+            the festival ordered higher in the list takes precedence on the public website.
+          </p>
+          {rank === 1 ? (
+            <p className="wp-season-priority-status is-highest">
+              ★ Highest priority — will always be displayed when its dates match.
+            </p>
+          ) : rank != null ? (
+            <p className="wp-season-priority-status">
+              Evaluated after {rank - 1} higher-ranked festival{rank - 1 === 1 ? "" : "s"} if dates coincide.
+            </p>
+          ) : null}
+        </div>
       </div>
 
+      {/* Tab 2: Appearance */}
       <div
         role="tabpanel"
-        id={`${tabId}-palette-panel`}
-        aria-labelledby={`${tabId}-palette-tab`}
+        id={`${tabId}-appearance-panel`}
+        aria-labelledby={`${tabId}-appearance-tab`}
         className="wp-season-editor-panel"
-        hidden={tab !== "palette"}
+        hidden={tab !== "appearance"}
       >
         <p className="wp-description">
           Change a hex value or its color picker. The public site uses these colors only while this season
@@ -290,20 +431,21 @@ export function SeasonEditor({
         </div>
       </div>
 
+      {/* Tab 3: Decorations */}
       <div
         role="tabpanel"
-        id={`${tabId}-ornaments-panel`}
-        aria-labelledby={`${tabId}-ornaments-tab`}
+        id={`${tabId}-decorations-panel`}
+        aria-labelledby={`${tabId}-decorations-tab`}
         className="wp-season-editor-panel"
-        hidden={tab !== "ornaments"}
+        hidden={tab !== "decorations"}
       >
         <fieldset className="wp-media-choice">
-          <legend>Look</legend>
+          <legend>Decorations look</legend>
           <div className="wp-seg">
             {(
               [
                 ["subtle", "Palette only"],
-                ["full", "Palette and ornaments"],
+                ["full", "Palette + Ornaments"],
               ] as const
             ).map(([intensity, label]) => (
               <label key={intensity} className={item.intensity === intensity ? "is-selected" : undefined}>
@@ -318,42 +460,58 @@ export function SeasonEditor({
             ))}
           </div>
         </fieldset>
-        <div className="wp-season-catalog-link">
-          <p className="wp-description">
-            Choose the screen position for each ornament (corners, top header, bottom floor, or side edges).
-          </p>
-          <p className="wp-description">
-            Pick images from the shared catalog. Upload or rename them once, then reuse them here.
-          </p>
-        </div>
-        <SeasonOrnamentPicker
-          images={item.ornamentImages}
-          positions={item.ornamentPositions ?? {}}
+
+        <p className="wp-description">
+          {item.intensity === "subtle"
+            ? "Palette only: applies festive brand gradient and theme colors. Ornaments and custom cursor stay hidden."
+            : "Palette + Ornaments: displays custom theme colors, screen ornaments, and custom cursor."}
+        </p>
+
+        {/* Placement Groups & Decorations */}
+        <SeasonPlacementEditor
+          placements={item.placements ?? []}
           ornaments={ornaments}
           cursorOrnament={item.cursorOrnament ?? null}
-          onImages={(images) => {
-            const nextPositions: Record<string, import("@/content/seasons").OrnamentPosition> = {};
-            for (const img of images) {
-              if (item.ornamentPositions?.[img]) {
-                nextPositions[img] = item.ornamentPositions[img];
+          onOpenCatalog={handleOpenCatalog}
+          onChangePlacements={(placements) => {
+            const allAssets: string[] = [];
+            for (const group of placements) {
+              for (const asset of group.assets) {
+                if (asset && !allAssets.includes(asset)) {
+                  allAssets.push(asset);
+                }
               }
             }
-            onChange({ ornamentImages: images, ornamentPositions: nextPositions });
-            onImages(images);
+            let nextCursor = item.cursorOrnament;
+            if (nextCursor && !allAssets.includes(nextCursor)) {
+              nextCursor = null;
+            }
+            onChange({
+              placements,
+              ornamentImages: allAssets,
+              cursorOrnament: nextCursor,
+            });
           }}
-          onPositions={(ornamentPositions) => {
-            onChange({ ornamentPositions });
-            onPreview();
+          onCursorOrnament={(cursorOrnament) => {
+            onChange({ cursorOrnament });
           }}
-          onCursorOrnament={(cursorOrnament) => onChange({ cursorOrnament })}
         />
       </div>
+
+      {/* Shared Ornament Catalog Drawer */}
+      {catalogOpen && data && setData ? (
+        <SeasonCatalogDrawer
+          data={data}
+          setData={setData}
+          onClose={() => setCatalogOpen(false)}
+        />
+      ) : null}
     </section>
   );
 }
 
 /**
- * Month and day fields for a repeating window.
+ * Month and day fields for a repeating annual window.
  * @example <AnnualDates start="12-20" end="12-26" onChange={set} />
  */
 function AnnualDates({

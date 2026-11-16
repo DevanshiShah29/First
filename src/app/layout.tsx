@@ -75,6 +75,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             season={season.id}
             images={season.ornamentImages}
             positions={season.ornamentPositions}
+            placements={season.placements}
           />
         ) : null}
         <GoogleAnalytics />

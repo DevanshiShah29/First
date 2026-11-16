@@ -87,12 +87,17 @@ export function SeasonOrnamentCatalog({
                 ornamentPositions[imageUrl] = ornamentPositions[oldUrl];
                 delete ornamentPositions[oldUrl];
               }
+              const placements = item.placements?.map((group) => ({
+                ...group,
+                assets: group.assets.map((src) => (src === oldUrl ? imageUrl : src)),
+              }));
               return {
                 ...item,
                 ornamentImages: Array.from(
                   new Set(item.ornamentImages.map((src) => (src === oldUrl ? imageUrl : src))),
                 ),
                 ornamentPositions,
+                placements,
               };
             })
           : currentSeasons.items;
@@ -120,10 +125,15 @@ export function SeasonOrnamentCatalog({
               ? { ...item.ornamentPositions }
               : {};
             delete ornamentPositions[ornament.imageUrl];
+            const placements = item.placements?.map((group) => ({
+              ...group,
+              assets: group.assets.filter((src) => src !== ornament.imageUrl),
+            }));
             return {
               ...item,
               ornamentImages: item.ornamentImages.filter((src) => src !== ornament.imageUrl),
               ornamentPositions,
+              placements,
             };
           })
         : currentSeasons.items;

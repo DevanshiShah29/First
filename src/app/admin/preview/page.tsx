@@ -113,22 +113,19 @@ export default function AdminPreviewPage() {
       {preview ? (
         <>
           <style dangerouslySetInnerHTML={{ __html: themeCss(themeWithSeason(preview.content.theme, season)) }} />
-          {season?.intensity === "full" ? (
+          {season && (season.intensity === "full" || Boolean(season.placements?.length)) ? (
             <SeasonLayer
               season={season.id}
               images={season.ornamentImages}
               positions={season.ornamentPositions}
+              placements={season.placements}
               placement="preview"
             />
           ) : null}
           {preview.section === "memories" ? null : (
             <Cursor
               style={preview.content.site.cursor.style}
-              ornament={
-                season?.cursorOrnament && season.ornamentImages.includes(season.cursorOrnament)
-                  ? season.cursorOrnament
-                  : null
-              }
+              ornament={season?.cursorOrnament || null}
             />
           )}
           <main id="cms-preview-main" tabIndex={-1}>

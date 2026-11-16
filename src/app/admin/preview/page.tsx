@@ -6,7 +6,12 @@ import { Cormorant_Garamond, Space_Mono, Waiting_for_the_Sunrise } from "next/fo
 
 // Application services & types
 import type { ContentData } from "@/content/types";
-import { resolveActiveSeason, themeWithSeason } from "@/content/seasons";
+import {
+  resolveActiveSeason,
+  resolveActiveCursorOrnament,
+  showsSeasonDecorations,
+  themeWithSeason,
+} from "@/content/seasons";
 import { Cursor } from "@/components/Cursor";
 import { SeasonLayer } from "@/components/season/SeasonLayer";
 import { themeCss } from "@/lib/theme";
@@ -113,7 +118,7 @@ export default function AdminPreviewPage() {
       {preview ? (
         <>
           <style dangerouslySetInnerHTML={{ __html: themeCss(themeWithSeason(preview.content.theme, season)) }} />
-          {season && (season.intensity === "full" || Boolean(season.placements?.length)) ? (
+          {showsSeasonDecorations(season) ? (
             <SeasonLayer
               season={season.id}
               images={season.ornamentImages}
@@ -125,7 +130,7 @@ export default function AdminPreviewPage() {
           {preview.section === "memories" ? null : (
             <Cursor
               style={preview.content.site.cursor.style}
-              ornament={season?.cursorOrnament || null}
+              ornament={resolveActiveCursorOrnament(preview.content.site.seasons)}
             />
           )}
           <main id="cms-preview-main" tabIndex={-1}>

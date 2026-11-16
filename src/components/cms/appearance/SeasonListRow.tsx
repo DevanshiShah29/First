@@ -1,6 +1,7 @@
 "use client";
 
 import type { SeasonConfig } from "@/content/seasons";
+import { placementItemCount } from "@/content/season-placement-layout";
 import { SeasonTrack } from "./SeasonTrack";
 import { scheduleSummary, seasonBadges, seasonName } from "./season-labels";
 import type { DayParts } from "./season-timeline";
@@ -34,6 +35,7 @@ export function SeasonListRow({
   countdown,
   overlap,
   today,
+  variant = "row",
   onSelect,
   onToggle,
   onPreview,
@@ -49,6 +51,8 @@ export function SeasonListRow({
   countdown: string | null;
   overlap: boolean;
   today: DayParts;
+  /** "selector" is the compact horizontal festival card. */
+  variant?: "row" | "selector";
   onSelect: () => void;
   onToggle: (enabled: boolean) => void;
   onPreview: () => void;
@@ -56,10 +60,19 @@ export function SeasonListRow({
   const name = seasonName(item);
   const inverted = item.schedule.kind === "dated" && item.schedule.start > item.schedule.end;
   const badges = seasonBadges(item, showing, ended, inverted, overlap, today);
+  const decoratedGroups = (item.placements ?? []).filter((group) => group.assets.length > 0);
+  const decorationCount = decoratedGroups.reduce(
+    (total, group) => total + placementItemCount(group),
+    0,
+  );
+  const decorationsOff = decorationCount > 0 && item.intensity === "subtle";
+  const decorationTitle = decorationsOff
+    ? `${decorationCount} ornament${decorationCount === 1 ? "" : "s"} configured in ${decoratedGroups.length} group${decoratedGroups.length === 1 ? "" : "s"}, but this season is palette only.`
+    : `${decorationCount} ornament${decorationCount === 1 ? "" : "s"} configured in ${decoratedGroups.length} group${decoratedGroups.length === 1 ? "" : "s"}.`;
 
   return (
     <li
-      className={`wp-season-item${selected ? " is-selected" : ""}${showing ? " is-showing" : ""}${!item.enabled ? " is-off" : ""}`}
+      className={`wp-season-item${variant === "selector" ? " is-selector-card" : ""}${selected ? " is-selected" : ""}${showing ? " is-showing" : ""}${!item.enabled ? " is-off" : ""}`}
       style={{
         background: item.enabled
           ? `linear-gradient(115deg, ${hexToRgba(item.palette.brandFrom, 0.12)} 0%, ${hexToRgba(item.palette.brandTo, 0.06)} 40%, #ffffff 80%)`
@@ -115,21 +128,33 @@ export function SeasonListRow({
                 {b.label}
               </span>
             ))}
+            {decorationCount > 0 ? (
+              <span
+                className={`wp-season-pill ${decorationsOff ? "is-decorations-off" : "is-decorated"}`}
+                title={decorationTitle}
+              >
+                {decorationsOff
+                  ? "Decorations hidden"
+                  : `${decorationCount} ornament${decorationCount === 1 ? "" : "s"}`}
+              </span>
+            ) : null}
             {previewing ? <span className="wp-season-pill is-previewing">Preview</span> : null}
           </span>
           <span className="wp-season-item-meta">
             {scheduleSummary(item.schedule)}
             {countdown ? ` · ${countdown}` : ""}
           </span>
-          <span className="wp-season-item-track">
-            <SeasonTrack
-              item={item}
-              today={today}
-              previewDate={previewing ? previewDate : null}
-              label={name}
-              off={!item.enabled}
-            />
-          </span>
+          {variant === "row" ? (
+            <span className="wp-season-item-track">
+              <SeasonTrack
+                item={item}
+                today={today}
+                previewDate={previewing ? previewDate : null}
+                label={name}
+                off={!item.enabled}
+              />
+            </span>
+          ) : null}
           {inverted ? (
             <span className="wp-season-item-note">End is before start, so this season cannot match.</span>
           ) : null}
@@ -151,15 +176,17 @@ export function SeasonListRow({
           </span>
           {item.enabled ? "On" : "Off"}
         </button>
-        <button
-          type="button"
-          className="wp-btn wp-btn-small"
-          aria-label={`Preview ${name}`}
-          title="Show this season in preview"
-          onClick={onPreview}
-        >
-          Preview
-        </button>
+        {variant === "row" ? (
+          <button
+            type="button"
+            className="wp-btn wp-btn-small"
+            aria-label={`Preview ${name}`}
+            title="Show this season in preview"
+            onClick={onPreview}
+          >
+            Preview
+          </button>
+        ) : null}
       </div>
     </li>
   );

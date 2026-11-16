@@ -20,8 +20,13 @@ import {
   type PlacementVisibility,
   type SeasonOrnament,
 } from "@/content/seasons";
+import {
+  placementItemCount,
+  placementVisibleAt,
+} from "@/content/season-placement-layout";
 import { cleanOrnamentUrl } from "./SeasonOrnamentPicker";
 import { ConfirmButton } from "../components/ConfirmDialog";
+import type { PreviewSeasonSummary } from "../preview/preview-summary";
 
 const SPACING_PRESETS = [
   { label: "Tight", value: 1 },
@@ -109,6 +114,7 @@ function PositionMinimap({
 export function SeasonPlacementEditor({
   placements,
   ornaments,
+  renderSummary,
   cursorOrnament,
   onOpenCatalog,
   onChangePlacements,
@@ -116,6 +122,7 @@ export function SeasonPlacementEditor({
 }: {
   placements: PlacementGroup[];
   ornaments: SeasonOrnament[];
+  renderSummary?: PreviewSeasonSummary | null;
   cursorOrnament: string | null;
   onOpenCatalog?: () => void;
   onChangePlacements: (placements: PlacementGroup[]) => void;
@@ -128,6 +135,11 @@ export function SeasonPlacementEditor({
   });
 
   const availableCatalog = ornaments.filter((item) => item.imageUrl);
+  const renderedById = new Map(
+    (renderSummary?.placements ?? []).map((entry) => [entry.id, entry]),
+  );
+  const hiddenDuplicateIds = new Set(renderSummary?.hiddenDuplicateIds ?? []);
+  const viewportWidth = renderSummary?.width ?? 0;
 
   // All unique assets across all placement groups
   const allUsedAssets = Array.from(
@@ -221,6 +233,10 @@ export function SeasonPlacementEditor({
           <p className="wp-description">
             Arrange ornaments in named groups — header garlands, edge borders, corners, or custom positions.
           </p>
+          <p className="wp-description">
+            “Configured” counts every repeated ornament. “Visible” comes from the live preview at the
+            selected width, so it also drops groups the public page hides.
+          </p>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0 }}>
           <button
@@ -271,7 +287,47 @@ export function SeasonPlacementEditor({
             const animMeta = PLACEMENT_ANIMATIONS.find((a) => a.id === group.animation) || PLACEMENT_ANIMATIONS[0];
             const visMeta = PLACEMENT_VISIBILITIES.find((v) => v.id === group.visibility) || PLACEMENT_VISIBILITIES[0];
             const hasAssets = group.assets.length > 0;
-            const totalItems = group.assets.length * Math.max(1, group.repeat);
+            const totalItems = placementItemCount(group);
+            const rendered = renderedById.get(group.id);
+            const shownHere = !renderSummary || placementVisibleAt(group, viewportWidth);
+            const overflowHidden = hiddenDuplicateIds.has(group.id);
+            const isEdge = group.position === "left-edge" || group.position === "right-edge";
+            const isCorners = group.position === "corners";
+            const isCustom = group.position === "custom";
+            const renderNote =
+              !renderSummary || !hasAssets
+                ? null
+                : !shownHere
+                  ? { tone: "info", text: `${visMeta.label}: this group is hidden at ${viewportWidth}px.` }
+                  : overflowHidden
+                    ? {
+                        tone: "warning",
+                        text: "Hidden at this width: earlier groups already fill this area. Reorder the list or widen the preview to see it.",
+                      }
+                    : !rendered
+                      ? {
+                          tone: "warning",
+                          text: "This group did not render. Check that its ornament images load.",
+                        }
+                      : rendered.broken > 0
+                        ? {
+                            tone: "warning",
+                            text: `${rendered.broken} image${rendered.broken === 1 ? "" : "s"} failed to load${rendered.visible < rendered.total ? `; ${rendered.visible} of ${rendered.total} painted` : ""}.`,
+                          }
+                        : rendered.visible === 0
+                          ? {
+                              tone: "warning",
+                              text: "No ornament fits at this width. Reduce the ornament size or spacing.",
+                            }
+                          : rendered.visible < rendered.total
+                            ? {
+                                tone: "info",
+                                text: `${rendered.visible} of ${rendered.total} configured ornaments fit at ${viewportWidth}px; the rest stay configured.`,
+                              }
+                            : {
+                                tone: "ok",
+                                text: `All ${rendered.total} configured ornaments render at ${viewportWidth}px.`,
+                              };
 
             return (
               <div
@@ -345,7 +401,7 @@ export function SeasonPlacementEditor({
                       </span>
                       <span className="wp-season-pos-region-badge">
                         {hasAssets
-                          ? `${totalItems} item${totalItems !== 1 ? "s" : ""}`
+                          ? `${totalItems} configured`
                           : "⚠ no ornaments"}
                       </span>
                       <span className="wp-season-pos-region-badge">{sizeMeta.label}</span>
@@ -353,6 +409,34 @@ export function SeasonPlacementEditor({
                       {group.visibility !== "all" ? (
                         <span className="wp-season-pos-region-badge" style={{ background: "#e0f2fe", color: "#0369a1" }}>
                           {visMeta.label}
+                        </span>
+                      ) : null}
+                      {renderSummary && hasAssets && shownHere && !overflowHidden ? (
+                        <span
+                          className={`wp-season-pos-region-badge${rendered && rendered.visible === 0 ? " is-warning" : ""}`}
+                          title={`Rendered by the preview at ${viewportWidth}px`}
+                        >
+                          {rendered
+                            ? `${rendered.visible} of ${rendered.total} visible`
+                            : "Not rendered"}
+                        </span>
+                      ) : null}
+                      {renderSummary && rendered && rendered.broken > 0 && shownHere ? (
+                        <span
+                          className="wp-season-pos-region-badge is-warning"
+                          title="These images failed to load in the preview"
+                        >
+                          {rendered.broken} image{rendered.broken === 1 ? "" : "s"} failed
+                        </span>
+                      ) : null}
+                      {renderSummary && hasAssets && !shownHere ? (
+                        <span className="wp-season-pos-region-badge" title={visMeta.label}>
+                          Not shown at {viewportWidth}px
+                        </span>
+                      ) : null}
+                      {renderSummary && overflowHidden ? (
+                        <span className="wp-season-pos-region-badge is-warning">
+                          Hidden · duplicates overflow
                         </span>
                       ) : null}
                     </div>
@@ -427,7 +511,7 @@ export function SeasonPlacementEditor({
                     </div>
 
                     {/* ── Custom Coordinates ── */}
-                    {group.position === "custom" ? (
+                    {isCustom ? (
                       <div
                         style={{
                           padding: "12px 14px",
@@ -439,6 +523,9 @@ export function SeasonPlacementEditor({
                         <span style={{ fontSize: 11, fontWeight: 600, color: "#1e40af", display: "block", marginBottom: 8 }}>
                           ✨ Custom Position (CSS values: 20%, 4rem, 50px…)
                         </span>
+                        <p style={{ fontSize: 11, color: "#1e40af", margin: "0 0 10px" }}>
+                          Custom coordinates stay exactly as entered and do not draw a motif edge.
+                        </p>
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
                           {(["top", "bottom", "left", "right"] as const).map((side) => (
                             <label key={side} style={{ fontSize: 11, color: "#646970", display: "flex", flexDirection: "column", gap: 3 }}>
@@ -462,6 +549,12 @@ export function SeasonPlacementEditor({
                       </div>
                     ) : null}
 
+                    {renderNote ? (
+                      <p className={`wp-season-render-note is-${renderNote.tone}`}>
+                        {renderNote.text}
+                      </p>
+                    ) : null}
+
                     {/* ── Ornaments ── */}
                     <div>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -469,7 +562,7 @@ export function SeasonPlacementEditor({
                           Ornaments
                           {group.assets.length > 0 && (
                             <span style={{ fontSize: 10, fontWeight: 400, marginLeft: 6, color: "#8c8f94", textTransform: "none" }}>
-                              {group.assets.length} selected · {totalItems} rendered
+                              {group.assets.length} selected · {totalItems} configured
                             </span>
                           )}
                         </span>
@@ -576,48 +669,60 @@ export function SeasonPlacementEditor({
                         <span style={{ fontSize: 11, fontWeight: 600, color: "#50575e", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
                           Alignment
                         </span>
-                        <div className="wp-seg" role="group" aria-label="Alignment">
-                          {PLACEMENT_ALIGNMENTS.map((align) => (
-                            <label
-                              key={align.id}
-                              className={group.alignment === align.id ? "is-selected" : undefined}
-                            >
-                              <input
-                                type="radio"
-                                name={`group-align-${group.id}`}
-                                checked={group.alignment === align.id}
-                                onChange={() =>
-                                  handleUpdate(group.id, { alignment: align.id as PlacementAlignment })
-                                }
-                              />
-                              {align.label}
-                            </label>
-                          ))}
-                        </div>
+                        {isCorners ? (
+                          <p className="wp-season-control-note">
+                            Each corner grows from its own edge, so alignment is not used.
+                          </p>
+                        ) : (
+                          <div className="wp-seg" role="group" aria-label="Alignment">
+                            {PLACEMENT_ALIGNMENTS.map((align) => (
+                              <label
+                                key={align.id}
+                                className={group.alignment === align.id ? "is-selected" : undefined}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`group-align-${group.id}`}
+                                  checked={group.alignment === align.id}
+                                  onChange={() =>
+                                    handleUpdate(group.id, { alignment: align.id as PlacementAlignment })
+                                  }
+                                />
+                                {align.label}
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div>
                         <span style={{ fontSize: 11, fontWeight: 600, color: "#50575e", textTransform: "uppercase", letterSpacing: "0.04em", display: "block", marginBottom: 6 }}>
                           Orientation
                         </span>
-                        <div className="wp-seg" role="group" aria-label="Orientation">
-                          {PLACEMENT_ORIENTATIONS.map((orient) => (
-                            <label
-                              key={orient.id}
-                              className={group.orientation === orient.id ? "is-selected" : undefined}
-                            >
-                              <input
-                                type="radio"
-                                name={`group-orient-${group.id}`}
-                                checked={group.orientation === orient.id}
-                                onChange={() =>
-                                  handleUpdate(group.id, { orientation: orient.id as PlacementOrientation })
-                                }
-                              />
-                              {orient.label}
-                            </label>
-                          ))}
-                        </div>
+                        {isEdge ? (
+                          <p className="wp-season-control-note">
+                            Edge rails always run vertically down the page.
+                          </p>
+                        ) : (
+                          <div className="wp-seg" role="group" aria-label="Orientation">
+                            {PLACEMENT_ORIENTATIONS.map((orient) => (
+                              <label
+                                key={orient.id}
+                                className={group.orientation === orient.id ? "is-selected" : undefined}
+                              >
+                                <input
+                                  type="radio"
+                                  name={`group-orient-${group.id}`}
+                                  checked={group.orientation === orient.id}
+                                  onChange={() =>
+                                    handleUpdate(group.id, { orientation: orient.id as PlacementOrientation })
+                                  }
+                                />
+                                {orient.label}
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -658,7 +763,7 @@ export function SeasonPlacementEditor({
                           </span>
                         </div>
                         <p style={{ fontSize: 11, color: "#8c8f94", margin: "4px 0 0" }}>
-                          {totalItems} ornament{totalItems !== 1 ? "s" : ""} rendered total
+                          {totalItems} ornament{totalItems !== 1 ? "s" : ""} configured in total
                         </p>
                       </div>
 

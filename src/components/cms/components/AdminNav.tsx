@@ -158,10 +158,14 @@ export function AdminMenu({
   menu,
   go,
   setMenuOpen,
+  collapsed,
+  onToggleCollapse,
 }: {
   menu: MenuItem[];
   go: (screen: Screen) => void;
   setMenuOpen: (v: boolean) => void;
+  collapsed: boolean;
+  onToggleCollapse: () => void;
 }) {
   return (
     <nav id="admin-menu" className="wp-menu" aria-label="Admin">
@@ -170,6 +174,8 @@ export function AdminMenu({
           <li key={item.id} className={item.match ? "is-current" : undefined}>
             <button
               type="button"
+              title={item.label}
+              aria-label={collapsed ? item.label : undefined}
               onClick={() => {
                 setMenuOpen(false);
                 go(item.id);
@@ -177,11 +183,28 @@ export function AdminMenu({
               aria-current={item.match ? "page" : undefined}
             >
               {item.icon}
-              {item.label}
+              <span className="wp-menu-label">{item.label}</span>
             </button>
           </li>
         ))}
       </ul>
+
+      <div className="wp-menu-foot">
+        <button
+          type="button"
+          className="wp-menu-collapse"
+          aria-label={collapsed ? "Expand admin menu" : "Collapse admin menu"}
+          aria-expanded={!collapsed}
+          aria-controls="admin-menu"
+          title={collapsed ? "Expand menu" : "Collapse menu"}
+          onClick={onToggleCollapse}
+        >
+          <span className="wp-menu-collapse-icon" aria-hidden="true">
+            {collapsed ? "»" : "«"}
+          </span>
+          <span className="wp-menu-label">{collapsed ? "Expand menu" : "Collapse menu"}</span>
+        </button>
+      </div>
     </nav>
   );
 }

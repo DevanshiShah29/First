@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 import {
   createCustomSeason,
   datedWindowEnded,
@@ -14,6 +21,8 @@ import {
 } from "@/content/seasons";
 import type { ContentData } from "@/content/types";
 import { Metabox } from "../components/Metabox";
+import type { PreviewSeasonSummary } from "../preview/preview-summary";
+import { EditorTabs } from "../preview/EditorTabs";
 import { SeasonCalendar } from "./SeasonCalendar";
 import { SeasonEditor } from "./SeasonEditor";
 import { SeasonListRow } from "./SeasonListRow";
@@ -33,15 +42,23 @@ import { seasonsOverlap } from "./season-timeline";
 export function SeasonsPanel({
   data,
   setData,
+  renderSummary,
   previewId,
   previewDate,
+  preview,
+  catalogue,
   onPreviewSeason,
   onPreviewDate,
 }: {
   data: ContentData;
   setData: Dispatch<SetStateAction<ContentData>>;
+  renderSummary?: PreviewSeasonSummary | null;
   previewId?: SeasonConfig["id"] | null;
   previewDate?: string | null;
+  /** Live preview column, supplied by the screen so this panel only owns layout. */
+  preview?: ReactNode;
+  /** Ornament catalogue content for the secondary workspace tab. */
+  catalogue?: ReactNode;
   onPreviewSeason?: (id: string | null, options?: { openTab?: boolean }) => void;
   onPreviewDate?: (iso: string | null) => void;
 }) {
@@ -111,7 +128,7 @@ export function SeasonsPanel({
   }
 
   /**
-   * Opens one season beside the list and paints it in the preview.
+   * Selects one festival and paints it in the preview.
    */
   function selectSeason(id: SeasonConfig["id"]) {
     setSelectedId(id);
@@ -120,7 +137,6 @@ export function SeasonsPanel({
     if (editor) {
       editor.scrollTop = 0;
     }
-    if (!window.matchMedia("(max-width: 1100px)").matches) return;
     window.setTimeout(() => {
       if (!editor) return;
       const top = editor.getBoundingClientRect().top;
@@ -178,6 +194,56 @@ export function SeasonsPanel({
     if (selectedId === id) setSelectedId(null);
     if (previewId === id) onPreviewSeason?.(null);
   }
+
+  const selectorRef = useRef<HTMLUListElement>(null);
+  const selectorOrder = sortedItems.map((item) => item.id).join("|");
+
+  // Keep the selected festival card visible in the horizontal selector.
+  useEffect(() => {
+    const list = selectorRef.current;
+    const card = list?.querySelector<HTMLElement>(".wp-season-item.is-selected");
+    if (!list || !card) return;
+    const listRect = list.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const cardLeft = cardRect.left - listRect.left + list.scrollLeft;
+    const cardRight = cardLeft + cardRect.width;
+    if (cardLeft < list.scrollLeft) {
+      list.scrollTo({ left: cardLeft, behavior: "smooth" });
+    } else if (cardRight > list.scrollLeft + list.clientWidth) {
+      list.scrollTo({ left: cardRight - list.clientWidth, behavior: "smooth" });
+    }
+  }, [selectedId, selectorOrder]);
+
+  /**
+   * The existing detail editor, reused unchanged inside the new workspace.
+   */
+  const detailPanel = selectedItem ? (
+    <SeasonEditor
+      item={selectedItem}
+      ornaments={seasons.ornaments ?? []}
+      ended={datedWindowEnded(selectedItem, parts)}
+      year={parts.year}
+      rank={sortedItems.findIndex((item) => item.id === selectedItem.id) + 1}
+      totalCount={sortedItems.length}
+      data={data}
+      setData={setData}
+      renderSummary={
+        renderSummary && renderSummary.seasonId === selectedItem.id ? renderSummary : null
+      }
+      onChange={(patch) => updateItem(selectedItem.id, patch)}
+      onPalette={(palette) => changePalette(selectedItem.id, palette)}
+      onClose={() => setSelectedId(null)}
+      onPreview={() => onPreviewSeason?.(selectedItem.id, { openTab: true })}
+      onRemove={() => removeFestival(selectedItem.id)}
+    />
+  ) : (
+    <div className="wp-season-detail-empty">
+      <p className="wp-palette-column-title">No festival selected</p>
+      <p className="wp-description">
+        Pick a festival above to edit its dates, palette, and ornaments.
+      </p>
+    </div>
+  );
 
   return (
     <>
@@ -259,176 +325,167 @@ export function SeasonsPanel({
           </p>
         ) : null}
 
-        <div className="wp-season-workspace">
-          <div className="wp-season-master">
-            <div className="wp-season-master-head">
-              <div>
-                <h3 className="wp-palette-column-title">Seasons</h3>
-                <p className="wp-description">
-                  Sorted by nearest date — currently active and upcoming festivals appear first.
-                </p>
-              </div>
-              {adding ? null : (
-                <button
-                  type="button"
-                  className="wp-btn wp-btn-secondary"
-                  disabled={!canAdd}
-                  onClick={beginAdd}
-                >
-                  + Add festival
-                </button>
-              )}
+        <section className="wp-season-selector" aria-label="Festival selector">
+          <div className="wp-season-selector-head">
+            <div>
+              <h3 className="wp-palette-column-title">Festivals</h3>
+              <p className="wp-description">
+                Sorted by nearest date — currently active and upcoming festivals appear first.
+              </p>
             </div>
-
-            {adding ? (
-              <form
-                className="wp-season-add-form"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  submitNewFestival();
-                }}
+            {adding ? null : (
+              <button
+                type="button"
+                className="wp-btn wp-btn-secondary"
+                disabled={!canAdd}
+                onClick={beginAdd}
               >
-                <label className="wp-season-add-field">
-                  Name
-                  <input
-                    className="wp-input"
-                    value={newName}
-                    maxLength={60}
-                    placeholder="Festival"
-                    autoFocus
-                    required
-                    onChange={(event) => setNewName(event.target.value)}
-                  />
-                </label>
-                <label className="wp-season-add-field">
-                  Starts
-                  <input
-                    className="wp-input"
-                    type="date"
-                    value={newStart}
-                    required
-                    onChange={(event) => setNewStart(event.target.value)}
-                  />
-                </label>
-                <label className="wp-season-add-field">
-                  Ends
-                  <input
-                    className="wp-input"
-                    type="date"
-                    value={newEnd}
-                    required
-                    onChange={(event) => setNewEnd(event.target.value)}
-                  />
-                </label>
-                <div className="wp-season-add-actions">
-                  <button
-                    type="submit"
-                    className="wp-btn wp-btn-primary"
-                    disabled={!newStart.trim() || !newEnd.trim() || newStart.trim() > newEnd.trim()}
-                  >
-                    Add festival
-                  </button>
-                  <button type="button" className="wp-btn" onClick={() => setAdding(false)}>
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : null}
-
-            <ul className="wp-season-list">
-              {sortedItems.map((item, index) => {
-                const covered =
-                  seasons.mode === "schedule" &&
-                  active &&
-                  active.id !== item.id &&
-                  matches.some((match) => match.id === item.id);
-                const hasDateOverlap = item.enabled && overlappingItemIds.has(item.id);
-                const isOverlapping = Boolean(covered || hasDateOverlap);
-                const forcedWhileOff =
-                  seasons.mode === "manual" && active?.id === item.id && !item.enabled;
-                const notice = forcedWhileOff
-                  ? "Forced on, so the switch is ignored until you follow the calendar."
-                  : covered && active
-                    ? `${seasonName(active)} is higher, so it wins today.`
-                    : null;
-                return (
-                  <SeasonListRow
-                    key={item.id}
-                    item={item}
-                    rank={index + 1}
-                    selected={selectedId === item.id}
-                    showing={active?.id === item.id}
-                    ended={datedWindowEnded(item, parts)}
-                    previewing={previewId === item.id}
-                    previewDate={previewDate ?? null}
-                    notice={notice}
-                    countdown={seasonCountdown(item, parts)}
-                    overlap={isOverlapping}
-                    today={parts}
-                    onSelect={() => selectSeason(item.id)}
-                    onToggle={(enabled) => updateItem(item.id, { enabled })}
-                    onPreview={() => onPreviewSeason?.(item.id, { openTab: true })}
-                  />
-                );
-              })}
-            </ul>
-
-            <details className="wp-season-overview">
-              <summary className="wp-season-overview-summary">
-                <span className="wp-season-overview-title">
-                  <svg
-                    className="wp-season-overview-chevron"
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                  Year overview
-                </span>
-                <span className="wp-season-overview-hint">Windows in {parts.year}</span>
-              </summary>
-              <SeasonCalendar
-                items={seasons.items}
-                parts={parts}
-                previewDate={previewDate ?? null}
-                onPreviewDate={(iso) => onPreviewDate?.(iso)}
-              />
-            </details>
-          </div>
-
-          <div className="wp-season-detail" id="season-editor">
-            {selectedItem ? (
-              <SeasonEditor
-                item={selectedItem}
-                ornaments={seasons.ornaments ?? []}
-                ended={datedWindowEnded(selectedItem, parts)}
-                year={parts.year}
-                rank={sortedItems.findIndex((item) => item.id === selectedItem.id) + 1}
-                totalCount={sortedItems.length}
-                data={data}
-                setData={setData}
-                onChange={(patch) => updateItem(selectedItem.id, patch)}
-                onPalette={(palette) => changePalette(selectedItem.id, palette)}
-                onClose={() => setSelectedId(null)}
-                onPreview={() => onPreviewSeason?.(selectedItem.id, { openTab: true })}
-                onRemove={() => removeFestival(selectedItem.id)}
-              />
-            ) : (
-              <div className="wp-season-detail-empty">
-                <p className="wp-palette-column-title">No season selected</p>
-                <p className="wp-description">
-                  Pick a season from the list to edit its dates, palette, and ornaments.
-                </p>
-              </div>
+                + Add festival
+              </button>
             )}
           </div>
+
+          {adding ? (
+            <form
+              className="wp-season-add-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                submitNewFestival();
+              }}
+            >
+              <label className="wp-season-add-field">
+                Name
+                <input
+                  className="wp-input"
+                  value={newName}
+                  maxLength={60}
+                  placeholder="Festival"
+                  autoFocus
+                  required
+                  onChange={(event) => setNewName(event.target.value)}
+                />
+              </label>
+              <label className="wp-season-add-field">
+                Starts
+                <input
+                  className="wp-input"
+                  type="date"
+                  value={newStart}
+                  required
+                  onChange={(event) => setNewStart(event.target.value)}
+                />
+              </label>
+              <label className="wp-season-add-field">
+                Ends
+                <input
+                  className="wp-input"
+                  type="date"
+                  value={newEnd}
+                  required
+                  onChange={(event) => setNewEnd(event.target.value)}
+                />
+              </label>
+              <div className="wp-season-add-actions">
+                <button
+                  type="submit"
+                  className="wp-btn wp-btn-primary"
+                  disabled={!newStart.trim() || !newEnd.trim() || newStart.trim() > newEnd.trim()}
+                >
+                  Add festival
+                </button>
+                <button type="button" className="wp-btn" onClick={() => setAdding(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          <ul className="wp-season-list is-selector" ref={selectorRef}>
+            {sortedItems.map((item, index) => {
+              const covered =
+                seasons.mode === "schedule" &&
+                active &&
+                active.id !== item.id &&
+                matches.some((match) => match.id === item.id);
+              const hasDateOverlap = item.enabled && overlappingItemIds.has(item.id);
+              const isOverlapping = Boolean(covered || hasDateOverlap);
+              const forcedWhileOff =
+                seasons.mode === "manual" && active?.id === item.id && !item.enabled;
+              const notice = forcedWhileOff
+                ? "Forced on, so the switch is ignored until you follow the calendar."
+                : covered && active
+                  ? `${seasonName(active)} is higher, so it wins today.`
+                  : null;
+              return (
+                <SeasonListRow
+                  key={item.id}
+                  item={item}
+                  rank={index + 1}
+                  selected={selectedId === item.id}
+                  showing={active?.id === item.id}
+                  ended={datedWindowEnded(item, parts)}
+                  previewing={previewId === item.id}
+                  previewDate={previewDate ?? null}
+                  notice={notice}
+                  countdown={seasonCountdown(item, parts)}
+                  overlap={isOverlapping}
+                  today={parts}
+                  variant="selector"
+                  onSelect={() => selectSeason(item.id)}
+                  onToggle={(enabled) => updateItem(item.id, { enabled })}
+                  onPreview={() => onPreviewSeason?.(item.id, { openTab: true })}
+                />
+              );
+            })}
+          </ul>
+
+          <details className="wp-season-overview">
+            <summary className="wp-season-overview-summary">
+              <span className="wp-season-overview-title">
+                <svg
+                  className="wp-season-overview-chevron"
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+                Year overview
+              </span>
+              <span className="wp-season-overview-hint">Windows in {parts.year}</span>
+            </summary>
+            <SeasonCalendar
+              items={seasons.items}
+              parts={parts}
+              previewDate={previewDate ?? null}
+              onPreviewDate={(iso) => onPreviewDate?.(iso)}
+            />
+          </details>
+        </section>
+
+        <div id="season-editor" className="wp-season-workspace">
+          {preview ? (
+            <EditorTabs
+              split
+              dataLabel="Season details"
+              middleTab={
+                catalogue
+                  ? { id: "catalogue", label: "Manage catalogue", content: catalogue }
+                  : undefined
+              }
+              preview={preview}
+            >
+              <div className="wp-season-detail">{detailPanel}</div>
+            </EditorTabs>
+          ) : (
+            <div className="wp-season-detail">{detailPanel}</div>
+          )}
         </div>
       </Metabox>
     </>

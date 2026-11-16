@@ -12,6 +12,7 @@ import {
 import type { ContentData } from "@/content/types";
 import { EditablePalette, PaletteColorRow } from "./EditablePalette";
 import { ConfirmButton } from "../components/ConfirmDialog";
+import type { PreviewSeasonSummary } from "../preview/preview-summary";
 import { SeasonAiPanel } from "./SeasonAiPanel";
 import { SeasonPlacementEditor } from "./SeasonPlacementEditor";
 import { SeasonCatalogDrawer } from "./SeasonCatalogDrawer";
@@ -129,6 +130,7 @@ export function SeasonEditor({
   totalCount,
   data,
   setData,
+  renderSummary,
   onOpenCatalog,
   onChange,
   onPalette,
@@ -144,6 +146,7 @@ export function SeasonEditor({
   totalCount?: number;
   data?: ContentData;
   setData?: Dispatch<SetStateAction<ContentData>>;
+  renderSummary?: PreviewSeasonSummary | null;
   onOpenCatalog?: () => void;
   onChange: (patch: Partial<SeasonConfig>) => void;
   onPalette: (palette: SeasonPalette) => void;
@@ -160,6 +163,7 @@ export function SeasonEditor({
   const aiNote = aiNotes[item.id] ?? "";
 
   const validation = validateSeasonDates(item.schedule, ended);
+  const configuredGroups = (item.placements ?? []).filter((group) => group.assets.length > 0).length;
 
   /**
    * Rolls a dated window one year forward so it can run again.
@@ -467,10 +471,24 @@ export function SeasonEditor({
             : "Palette + Ornaments: displays custom theme colors, screen ornaments, and custom cursor."}
         </p>
 
+        {item.intensity === "subtle" && configuredGroups > 0 ? (
+          <p className="wp-season-validation is-warning" role="status">
+            <span className="wp-season-validation-icon" aria-hidden="true">
+              ℹ
+            </span>
+            <span className="wp-season-validation-text">
+              {configuredGroups} group{configuredGroups === 1 ? " is" : "s are"} configured but will
+              not render while this season is set to Palette only. The preview below shows the
+              public result.
+            </span>
+          </p>
+        ) : null}
+
         {/* Placement Groups & Decorations */}
         <SeasonPlacementEditor
           placements={item.placements ?? []}
           ornaments={ornaments}
+          renderSummary={item.intensity === "subtle" ? null : renderSummary}
           cursorOrnament={item.cursorOrnament ?? null}
           onOpenCatalog={handleOpenCatalog}
           onChangePlacements={(placements) => {

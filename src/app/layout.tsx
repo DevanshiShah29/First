@@ -7,7 +7,11 @@ import { AnalyticsTracker } from "@/components/AnalyticsTracker";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { SeasonLayer } from "@/components/season/SeasonLayer";
 import { loadContent } from "@/content/store";
-import { resolveActiveSeason, themeWithSeason } from "@/content/seasons";
+import {
+  resolveActiveSeason,
+  showsSeasonDecorations,
+  themeWithSeason,
+} from "@/content/seasons";
 import { buildPageMetadata } from "@/lib/seo";
 import { siteOrigin } from "@/lib/site-url";
 import { themeCss, themeInitScript } from "@/lib/theme";
@@ -70,7 +74,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScript(theme.defaultMode) }}
         />
-        {season?.intensity === "full" ? (
+        {showsSeasonDecorations(season) ? (
           <SeasonLayer
             season={season.id}
             images={season.ornamentImages}

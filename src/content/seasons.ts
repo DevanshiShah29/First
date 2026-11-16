@@ -76,12 +76,12 @@ export type PlacementGroup = {
 };
 
 export const PLACEMENT_POSITIONS: { id: PlacementPosition; label: string; icon: string; description: string }[] = [
-  { id: "header", label: "Header", icon: "📌", description: "Hangs along the top header area" },
-  { id: "top-edge", label: "Top Edge", icon: "⬆️", description: "Along the top edge of the screen" },
+  { id: "header", label: "Header", icon: "📌", description: "Hangs below the header, inset from the page edges" },
+  { id: "top-edge", label: "Top Edge", icon: "⬆️", description: "Spans the top of the page, just below the header" },
   { id: "bottom-edge", label: "Bottom Edge", icon: "⬇️", description: "Along the bottom floor of the screen" },
   { id: "left-edge", label: "Left Edge", icon: "⬅️", description: "Running down the left border" },
   { id: "right-edge", label: "Right Edge", icon: "➡️", description: "Running down the right border" },
-  { id: "corners", label: "Corners", icon: "📐", description: "Distributed in the screen corners" },
+  { id: "corners", label: "Corners", icon: "📐", description: "Distributed across the four corners, one ornament per corner slot" },
   { id: "center", label: "Center", icon: "🎯", description: "Centered on the screen" },
   { id: "custom", label: "Custom", icon: "✨", description: "Custom positioning coordinates" },
 ];
@@ -106,6 +106,15 @@ export const PLACEMENT_SIZES: { id: PlacementSize; label: string; rem: number }[
   { id: "large", label: "Large", rem: 4 },
   { id: "custom", label: "Custom", rem: 3 },
 ];
+
+/**
+ * Rendered size of one placement ornament, including custom sizes.
+ * @example placementSizeRem({ size: "custom", customSize: 5 }) // 5
+ */
+export function placementSizeRem(group: Pick<PlacementGroup, "size" | "customSize">): number {
+  if (group.size === "custom") return group.customSize ?? 3;
+  return PLACEMENT_SIZES.find((entry) => entry.id === group.size)?.rem ?? 3;
+}
 
 export const PLACEMENT_ANIMATIONS: { id: PlacementAnimation; label: string }[] = [
   { id: "sway", label: "Sway" },
@@ -1057,8 +1066,19 @@ export function resolveActiveSeason(
 }
 
 /**
+ * True when a live season should paint ornaments and its cursor.
+ * "Palette only" keeps colors but hides every decoration on the public site.
+ * @example showsSeasonDecorations(activeSeason) // true | false
+ */
+export function showsSeasonDecorations(
+  season: SeasonConfig | null | undefined,
+): season is SeasonConfig {
+  return season?.intensity === "full";
+}
+
+/**
  * Resolves the ornament image to use as cursor for the currently live season.
- * Returns null if no season is live or if the live season has no ornament cursor configured.
+ * Returns null if no season is live, the season is palette-only, or no ornament cursor is configured.
  * @example resolveActiveCursorOrnament(settings, new Date()) // "/uploads/artifacts/diya.png" | null
  */
 export function resolveActiveCursorOrnament(
@@ -1066,7 +1086,7 @@ export function resolveActiveCursorOrnament(
   now: Date = new Date(),
 ): string | null {
   const season = resolveActiveSeason(settings, now);
-  if (!season || !season.cursorOrnament) return null;
+  if (!showsSeasonDecorations(season) || !season.cursorOrnament) return null;
   return season.ornamentImages.includes(season.cursorOrnament) ? season.cursorOrnament : null;
 }
 

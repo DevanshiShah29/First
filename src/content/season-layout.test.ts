@@ -1,11 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  cornerBuckets,
   motifFor,
   ornamentPlacementCopy,
   ornamentSpots,
   positionedOrnamentSpots,
+  splitRails,
   spotStyle,
+  visibleInTrack,
   type OrnamentSpot,
 } from "./season-layout";
 
@@ -232,5 +235,64 @@ describe("positionedOrnamentSpots", () => {
     // 0 defaults to top-right, 1 defaults to top-left
     assert.equal(spots[0]?.corner, "tr");
     assert.equal(spots[1]?.corner, "tl");
+  });
+});
+
+describe("cornerBuckets", () => {
+  it("places each ornament in exactly one corner", () => {
+    const buckets = cornerBuckets(["a", "b", "c", "d", "e"]);
+    assert.deepEqual(
+      buckets.map((bucket) => bucket.length),
+      [2, 1, 1, 1],
+    );
+    assert.deepEqual(buckets[0], ["a", "e"]);
+    assert.deepEqual([...buckets.flat()].sort(), ["a", "b", "c", "d", "e"]);
+  });
+
+  it("keeps unused corners empty", () => {
+    const buckets = cornerBuckets(["only"]);
+    assert.deepEqual(
+      buckets.map((bucket) => bucket.length),
+      [1, 0, 0, 0],
+    );
+  });
+});
+
+describe("splitRails", () => {
+  it("balances two rails without reordering or duplicating", () => {
+    const rails = splitRails(["a", "b", "c", "d", "e"]);
+    assert.deepEqual(rails[0], ["a", "b", "c"]);
+    assert.deepEqual(rails[1], ["d", "e"]);
+    assert.deepEqual([...rails[0], ...rails[1]], ["a", "b", "c", "d", "e"]);
+  });
+
+  it("handles empty and single-item sequences", () => {
+    assert.deepEqual(splitRails([]), [[], []]);
+    assert.deepEqual(splitRails(["only"]), [["only"], []]);
+  });
+});
+
+describe("visibleInTrack", () => {
+  it("shows every ornament when the row has room", () => {
+    assert.equal(visibleInTrack(8, 3, 2, 1392), 8);
+    assert.equal(visibleInTrack(4, 3, 2, 400), 4);
+  });
+
+  it("keeps full size and hides the excess when the row is tight", () => {
+    // 48px ornaments + 32px gaps: four fit in a 342px phone row.
+    assert.equal(visibleInTrack(8, 3, 2, 342), 4);
+    assert.equal(visibleInTrack(32, 3, 2, 342), 4);
+    assert.equal(visibleInTrack(8, 3, 2, 566), 7);
+  });
+
+  it("handles zero spacing and empty rows", () => {
+    assert.equal(visibleInTrack(8, 3, 0, 342), 7);
+    assert.equal(visibleInTrack(0, 3, 2, 342), 0);
+    assert.equal(visibleInTrack(8, 3, 2, 0), 0);
+  });
+
+  it("hides a single ornament only when it cannot fit", () => {
+    assert.equal(visibleInTrack(1, 3, 2, 48), 1);
+    assert.equal(visibleInTrack(1, 3, 2, 40), 0);
   });
 });

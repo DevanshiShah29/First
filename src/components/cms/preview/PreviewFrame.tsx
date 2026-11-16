@@ -12,10 +12,16 @@ import {
   type PreviewSection,
   type PreviewThemeMode,
 } from "./preview-messages";
+import {
+  readPreviewSummary,
+  samePreviewSummary,
+  type PreviewSeasonSummary,
+  type PreviewViewport,
+} from "./preview-summary";
 
 /**
- * Posts live CMS draft into an isolated preview iframe.
- * @example <PreviewFrame content={data} section="hero" themeMode="dark" />
+ * Posts live CMS draft into an isolated preview iframe and reports what it rendered.
+ * @example <PreviewFrame content={data} section="hero" themeMode="dark" viewport="desktop" />
  */
 export function PreviewFrame({
   content,
@@ -23,15 +29,30 @@ export function PreviewFrame({
   themeMode,
   viewport,
   title,
+  onRendered,
 }: {
   content: ContentData;
   section: PreviewSection;
   themeMode: PreviewThemeMode;
-  viewport: "desktop" | "mobile";
+  viewport: PreviewViewport;
   title: string;
+  onRendered?: (summary: PreviewSeasonSummary) => void;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const readyRef = useRef(false);
+  const observerRef = useRef<MutationObserver | null>(null);
+  const frameRef = useRef(0);
+  const lastSummaryRef = useRef<PreviewSeasonSummary | null>(null);
+  const viewportRef = useRef(viewport);
+  const onRenderedRef = useRef(onRendered);
+
+  useEffect(() => {
+    viewportRef.current = viewport;
+  }, [viewport]);
+
+  useEffect(() => {
+    onRenderedRef.current = onRendered;
+  }, [onRendered]);
 
   /**
    * Sends the current draft payload to the preview iframe.
@@ -50,6 +71,56 @@ export function PreviewFrame({
       window.location.origin,
     );
   }, [content, section, themeMode]);
+
+  /**
+   * Watches the preview document for layout changes and reports the rendered summary.
+   * @example startObserving() // void
+   */
+  const startObserving = useCallback(() => {
+    if (!onRenderedRef.current) return;
+    const doc = iframeRef.current?.contentDocument;
+    if (!doc?.body) return;
+
+    observerRef.current?.disconnect();
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+
+    /**
+     * Reads counts after mutations settle so a hidden row reports its final state.
+     * @example collect() // onRendered(...)
+     */
+    const collect = () => {
+      frameRef.current = 0;
+      const next = readPreviewSummary(doc, viewportRef.current);
+      if (!samePreviewSummary(lastSummaryRef.current, next)) {
+        lastSummaryRef.current = next;
+        onRenderedRef.current?.(next);
+      }
+    };
+
+    const schedule = () => {
+      if (frameRef.current) return;
+      frameRef.current = requestAnimationFrame(collect);
+    };
+
+    const observer = new MutationObserver(schedule);
+    observer.observe(doc.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [
+        "data-season",
+        "data-visible-count",
+        "data-broken-count",
+        "data-total-count",
+        "data-position",
+        "data-edges",
+        "data-hidden-group-ids",
+        "data-placement-visibility",
+      ],
+    });
+    observerRef.current = observer;
+    schedule();
+  }, []);
 
   useEffect(() => {
     /**
@@ -72,6 +143,14 @@ export function PreviewFrame({
     postDraft();
   }, [postDraft]);
 
+  useEffect(
+    () => () => {
+      observerRef.current?.disconnect();
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    },
+    [],
+  );
+
   return (
     <iframe
       ref={iframeRef}
@@ -80,11 +159,13 @@ export function PreviewFrame({
       src="/admin/preview"
       onLoad={() => {
         readyRef.current = false;
+        lastSummaryRef.current = null;
         iframeRef.current?.contentWindow?.postMessage(
           { type: CMS_PREVIEW_HELLO },
           window.location.origin,
         );
         postDraft();
+        startObserving();
       }}
     />
   );

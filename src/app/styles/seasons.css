@@ -1,7 +1,8 @@
 .season-layer {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  /* Below the sticky site header (z-50), above page content. */
+  z-index: 40;
   overflow: hidden;
   pointer-events: none;
 }
@@ -82,6 +83,75 @@
   background:
     radial-gradient(9rem 16rem at 0% 78%, color-mix(in srgb, var(--brand-to, #f472b6) 16%, transparent), transparent 72%),
     radial-gradient(9rem 16rem at 100% 64%, color-mix(in srgb, var(--brand-from, #be123c) 16%, transparent), transparent 72%);
+}
+
+/* Placement groups decide which motif edges appear. */
+.season-layer--placed.season-layer--motif-garland:not([data-edges~="top"])::before,
+.season-layer--placed.season-layer--motif-lights:not([data-edges~="top"])::before {
+  display: none;
+}
+
+.season-layer--placed.season-layer--motif-garland[data-edges~="bottom"]::after,
+.season-layer--placed.season-layer--motif-lights[data-edges~="bottom"]::after {
+  content: "";
+  position: absolute;
+  bottom: 0.75rem;
+  left: 6%;
+  right: 6%;
+  height: 1px;
+  background: color-mix(in srgb, var(--brand-to, #d97706) 55%, transparent);
+}
+
+.season-layer--placed.season-layer--motif-lights[data-edges~="bottom"]::after {
+  height: 0;
+  background: none;
+  border-bottom: 1px dotted color-mix(in srgb, var(--brand-to, #d97706) 70%, transparent);
+}
+
+.season-layer--placed.season-layer--motif-doorway:not([data-edges~="left"])::before,
+.season-layer--placed.season-layer--motif-doorway:not([data-edges~="right"])::after {
+  display: none;
+}
+
+.season-layer--placed.season-layer--motif-diyas:not([data-edges~="bottom"])::before,
+.season-layer--placed.season-layer--motif-diyas:not([data-edges~="bottom"])::after {
+  display: none;
+}
+
+.season-layer--placed.season-layer--motif-color:not([data-edges~="left"]):not([data-edges~="right"])::before {
+  display: none;
+}
+
+.season-layer--placed.season-layer--motif-color[data-edges~="left"]:not([data-edges~="right"])::before {
+  background:
+    radial-gradient(11rem 14rem at 0% 32%, color-mix(in srgb, var(--brand-from, #db2777) 20%, transparent), transparent 70%),
+    radial-gradient(9rem 9rem at 0% 100%, color-mix(in srgb, var(--badge, #0d9488) 16%, transparent), transparent 72%);
+}
+
+.season-layer--placed.season-layer--motif-color[data-edges~="right"]:not([data-edges~="left"])::before {
+  background:
+    radial-gradient(11rem 14rem at 100% 58%, color-mix(in srgb, var(--brand-to, #0d9488) 20%, transparent), transparent 70%),
+    radial-gradient(9rem 9rem at 100% 100%, color-mix(in srgb, var(--brand-from, #db2777) 16%, transparent), transparent 72%);
+}
+
+.season-layer--placed.season-layer--motif-rise:not([data-edges~="left"]):not([data-edges~="right"])::before {
+  display: none;
+}
+
+.season-layer--placed.season-layer--motif-rise[data-edges~="left"]:not([data-edges~="right"])::before {
+  background: radial-gradient(
+    9rem 16rem at 0% 78%,
+    color-mix(in srgb, var(--brand-to, #f472b6) 16%, transparent),
+    transparent 72%
+  );
+}
+
+.season-layer--placed.season-layer--motif-rise[data-edges~="right"]:not([data-edges~="left"])::before {
+  background: radial-gradient(
+    9rem 16rem at 100% 64%,
+    color-mix(in srgb, var(--brand-from, #be123c) 16%, transparent),
+    transparent 72%
+  );
 }
 
 .season-ornament {
@@ -259,8 +329,9 @@
 }
 
 @media (max-width: 40rem) {
-  .season-ornament.is-quiet,
-  .season-ornament:not(.is-corner) {
+  /* Legacy spots hide on phones; placement groups keep their own responsive rules. */
+  .season-layer > .season-ornament.is-quiet,
+  .season-layer > .season-ornament:not(.is-corner) {
     display: none;
   }
 
@@ -324,7 +395,7 @@
 .season-placement-group {
   position: fixed;
   pointer-events: none;
-  z-index: 60;
+  z-index: 40;
   box-sizing: border-box;
   /* Ornaments inside a placement group are flex items, not absolutely positioned. */
 }
@@ -333,6 +404,11 @@
 .season-placement-group .season-ornament {
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Diagonal/free wrappers must keep the ornament's configured size too. */
+.season-placement-group .season-ornament-wrap {
   flex-shrink: 0;
 }
 
@@ -354,6 +430,7 @@
   position: absolute;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
   pointer-events: none;
 }
 

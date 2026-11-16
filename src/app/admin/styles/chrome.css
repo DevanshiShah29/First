@@ -200,13 +200,20 @@ button.wp-bar-item:disabled {
   position: sticky;
   top: 32px;
   align-self: flex-start;
+  display: flex;
+  flex-direction: column;
   width: 160px;
-  min-height: calc(100vh - 32px);
+  height: calc(100vh - 32px);
   background: #1d2327;
   flex-shrink: 0;
+  overflow: hidden;
+  transition: width 0.18s ease;
 }
 
 .wp-menu-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   margin: 0;
   padding: 12px 0 24px;
   list-style: none;
@@ -256,6 +263,65 @@ button.wp-bar-item:disabled {
   height: 20px;
   flex-shrink: 0;
   opacity: 0.85;
+}
+
+.wp-menu-foot {
+  flex-shrink: 0;
+  padding: 6px;
+  border-top: 1px solid #3c434a;
+}
+
+.wp-menu-collapse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 34px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: #c3c4c7;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wp-menu-collapse:hover {
+  background: #2c3338;
+  color: #fff;
+}
+
+.wp-menu-collapse-icon {
+  width: 20px;
+  flex-shrink: 0;
+  text-align: center;
+  font-size: 16px;
+  line-height: 1;
+}
+
+@media (min-width: 783px) {
+  .wp-app.is-menu-collapsed .wp-menu {
+    width: 48px;
+  }
+
+  .wp-app.is-menu-collapsed .wp-menu-label {
+    display: none;
+  }
+
+  .wp-app.is-menu-collapsed .wp-menu-list button,
+  .wp-app.is-menu-collapsed .wp-menu-list a,
+  .wp-app.is-menu-collapsed .wp-menu-collapse {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 782px) {
+  .wp-menu-foot {
+    display: none;
+  }
 }
 
 .wp-content {

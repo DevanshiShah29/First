@@ -7,10 +7,18 @@ import { useId, useState } from "react";
 import type { ContentData } from "@/content/types";
 import { PreviewChrome } from "./PreviewChrome";
 import { PreviewFrame } from "./PreviewFrame";
+import { PreviewScaler } from "./PreviewScaler";
 import type { PreviewSection, PreviewThemeMode } from "./preview-messages";
+import type { PreviewSeasonSummary, PreviewViewport } from "./preview-summary";
 
 type ThemeChoice = PreviewThemeMode | "side-by-side";
-type ViewportChoice = "desktop" | "mobile";
+
+/** Outer width of each simulated screen, in CSS pixels. */
+const FRAME_WIDTHS: Record<PreviewViewport, number> = {
+  desktop: 1280,
+  tablet: 768,
+  mobile: 360,
+};
 
 /**
  * Builds a short preview hostname from the site name.
@@ -21,22 +29,46 @@ function previewHost(siteName: string) {
   return `${slug}.dev`;
 }
 
+const VIEWPORTS: { id: PreviewViewport; label: string; icon: string }[] = [
+  { id: "desktop", label: "Desktop", icon: "🖥" },
+  { id: "tablet", label: "Tablet", icon: "📲" },
+  { id: "mobile", label: "Mobile", icon: "📱" },
+];
+
 /**
  * CMS live preview toolbar, status, and framed section iframes.
- * @example <LivePreviewShell data={data} dirty section="hero" />
+ * Widths are simulated inside the iframe so media queries match the public site.
+ * @example <LivePreviewShell data={data} dirty section="hero" onRendered={setSummary} />
  */
 export function LivePreviewShell({
   data,
   dirty,
   section,
+  onRendered,
+  viewport: controlledViewport,
+  onViewportChange,
 }: {
   data: ContentData;
   dirty: boolean;
   section: PreviewSection;
+  onRendered?: (summary: PreviewSeasonSummary) => void;
+  /** Optional controlled viewport so the editor can discard counts from another width. */
+  viewport?: PreviewViewport;
+  onViewportChange?: (viewport: PreviewViewport) => void;
 }) {
   const baseId = useId();
   const [theme, setTheme] = useState<ThemeChoice>("light");
-  const [viewport, setViewport] = useState<ViewportChoice>("desktop");
+  const [internalViewport, setInternalViewport] = useState<PreviewViewport>("desktop");
+  const viewport = controlledViewport ?? internalViewport;
+
+  /**
+   * Keeps a controlled parent in sync while still working on its own.
+   * @example changeViewport("mobile") // void
+   */
+  const changeViewport = (next: PreviewViewport) => {
+    if (controlledViewport === undefined) setInternalViewport(next);
+    onViewportChange?.(next);
+  };
 
   const host = previewHost(data.site.name);
   const address = `https://${host}`;
@@ -83,22 +115,17 @@ export function LivePreviewShell({
               Viewport
             </span>
             <div className="wp-preview-modes">
-              <button
-                type="button"
-                className={`wp-preview-mode-btn${viewport === "desktop" ? " is-active" : ""}`}
-                aria-pressed={viewport === "desktop"}
-                onClick={() => setViewport("desktop")}
-              >
-                <span aria-hidden>🖥</span> Desktop
-              </button>
-              <button
-                type="button"
-                className={`wp-preview-mode-btn${viewport === "mobile" ? " is-active" : ""}`}
-                aria-pressed={viewport === "mobile"}
-                onClick={() => setViewport("mobile")}
-              >
-                <span aria-hidden>📱</span> Mobile
-              </button>
+              {VIEWPORTS.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  className={`wp-preview-mode-btn${viewport === entry.id ? " is-active" : ""}`}
+                  aria-pressed={viewport === entry.id}
+                  onClick={() => changeViewport(entry.id)}
+                >
+                  <span aria-hidden>{entry.icon}</span> {entry.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -113,25 +140,21 @@ export function LivePreviewShell({
       </div>
 
       <div
-        className={`wp-live-stage${theme === "side-by-side" ? " is-split" : ""}${
-          viewport === "mobile" ? " is-mobile" : " is-desktop"
-        }`}
+        className={`wp-live-stage${theme === "side-by-side" ? " is-split" : ""} is-${viewport}`}
       >
         {themes.map((mode) => (
-          <PreviewChrome
-            key={`${mode}-${viewport}`}
-            variant={viewport}
-            label={mode.toUpperCase()}
-            address={address}
-          >
-            <PreviewFrame
-              content={data}
-              section={section}
-              themeMode={mode}
-              viewport={viewport}
-              title={`${section} preview, ${mode}, ${viewport}`}
-            />
-          </PreviewChrome>
+          <PreviewScaler key={`${mode}-${viewport}`} frameWidth={FRAME_WIDTHS[viewport]}>
+            <PreviewChrome variant={viewport} label={mode.toUpperCase()} address={address}>
+              <PreviewFrame
+                content={data}
+                section={section}
+                themeMode={mode}
+                viewport={viewport}
+                title={`${section} preview, ${mode}, ${viewport}`}
+                onRendered={onRendered}
+              />
+            </PreviewChrome>
+          </PreviewScaler>
         ))}
       </div>
     </div>

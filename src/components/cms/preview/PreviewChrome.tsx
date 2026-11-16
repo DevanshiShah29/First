@@ -2,9 +2,10 @@
 
 // External dependencies
 import type { ReactNode } from "react";
+import type { PreviewViewport } from "./preview-summary";
 
 /**
- * Wraps preview content in desktop browser or mobile device chrome.
+ * Wraps preview content in desktop, tablet, or mobile device chrome.
  * @example <PreviewChrome variant="mobile" label="LIGHT">{children}</PreviewChrome>
  */
 export function PreviewChrome({
@@ -13,7 +14,7 @@ export function PreviewChrome({
   address,
   children,
 }: {
-  variant: "desktop" | "mobile";
+  variant: PreviewViewport;
   label: string;
   address: string;
   children: ReactNode;
@@ -62,7 +63,7 @@ export function PreviewChrome({
   }
 
   return (
-    <div className="wp-live-browser">
+    <div className={`wp-live-browser${variant === "tablet" ? " wp-live-tablet" : ""}`}>
       <div className="wp-mockup-bar wp-live-browser-bar">
         <div className="wp-mockup-dots" aria-hidden>
           <span className="dot red" />

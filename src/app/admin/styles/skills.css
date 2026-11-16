@@ -334,7 +334,7 @@
   }
 
   .wp-app.is-menu-open .wp-menu {
-    display: block;
+    display: flex;
   }
 
   .wp-menu {

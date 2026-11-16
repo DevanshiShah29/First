@@ -91,6 +91,49 @@ export function motifFor(seasonId: string): SeasonMotif {
 }
 
 /**
+ * Divides rendered ornaments across the four screen corners.
+ * Every ornament appears exactly once, so the rendered count matches the group.
+ * @example cornerBuckets(["a", "b"]) // [["a"], ["b"], [], []]
+ */
+export function cornerBuckets<T>(items: T[]): [T[], T[], T[], T[]] {
+  const buckets: [T[], T[], T[], T[]] = [[], [], [], []];
+  items.forEach((item, index) => buckets[index % 4].push(item));
+  return buckets;
+}
+
+/**
+ * Splits a visible sequence into two balanced rails without reordering or duplicating.
+ * The first rail takes the extra ornament when the count is odd.
+ * @example splitRails([1, 2, 3]) // [[1, 2], [3]]
+ */
+export function splitRails<T>(items: T[]): [T[], T[]] {
+  const split = Math.ceil(items.length / 2);
+  return [items.slice(0, split), items.slice(split)];
+}
+
+/**
+ * Number of ornaments that fit in one row or column at their configured size and spacing.
+ * Excess items are hidden instead of shrinking the visible ones.
+ * @example visibleInTrack(8, 3, 2, 342) // 4
+ */
+export function visibleInTrack(
+  count: number,
+  sizeRem: number,
+  spacingRem: number,
+  availablePx: number,
+  rootPx = 16,
+): number {
+  const items = Math.max(0, Math.floor(count));
+  if (!items || !Number.isFinite(availablePx) || availablePx <= 0) return 0;
+  const size = sizeRem * rootPx;
+  const spacing = spacingRem * rootPx;
+  const perItem = size + spacing;
+  if (!Number.isFinite(perItem) || perItem <= 0) return items;
+  const fit = Math.floor((availablePx + spacing) / perItem);
+  return Math.max(0, Math.min(items, fit));
+}
+
+/**
  * Editor copy for how this season's images are placed.
  * @example ornamentPlacementCopy("christmas") // "Hung in a row…"
  */

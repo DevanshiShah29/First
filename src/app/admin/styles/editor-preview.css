@@ -46,6 +46,106 @@
   display: none;
 }
 
+/* Side-by-side editor + live preview (wide screens) */
+.wp-editor-tabbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.wp-editor-tabbar .wp-editor-tablist {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.wp-editor-tabs.is-split .wp-editor-tabbar {
+  margin-bottom: 12px;
+}
+
+.wp-editor-tabs.is-split .wp-editor-tabbar .wp-editor-tablist {
+  margin-bottom: 0;
+}
+
+.wp-editor-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(340px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.wp-editor-split-main {
+  min-width: 0;
+}
+
+.wp-editor-focus-btn {
+  appearance: none;
+  margin-left: auto;
+  align-self: center;
+  padding: 5px 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 4px;
+  background: #fff;
+  color: #2271b1;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.wp-editor-focus-btn:hover,
+.wp-editor-focus-btn.is-active {
+  border-color: #2271b1;
+  background: #f0f6fc;
+}
+
+.wp-editor-split.is-preview-focus {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.wp-editor-split.is-preview-focus .wp-editor-split-main {
+  display: none;
+}
+
+/* Frames render at their real width, then scale into the available column. */
+.wp-preview-scaler {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.wp-preview-scaler-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+
+.wp-editor-split-preview {
+  position: sticky;
+  top: 44px;
+  min-width: 0;
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  padding-right: 2px;
+}
+
+@media (max-width: 1180px) {
+  .wp-editor-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .wp-editor-split-preview {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}
+
 .wp-live-preview {
   margin-top: 4px;
 }
@@ -108,6 +208,20 @@
 
 .wp-live-stage.is-mobile:not(.is-split) {
   justify-items: center;
+}
+
+.wp-live-stage.is-tablet:not(.is-split) {
+  justify-items: center;
+}
+
+.wp-live-stage.is-split.is-tablet {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  justify-items: center;
+}
+
+/* Tablet keeps browser chrome but a narrower screen, so media queries see a tablet width. */
+.wp-live-tablet {
+  width: min(100%, 768px);
 }
 
 .wp-live-browser {
@@ -420,6 +534,12 @@
 .wp-live-frame.is-mobile {
   width: 100%;
   height: 620px;
+}
+
+.wp-live-frame.is-tablet {
+  width: 100%;
+  height: min(62vh, 760px);
+  min-height: 460px;
 }
 
 @media (max-width: 900px) {

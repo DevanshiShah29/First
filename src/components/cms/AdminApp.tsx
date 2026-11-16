@@ -1,6 +1,7 @@
 "use client";
 
 // External dependencies
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 // Application services & types
@@ -71,6 +72,7 @@ import {
  */
 export function AdminApp({ initial }: { initial: ContentData }) {
   const router = useRouter();
+  const [menuCollapsed, setMenuCollapsed] = useState(false);
   const doc = useCmsDocument(initial);
   const {
     data,
@@ -157,7 +159,9 @@ export function AdminApp({ initial }: { initial: ContentData }) {
   ];
 
   return (
-    <div className={`wp-app${menuOpen ? " is-menu-open" : ""}`}>
+    <div
+      className={`wp-app${menuOpen ? " is-menu-open" : ""}${menuCollapsed ? " is-menu-collapsed" : ""}`}
+    >
       <a href="#admin-content" className="skip">
         Skip to content
       </a>
@@ -179,7 +183,13 @@ export function AdminApp({ initial }: { initial: ContentData }) {
       />
 
       <div className="wp-layout">
-        <AdminMenu menu={menu} go={go} setMenuOpen={setMenuOpen} />
+        <AdminMenu
+          menu={menu}
+          go={go}
+          setMenuOpen={setMenuOpen}
+          collapsed={menuCollapsed}
+          onToggleCollapse={() => setMenuCollapsed((value) => !value)}
+        />
 
         <main id="admin-content" className="wp-content" tabIndex={-1}>
           <Breadcrumbs items={breadcrumbs} />

@@ -15,11 +15,13 @@ import {
   parseOrnamentPositions,
   parsePlacements,
   parseSeasons,
+  placementSizeRem,
   resolveActiveCursorOrnament,
   resolveActiveSeason,
   seasonForIsoDate,
   seasonOrnamentImageUrl,
   seasonsMatchingToday,
+  showsSeasonDecorations,
   synthesizePlacementsFromLegacy,
   themeWithSeason,
   type SeasonConfig,
@@ -440,6 +442,81 @@ describe("resolveActiveCursorOrnament", () => {
       ornaments: [],
     };
     assert.equal(resolveActiveCursorOrnament(settings), null);
+  });
+
+  it("returns null when a palette-only season has a cursor configured", () => {
+    const settings: SeasonsSettings = {
+      mode: "manual",
+      manualId: "halloween",
+      timezone: ZONE,
+      items: [
+        {
+          ...DEFAULT_SEASONS.items[0],
+          id: "halloween",
+          intensity: "subtle",
+          ornamentImages: ["/uploads/artifacts/bat.png"],
+          cursorOrnament: "/uploads/artifacts/bat.png",
+        },
+      ],
+      ornaments: [],
+    };
+    assert.equal(resolveActiveCursorOrnament(settings), null);
+  });
+});
+
+describe("showsSeasonDecorations", () => {
+  it("only paints decorations for the full look", () => {
+    assert.equal(showsSeasonDecorations(null), false);
+    assert.equal(showsSeasonDecorations({ intensity: "subtle" } as SeasonConfig), false);
+    assert.equal(showsSeasonDecorations({ intensity: "full" } as SeasonConfig), true);
+  });
+
+  it("follows a manual season switch for ornaments and cursor", () => {
+    const base = DEFAULT_SEASONS.items[0];
+    const settings: SeasonsSettings = {
+      mode: "manual",
+      manualId: "christmas",
+      timezone: ZONE,
+      items: [
+        {
+          ...base,
+          id: "christmas",
+          intensity: "full",
+          ornamentImages: ["/uploads/artifacts/bell.png"],
+          cursorOrnament: "/uploads/artifacts/bell.png",
+        },
+        {
+          ...base,
+          id: "halloween",
+          intensity: "subtle",
+          ornamentImages: ["/uploads/artifacts/bat.png"],
+          cursorOrnament: "/uploads/artifacts/bat.png",
+        },
+      ],
+      ornaments: [],
+    };
+
+    const christmas = resolveActiveSeason(settings, new Date());
+    assert.equal(showsSeasonDecorations(christmas), true);
+    assert.equal(resolveActiveCursorOrnament(settings), "/uploads/artifacts/bell.png");
+
+    const halloweenSettings: SeasonsSettings = { ...settings, manualId: "halloween" };
+    const halloween = resolveActiveSeason(halloweenSettings, new Date());
+    assert.equal(showsSeasonDecorations(halloween), false);
+    assert.equal(resolveActiveCursorOrnament(halloweenSettings), null);
+  });
+});
+
+describe("placementSizeRem", () => {
+  it("maps each preset to its rendered size", () => {
+    assert.equal(placementSizeRem({ size: "small" }), 2);
+    assert.equal(placementSizeRem({ size: "medium" }), 3);
+    assert.equal(placementSizeRem({ size: "large" }), 4);
+  });
+
+  it("uses the custom size, with a safe default", () => {
+    assert.equal(placementSizeRem({ size: "custom", customSize: 5 }), 5);
+    assert.equal(placementSizeRem({ size: "custom" }), 3);
   });
 });
 

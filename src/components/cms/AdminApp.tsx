@@ -21,6 +21,7 @@ import { useCmsUploads } from "./hooks/useCmsUploads";
 import { AboutScreen } from "./screens/AboutScreen";
 import { AnalyticsScreen } from "./screens/AnalyticsScreen";
 import { AppearanceScreen } from "./screens/AppearanceScreen";
+import { BooksScreen } from "./screens/BooksScreen";
 import { ContactScreen } from "./screens/ContactScreen";
 import { CraftScreen } from "./screens/CraftScreens";
 import { DashboardScreen } from "./screens/DashboardScreen";
@@ -51,6 +52,7 @@ import {
   IconAbout,
   IconAnalytics,
   IconAppearance,
+  IconBook,
   IconCode,
   IconContact,
   IconCraft,
@@ -151,6 +153,7 @@ export function AdminApp({ initial }: { initial: ContentData }) {
     { id: "contact", label: "Contact", icon: <IconContact />, match: screen === "contact" },
     { id: "craft", label: "Craft", icon: <IconCraft />, match: screen === "craft" },
     { id: "memories", label: "Memories", icon: <IconJar />, match: screen.startsWith("memories") },
+    { id: "books", label: "Book Nook", icon: <IconBook />, match: screen === "books" },
     { id: "artifacts", label: "Shelf", icon: <IconShelf />, match: screen.startsWith("artifacts") },
     { id: "appearance", label: "Appearance", icon: <IconAppearance />, match: screen === "appearance" },
     { id: "seasons", label: "Seasons", icon: <IconSeasons />, match: screen === "seasons" },
@@ -405,6 +408,8 @@ export function AdminApp({ initial }: { initial: ContentData }) {
               status={status}
             />
           )}
+
+          {screen === "books" && <BooksScreen />}
 
           {screen === "artifacts" && (
             <ArtifactsListScreen

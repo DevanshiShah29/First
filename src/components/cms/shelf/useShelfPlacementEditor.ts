@@ -176,7 +176,7 @@ export function useShelfPlacementEditor({
   useEffect(() => {
     let cancelled = false;
     /**
-     * Loads Goodreads shelves for book picking.
+     * Loads imported books for book picking.
      * @example void load()
      */
     async function load() {
@@ -189,7 +189,7 @@ export function useShelfPlacementEditor({
         };
         if (cancelled) return;
         if (!res.ok && !data.configured) {
-          setLoadError(data.error || "Could not load Goodreads shelves.");
+          setLoadError(data.error || "Could not load the imported books.");
           setLibrary(null);
           return;
         }
@@ -197,7 +197,7 @@ export function useShelfPlacementEditor({
         setLoadError("");
       } catch {
         if (!cancelled) {
-          setLoadError("Could not load Goodreads shelves.");
+          setLoadError("Could not load the imported books.");
           setLibrary(null);
         }
       }

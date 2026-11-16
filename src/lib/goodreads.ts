@@ -13,6 +13,12 @@ export type GoodreadsBook = {
   review: string;
 };
 
+export type GoodreadsShelf = "currently-reading" | "read" | "to-read";
+
+export type GoodreadsCsvBook = GoodreadsBook & {
+  shelf: GoodreadsShelf;
+};
+
 export type GoodreadsLibrary = {
   configured: boolean;
   name: string;
@@ -56,11 +62,18 @@ export function emptyLibrary(profileUrl = ""): GoodreadsLibrary {
  */
 function decode(value: string) {
   return value
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&#(\d+);/g, (_, code: string) =>
+      String.fromCharCode(Number.parseInt(code, 10)),
+    )
+    .replace(/&#x([0-9a-f]+);/gi, (_, code: string) =>
+      String.fromCharCode(Number.parseInt(code, 16)),
+    )
     .trim();
 }
 
@@ -80,100 +93,166 @@ function stripHtml(value: string) {
 }
 
 /**
- * Reads a named RSS item field (CDATA or text).
- * @example field(itemXml, "title") // "Book Title"
+ * Splits CSV text into rows, honoring quoted commas and newlines.
+ * @example csvRows('"Title, with comma",Author') // [["Title, with comma", "Author"]]
  */
-function field(block: string, name: string) {
-  const re = new RegExp(
-    `<${name}(?:\\s[^>]*)?>(?:<!\\[CDATA\\[([\\s\\S]*?)\\]\\]>|([^<]*))</${name}>`,
-    "i",
-  );
-  const match = block.match(re);
-  return decode(match?.[1] ?? match?.[2] ?? "");
+function csvRows(input: string): string[][] {
+  const rows: string[][] = [];
+  const text = input.replace(/^\uFEFF/, "");
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    if (quoted) {
+      if (char === '"') {
+        if (text[index + 1] === '"') {
+          cell += '"';
+          index += 1;
+        } else {
+          quoted = false;
+        }
+      } else {
+        cell += char;
+      }
+      continue;
+    }
+    if (char === '"') {
+      quoted = true;
+    } else if (char === ",") {
+      row.push(cell);
+      cell = "";
+    } else if (char === "\n" || char === "\r") {
+      if (char === "\r" && text[index + 1] === "\n") index += 1;
+      row.push(cell);
+      cell = "";
+      if (row.some((value) => value.trim())) rows.push(row);
+      row = [];
+    } else {
+      cell += char;
+    }
+  }
+
+  row.push(cell);
+  if (row.some((value) => value.trim())) rows.push(row);
+  return rows;
 }
 
 /**
- * Upgrades a Goodreads cover URL to a larger size.
- * @example nicerCover("…_SX98_.jpg") // "…_SY475_.jpg"
+ * Normalizes a CSV header for lookup.
+ * @example headerKey("Book Id") // "bookid"
  */
-function nicerCover(url: string) {
-  if (!url) return "";
-  return url.replace(/_S[YX]\d+(_\.)?/i, "_SY475_.");
+function headerKey(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]/g, "");
 }
 
 /**
- * Parses Goodreads RSS XML into book records.
- * @example parseGoodreadsRss(xml) // GoodreadsBook[]
+ * Normalizes an ISBN cell (strips Excel ="" wrappers).
+ * @example cleanIsbn('="0439023483"') // "0439023483"
  */
-export function parseGoodreadsRss(xml: string): GoodreadsBook[] {
-  const blocks = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].map((m) => m[1] ?? "");
-  const books: GoodreadsBook[] = [];
+function cleanIsbn(value: string) {
+  return value.replace(/[^0-9Xx]/g, "").toUpperCase();
+}
+
+/**
+ * Builds an Open Library cover URL from ISBN values.
+ * @example coverForIsbn("9780439023481") // "https://covers.openlibrary.org/…"
+ */
+function coverForIsbn(...values: string[]) {
+  const isbn = values.map(cleanIsbn).find((value) => value.length >= 10);
+  return isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false` : "";
+}
+
+/**
+ * Reads an exclusive shelf, falling back to the bookshelves column.
+ * @example shelfOf("read", "fiction", "") // "read"
+ */
+function shelfOf(
+  exclusive: string,
+  bookshelves: string,
+  readAt: string,
+): GoodreadsShelf {
+  const value = exclusive.trim().toLowerCase();
+  if (value === "currently-reading" || value === "read" || value === "to-read") {
+    return value;
+  }
+  const shelves = bookshelves.toLowerCase();
+  if (shelves.includes("currently-reading")) return "currently-reading";
+  if (readAt.trim()) return "read";
+  return "to-read";
+}
+
+/**
+ * Parses a Goodreads My Books CSV export into book records.
+ * @example parseGoodreadsCsv(csv) // GoodreadsCsvBook[]
+ */
+export function parseGoodreadsCsv(csv: string): GoodreadsCsvBook[] {
+  const rows = csvRows(csv);
+  if (rows.length < 2) return [];
+
+  const header = rows[0].map(headerKey);
+  const column = (name: string) => header.indexOf(name);
+  const columns = {
+    id: column("bookid"),
+    title: column("title"),
+    author: column("author"),
+    isbn: column("isbn"),
+    isbn13: column("isbn13"),
+    rating: column("myrating"),
+    pages: column("numberofpages"),
+    year: column("yearpublished"),
+    originalYear: column("originalpublicationyear"),
+    readAt: column("dateread"),
+    shelves: column("bookshelves"),
+    exclusive: column("exclusiveshelf"),
+    review: column("myreview"),
+  };
+  if (columns.id < 0 || columns.title < 0) return [];
+
+  /**
+   * Reads one cell by column index, tolerating short rows.
+   * @example read(row, columns.title) // "Title"
+   */
+  const read = (row: string[], index: number) =>
+    index >= 0
+      ? (row[index] ?? "")
+          .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+          .trim()
+      : "";
+
+  const books: GoodreadsCsvBook[] = [];
   const seen = new Set<string>();
-  for (const block of blocks) {
-    const id = field(block, "book_id");
-    const title = field(block, "title");
-    const key = id || title;
-    if (!title || !key || seen.has(key)) continue;
-    seen.add(key);
-    const rating = Number(field(block, "user_rating"));
-    const reviewLink = field(block, "link");
+
+  for (const row of rows.slice(1)) {
+    const id = read(row, columns.id);
+    const title = decode(read(row, columns.title));
+    if (!id || !title || seen.has(id)) continue;
+    seen.add(id);
+
+    const rating = Number.parseInt(read(row, columns.rating), 10);
+    const bookshelves = read(row, columns.shelves);
+    const readAt = read(row, columns.readAt);
+    const year = read(row, columns.year) || read(row, columns.originalYear);
+    const url = `https://www.goodreads.com/book/show/${id}`;
+
     books.push({
-      id: key,
+      id,
       title,
-      author: field(block, "author_name"),
-      cover: nicerCover(
-        field(block, "book_large_image_url") ||
-          field(block, "book_medium_image_url") ||
-          field(block, "book_image_url"),
-      ),
-      url: id ? `https://www.goodreads.com/book/show/${id}` : reviewLink,
-      reviewUrl: reviewLink,
+      author: decode(read(row, columns.author)),
+      cover: coverForIsbn(read(row, columns.isbn13), read(row, columns.isbn)),
+      url,
+      reviewUrl: url,
       rating: Number.isFinite(rating) ? Math.max(0, Math.min(5, rating)) : 0,
-      year: field(block, "book_published"),
-      pages: field(block, "num_pages"),
-      readAt: field(block, "user_read_at"),
-      shelves: field(block, "user_shelves"),
-      review: stripHtml(field(block, "user_review")),
+      year,
+      pages: read(row, columns.pages),
+      readAt,
+      shelves: bookshelves,
+      review: stripHtml(read(row, columns.review)),
+      shelf: shelfOf(read(row, columns.exclusive), bookshelves, readAt),
     });
   }
-  return books;
-}
 
-/**
- * Fetches one Goodreads RSS page for a shelf.
- * @example await fetchGoodreadsPage("123", "read", 1) // GoodreadsBook[]
- */
-async function fetchGoodreadsPage(userId: string, shelf: string, page: number) {
-  const url = `https://www.goodreads.com/review/list_rss/${userId}?shelf=${encodeURIComponent(shelf)}&per_page=100&page=${page}`;
-  const res = await fetch(url, {
-    headers: {
-      Accept: "application/rss+xml, application/xml, text/xml",
-      "User-Agent": "Mozilla/5.0 (compatible; DevanshiPortfolio/1.0)",
-    },
-    next: { revalidate: 1800 },
-  });
-  if (!res.ok) throw new Error(`Goodreads ${shelf} ${res.status}`);
-  return parseGoodreadsRss(await res.text());
-}
-
-/**
- * Loads all pages of a Goodreads shelf (up to 8).
- * @example await fetchGoodreadsShelf("123", "read") // GoodreadsBook[]
- */
-export async function fetchGoodreadsShelf(userId: string, shelf: string) {
-  const books: GoodreadsBook[] = [];
-  const seen = new Set<string>();
-  for (let page = 1; page <= 8; page += 1) {
-    const batch = await fetchGoodreadsPage(userId, shelf, page);
-    let added = 0;
-    for (const book of batch) {
-      if (seen.has(book.id)) continue;
-      seen.add(book.id);
-      books.push(book);
-      added += 1;
-    }
-    if (batch.length < 100 || added === 0) break;
-  }
   return books;
 }
 
@@ -199,27 +278,4 @@ export function compareReadAtDesc(a: { readAt: string }, b: { readAt: string }) 
   if (left === null) return 1;
   if (right === null) return -1;
   return right - left;
-}
-
-/**
- * Loads currently-reading, read, and to-read shelves.
- * The read shelf is ordered by reading date, newest first.
- * @example await loadGoodreadsLibrary(url, name) // GoodreadsLibrary
- */
-export async function loadGoodreadsLibrary(profileUrl: string, name: string): Promise<GoodreadsLibrary> {
-  const userId = goodreadsUserId(profileUrl);
-  if (!userId) return emptyLibrary(profileUrl);
-  const [currentlyReading, read, toRead] = await Promise.all([
-    fetchGoodreadsShelf(userId, "currently-reading"),
-    fetchGoodreadsShelf(userId, "read"),
-    fetchGoodreadsShelf(userId, "to-read"),
-  ]);
-  return {
-    configured: true,
-    name,
-    profileUrl: `https://www.goodreads.com/user/show/${userId}`,
-    currentlyReading,
-    read: read.sort(compareReadAtDesc),
-    toRead,
-  };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { loadContent } from "@/content/store";
-import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
+import { emptyLibrary } from "@/lib/goodreads";
+import { loadLibrary } from "@/server/books";
 
 export const runtime = "nodejs";
 
@@ -12,17 +13,14 @@ export async function GET() {
   const { site } = await loadContent();
   const profileUrl = site.goodreadsUrl.trim();
   const name = site.name.split(" ")[0] || site.name;
-  if (!profileUrl) {
-    return NextResponse.json(emptyLibrary(), { headers: { "Cache-Control": "no-store" } });
-  }
   try {
-    const library = await loadGoodreadsLibrary(profileUrl, name);
+    const library = await loadLibrary(profileUrl, name);
     return NextResponse.json(library, {
-      headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=86400" },
+      headers: { "Cache-Control": "no-store" },
     });
   } catch {
     return NextResponse.json(
-      { error: "Could not load Goodreads right now.", ...emptyLibrary(profileUrl), configured: true },
+      { error: "Could not load the bookshelf right now.", ...emptyLibrary(profileUrl), configured: true },
       { status: 502 },
     );
   }

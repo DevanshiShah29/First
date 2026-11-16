@@ -226,6 +226,18 @@ export function IconShelf({ className }: IconProps) {
 }
 
 /**
+ * Renders the Book Nook menu icon.
+ * @example <IconBook />
+ */
+export function IconBook({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M4 3.5A1.5 1.5 0 0 1 5.5 2H16v15H5.5A1.5 1.5 0 0 0 4 18.5v-15zM6 4v10h8V4H6zm1.5 1.5h5V7h-5V5.5zm0 3h5V10h-5V8.5zM5.5 16H16v1.5H5.5a.75.75 0 0 1 0-1.5z" />
+    </Svg>
+  );
+}
+
+/**
  * Renders the Technologies/code menu icon.
  * @example <IconCode />
  */

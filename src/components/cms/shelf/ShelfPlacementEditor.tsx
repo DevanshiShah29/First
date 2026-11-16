@@ -461,7 +461,7 @@ export function ShelfPlacementEditor({
 
       {loadError ? (
         <div className="wp-notice is-error" role="alert">
-          {loadError} Add a Goodreads URL under Hero to load books.
+          {loadError} Import your Goodreads library under Book Nook to load books.
         </div>
       ) : null}
 

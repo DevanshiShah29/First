@@ -249,6 +249,11 @@ export function useCmsNavigation(
             current: true,
           },
         ];
+      case "books":
+        return [
+          { label: "Dashboard", onClick: () => go("dashboard") },
+          { label: "Book Nook", current: true },
+        ];
       case "artifacts":
         return [
           { label: "Dashboard", onClick: () => go("dashboard") },

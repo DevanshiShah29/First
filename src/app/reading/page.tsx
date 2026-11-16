@@ -5,10 +5,11 @@ import { ReadingLibrary } from "@/components/ReadingLibrary";
 import { loadContent } from "@/content/store";
 import { sectionTitle } from "@/content/section-titles";
 import { EMPTY_SHELF_LAYOUT, sectionEnabled, toPublicContent } from "@/content/types";
-import { emptyLibrary, loadGoodreadsLibrary } from "@/lib/goodreads";
+import { emptyLibrary } from "@/lib/goodreads";
 import { buildPageMetadata } from "@/lib/seo";
+import { loadLibrary } from "@/server/books";
 
-/** Dynamic so a saved shelf draft is not held in the page cache. Goodreads itself still caches for 30 minutes. */
+/** Dynamic so an imported book list or saved shelf draft is not held in the page cache. */
 export const dynamic = "force-dynamic";
 
 /**
@@ -38,7 +39,7 @@ export default async function ReadingPage() {
   let library = emptyLibrary(full.site.goodreadsUrl);
   let loadFailed = false;
   try {
-    library = await loadGoodreadsLibrary(full.site.goodreadsUrl, name);
+    library = await loadLibrary(full.site.goodreadsUrl, name);
   } catch {
     loadFailed = true;
   }

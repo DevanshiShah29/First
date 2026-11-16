@@ -1,10 +1,10 @@
 import { sectionTitle, type SectionTitles } from "@/content/section-titles";
 import { EMPTY_SHELF_LAYOUT, type ShelfArtifactItem, type ShelfLayout } from "@/content/types";
 import type { GoodreadsBook, GoodreadsLibrary } from "@/lib/goodreads";
-import { MediaImage } from "./MediaImage";
 import { NewTabHint } from "./a11y";
 import { Fade } from "./Fade";
 import { RouteRetry } from "./RouteRetry";
+import { BookCover } from "./reading/BookCover";
 import { Bookshelf } from "./reading/Bookshelf";
 import { shelfSections } from "./reading/shelfSections";
 
@@ -37,33 +37,6 @@ function Stars({ value }: { value: number }) {
 }
 
 /**
- * Renders a book cover image or empty placeholder.
- * @example <Cover book={book} decorative />
- */
-function Cover({
-  book,
-  className,
-  decorative = false,
-}: {
-  book: GoodreadsBook;
-  className?: string;
-  decorative?: boolean;
-}) {
-  if (!book.cover) return <div className={`${className ?? ""} reading-cover is-empty`} aria-hidden />;
-  return (
-    <MediaImage
-      src={book.cover}
-      alt={decorative ? "" : `${book.title} cover`}
-      className={`${className ?? ""} reading-cover`}
-      width={200}
-      height={300}
-      sizes="(max-width: 640px) 40vw, 140px"
-      loading="lazy"
-    />
-  );
-}
-
-/**
  * Renders author/year/pages/read-date meta line.
  * @example <Meta book={book} />
  */
@@ -81,7 +54,7 @@ function Meta({ book }: { book: GoodreadsBook }) {
 function BookCard({ book, featured = false }: { book: GoodreadsBook; featured?: boolean }) {
   return (
     <article id={`book-${book.id}`} className={`reading-card${featured ? " is-featured" : ""}`}>
-      <Cover book={book} />
+      <BookCover book={book} />
       <div>
         <h3>
           <a href={book.url} target="_blank" rel="noopener noreferrer">
@@ -125,7 +98,7 @@ export function ReadingLibrary({
       <section id="library" className="section-shell py-20 sm:py-28">
         <p className="kicker">From the desk</p>
         <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">{pageTitle}</h1>
-        <p className="mt-5 max-w-xl text-muted">Couldn’t load books from Goodreads right now.</p>
+        <p className="mt-5 max-w-xl text-muted">Couldn’t load the bookshelf right now.</p>
         <RouteRetry />
       </section>
     );
@@ -137,7 +110,7 @@ export function ReadingLibrary({
         <p className="kicker">From the desk</p>
         <h1 className="mt-3 text-4xl font-semibold text-foreground sm:text-5xl">{pageTitle}</h1>
         <p className="mt-5 max-w-xl text-muted">
-          The bookshelf is taking a break. Add a Goodreads profile in the CMS to fill this page.
+          The bookshelf is taking a break. Add your Goodreads library in the CMS to fill this page.
         </p>
       </section>
     );
@@ -228,7 +201,7 @@ export function ReadingLibrary({
               rel="noopener noreferrer"
               className="reading-want-card"
             >
-              <Cover book={book} decorative />
+              <BookCover book={book} decorative />
               <strong>{book.title}</strong>
               <span>{book.author}</span>
               <NewTabHint />

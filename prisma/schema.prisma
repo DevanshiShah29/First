@@ -166,6 +166,31 @@ model Memory {
   @@index([sortOrder])
 }
 
+/// Imported Goodreads library for /reading. Replaces the retired Goodreads RSS feed.
+model Book {
+  /// Goodreads book id. Shelf layouts store this id.
+  id        String @id
+  sortOrder Int    @default(0)
+  title     String
+  author    String @default("")
+  cover     String @default("")
+  url       String @default("")
+  reviewUrl String @default("")
+  rating    Int    @default(0)
+  year      String @default("")
+  pages     String @default("")
+  readAt    String @default("")
+  shelves   String @default("")
+  review    String @default("")
+  /// "currently-reading" | "read" | "to-read"
+  shelf     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shelf, sortOrder])
+}
+
 /// Shelf ornaments catalog for /reading (placement lives in ShelfLayout JSON).
 model ShelfArtifact {
   id        String  @id

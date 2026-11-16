@@ -22,7 +22,7 @@ export function SpineFace({
   return (
     <>
       {hasArt ? (
-        // eslint-disable-next-line @next/next/no-img-element -- Goodreads CDN covers; decorative crop
+        // eslint-disable-next-line @next/next/no-img-element -- Imported cover hosts; decorative crop
         <img
           className="bookshelf-spine-art"
           src={cover}

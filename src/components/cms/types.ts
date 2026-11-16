@@ -22,7 +22,8 @@ export type Screen =
   | "memories"
   | "memories-edit"
   | "artifacts"
-  | "artifacts-edit";
+  | "artifacts-edit"
+  | "books";
 
 export interface BreadcrumbItem {
   label: string;
@@ -65,10 +66,10 @@ export function newId(): string {
 export function goodreadsHint(url: string): string {
   const trimmed = url.trim();
   if (!trimmed) {
-    return "Leave blank to rest the books. The 3D World piano-desk book pulls this profile when tapped.";
+    return "Leave blank if you don't want to link a Goodreads profile. Import books under Book Nook.";
   }
   if (goodreadsUserId(trimmed)) {
-    return "Goodreads profile detected — the books object will load this shelf.";
+    return "Goodreads profile detected — import your My Books CSV under Book Nook to fill the shelves.";
   }
   return "Could not find a Goodreads user ID. Paste a profile URL like https://www.goodreads.com/user/show/123-name";
 }

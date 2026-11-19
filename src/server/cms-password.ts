@@ -91,8 +91,8 @@ async function storedPasswordHash() {
  */
 export async function passwordsMatch(provided: string) {
   const stored = await storedPasswordHash();
-  if (stored) {
-    return verifyPasswordHash(provided, stored);
+  if (stored && (await verifyPasswordHash(provided, stored))) {
+    return true;
   }
   const expected = adminPassword();
   if (!expected) return false;

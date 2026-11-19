@@ -1,9 +1,13 @@
 "use client";
 
+// External dependencies
+import { getImageProps } from "next/image";
+
 // Application services & types
 import type { HeroMedia } from "@/content/types";
 import { useReducedMotion } from "@/hooks/reduced-motion";
 import { parsePlayableMedia } from "@/lib/media-url";
+import { CURATED_HERO_ARTWORKS } from "./hero-overlay";
 
 // UI components
 import { MediaImage } from "@/components/MediaImage";
@@ -67,6 +71,55 @@ export function HeroMediaView({
   }
 
   if (playable.type === "file") {
+    const artwork = CURATED_HERO_ARTWORKS.find(
+      (a) =>
+        playable.src === a.desktopSrc ||
+        playable.src.includes(a.desktopSrc) ||
+        playable.src.endsWith(a.desktopSrc) ||
+        (a.id === "editorial-3d" && playable.src.includes("hero-desktop.jpg")),
+    );
+    if (artwork) {
+      const isBg = media.place === "background";
+      const common = {
+        alt: decorative ? "" : alt,
+        sizes: isBg ? "100vw" : "(max-width: 768px) 100vw, 50vw",
+        priority: true,
+        quality: 92,
+      };
+
+      const {
+        props: { srcSet: desktopSrcSet, ...desktopRest },
+      } = getImageProps({
+        ...common,
+        src: artwork.desktopSrc,
+        width: artwork.width,
+        height: artwork.height,
+      });
+
+      const {
+        props: { srcSet: mobileSrcSet },
+      } = getImageProps({
+        ...common,
+        src: artwork.mobileSrc,
+        width: artwork.mobileWidth,
+        height: artwork.mobileHeight,
+      });
+
+      return (
+        <picture className="block h-full w-full">
+          <source media="(max-width: 768px)" srcSet={mobileSrcSet} sizes={common.sizes} />
+          <source media="(min-width: 769px)" srcSet={desktopSrcSet} sizes={common.sizes} />
+          <img
+            {...desktopRest}
+            className={className}
+            alt={decorative ? "" : alt}
+            loading="eager"
+            decoding="async"
+          />
+        </picture>
+      );
+    }
+
     return (
       <MediaImage
         src={playable.src}
@@ -74,7 +127,8 @@ export function HeroMediaView({
         className={className}
         width={1200}
         height={900}
-        sizes="(max-width: 768px) 100vw, 50vw"
+        sizes={media.place === "background" ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
+        priority={media.place === "background"}
       />
     );
   }

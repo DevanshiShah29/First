@@ -3,6 +3,7 @@ import { parseCursor } from "./cursor";
 import { parseSeasons } from "./seasons";
 import { parseSectionTitles } from "./section-titles";
 import {
+  HERO_OVERLAY_MODES,
   HERO_TEMPLATES,
   SKILL_ICONS,
   normalizeSections,
@@ -37,8 +38,32 @@ const hexColor = z
 const heroMediaSchema = z.object({
   kind: z.enum(["none", "image", "video"]),
   url: z.string(),
-  place: z.enum(["side", "background"]),
+  place: z
+    .string()
+    .transform((p) => (p.startsWith("background") ? "background" : "side")),
   side: z.enum(["left", "right"]),
+  overlay: z.boolean().optional(),
+  overlayStyle: z
+    .enum([
+      "none",
+      "solid",
+      "left-fade",
+      "left-heavy-fade",
+      "right-fade",
+      "top-fade",
+      "top-left-fade",
+      "top-right-fade",
+      "bottom-fade",
+      "radial-vignette",
+      "radial-center",
+    ])
+    .optional(),
+  overlayOpacity: z.enum(["15", "30", "50", "70", "85"]).optional(),
+  overlayColor: z
+    .enum(["theme", "dark", "slate", "espresso", "light", "cream", "peach", "rose"])
+    .optional(),
+  overlayBlur: z.enum(["none", "subtle", "medium", "heavy"]).optional(),
+  overlayMode: z.enum(HERO_OVERLAY_MODES).optional(),
 });
 
 const contactMediaSchema = z.object({

@@ -5,9 +5,13 @@ import type { MouseEvent } from "react";
 import dynamic from "next/dynamic";
 
 // Application services & types
-import type { PublicSiteContent, SiteContent } from "@/content/types";
+import type {
+  PublicSiteContent,
+  SiteContent,
+} from "@/content/types";
 
 // UI components
+import { getHeroContrastTheme, HeroOverlay, resolveHeroOverlay } from "./hero-overlay";
 import { hasMedia, HeroMediaView } from "./HeroMediaView";
 import { ClassicHero, HERO_TEMPLATES_MAP, HeroCopy } from "./templates";
 
@@ -52,6 +56,8 @@ export function Hero({ site, onProjects }: HeroProps) {
   const copy = <HeroCopy site={site} onProjects={onProjects} template={template} />;
 
   if (hasMedia(media) && media.place === "background") {
+    const overlay = resolveHeroOverlay(media);
+    const contrastTheme = getHeroContrastTheme(overlay.color, overlay.style);
     return (
       <section id="top" className="hero-viewport-min relative flex items-center overflow-hidden py-20 sm:py-28">
         <div className="absolute inset-0">
@@ -61,9 +67,11 @@ export function Hero({ site, onProjects }: HeroProps) {
             alt=""
             decorative
           />
-          <div className="absolute inset-0 bg-background/70" />
+          <HeroOverlay media={media} />
         </div>
-        <div className="section-shell relative z-10 w-full">{copy}</div>
+        <div className="section-shell relative z-10 w-full" data-theme={contrastTheme}>
+          {copy}
+        </div>
       </section>
     );
   }

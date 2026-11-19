@@ -88,11 +88,87 @@ export type HeroMediaKind = "none" | "image" | "video";
 export type HeroMediaPlace = "side" | "background";
 export type HeroMediaSide = "left" | "right";
 
+export const HERO_OVERLAY_STYLES = [
+  "none",
+  "solid",
+  "left-fade",
+  "left-heavy-fade",
+  "right-fade",
+  "top-fade",
+  "top-left-fade",
+  "top-right-fade",
+  "bottom-fade",
+  "radial-vignette",
+  "radial-center",
+] as const;
+
+export type HeroOverlayStyle = (typeof HERO_OVERLAY_STYLES)[number];
+
+export function isHeroOverlayStyle(value: unknown): value is HeroOverlayStyle {
+  return typeof value === "string" && (HERO_OVERLAY_STYLES as readonly string[]).includes(value);
+}
+
+export const HERO_OVERLAY_OPACITIES = ["15", "30", "50", "70", "85"] as const;
+export type HeroOverlayOpacity = (typeof HERO_OVERLAY_OPACITIES)[number];
+
+export function isHeroOverlayOpacity(value: unknown): value is HeroOverlayOpacity {
+  return typeof value === "string" && (HERO_OVERLAY_OPACITIES as readonly string[]).includes(value);
+}
+
+export const HERO_OVERLAY_COLORS = [
+  "theme",
+  "dark",
+  "slate",
+  "espresso",
+  "light",
+  "cream",
+  "peach",
+  "rose",
+] as const;
+
+export type HeroOverlayColor = (typeof HERO_OVERLAY_COLORS)[number];
+
+export function isHeroOverlayColor(value: unknown): value is HeroOverlayColor {
+  return typeof value === "string" && (HERO_OVERLAY_COLORS as readonly string[]).includes(value);
+}
+
+export const HERO_OVERLAY_BLURS = ["none", "subtle", "medium", "heavy"] as const;
+export type HeroOverlayBlur = (typeof HERO_OVERLAY_BLURS)[number];
+
+export function isHeroOverlayBlur(value: unknown): value is HeroOverlayBlur {
+  return typeof value === "string" && (HERO_OVERLAY_BLURS as readonly string[]).includes(value);
+}
+
+/** Legacy overlay modes for backwards compatibility */
+export const HERO_OVERLAY_MODES = [
+  "none",
+  "70",
+  "50",
+  "20",
+  "left-fade",
+  "right-fade",
+  "top-left-fade",
+  "top-right-fade",
+  "bottom-fade",
+] as const;
+
+export type HeroOverlayMode = (typeof HERO_OVERLAY_MODES)[number];
+
+export function isHeroOverlayMode(value: unknown): value is HeroOverlayMode {
+  return typeof value === "string" && (HERO_OVERLAY_MODES as readonly string[]).includes(value);
+}
+
 export type HeroMedia = {
   kind: HeroMediaKind;
   url: string;
   place: HeroMediaPlace;
   side: HeroMediaSide;
+  overlay?: boolean;
+  overlayStyle?: HeroOverlayStyle;
+  overlayOpacity?: HeroOverlayOpacity;
+  overlayColor?: HeroOverlayColor;
+  overlayBlur?: HeroOverlayBlur;
+  overlayMode?: HeroOverlayMode;
 };
 
 export const DEFAULT_HERO_MEDIA: HeroMedia = {
@@ -100,6 +176,12 @@ export const DEFAULT_HERO_MEDIA: HeroMedia = {
   url: "",
   place: "side",
   side: "right",
+  overlay: true,
+  overlayStyle: "solid",
+  overlayOpacity: "70",
+  overlayColor: "theme",
+  overlayBlur: "none",
+  overlayMode: "70",
 };
 
 /** Public areas that can be hidden from the live site without deleting their CMS content. */

@@ -6,10 +6,15 @@
     "description": "",
     "heroTemplate": "classic",
     "heroMedia": {
-      "kind": "none",
-      "url": "",
+      "kind": "image",
+      "url": "/images/hero-sunset-castle.jpg",
       "place": "side",
-      "side": "right"
+      "side": "right",
+      "overlay": false,
+      "overlayStyle": "left-fade",
+      "overlayOpacity": "70",
+      "overlayColor": "theme",
+      "overlayBlur": "none"
     },
     "pianoYoutubeUrl": "",
     "goodreadsUrl": "",

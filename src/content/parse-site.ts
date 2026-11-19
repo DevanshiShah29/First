@@ -1,6 +1,11 @@
 import {
   DEFAULT_CONTACT_MEDIA,
   DEFAULT_HERO_MEDIA,
+  isHeroOverlayBlur,
+  isHeroOverlayColor,
+  isHeroOverlayMode,
+  isHeroOverlayOpacity,
+  isHeroOverlayStyle,
   isHeroTemplate,
   isSkillIcon,
   normalizeSections,
@@ -11,6 +16,11 @@ import {
   type HeroMediaKind,
   type HeroMediaPlace,
   type HeroMediaSide,
+  type HeroOverlayBlur,
+  type HeroOverlayColor,
+  type HeroOverlayMode,
+  type HeroOverlayOpacity,
+  type HeroOverlayStyle,
   type ProjectItem,
   type SiteContent,
   type SkillGroup,
@@ -31,14 +41,70 @@ function parseHeroMedia(value: unknown): HeroMedia {
   const kind: HeroMediaKind =
     kindRaw === "image" || kindRaw === "video" || kindRaw === "none" ? kindRaw : "none";
   const placeRaw = str(row.place, DEFAULT_HERO_MEDIA.place);
-  const place: HeroMediaPlace = placeRaw === "background" ? "background" : "side";
+  const place: HeroMediaPlace =
+    placeRaw === "background" || placeRaw.startsWith("background") ? "background" : "side";
   const sideRaw = str(row.side, DEFAULT_HERO_MEDIA.side);
   const side: HeroMediaSide = sideRaw === "left" ? "left" : "right";
+
+  let inferredStyle: HeroOverlayStyle = "solid";
+  let inferredOpacity: HeroOverlayOpacity = "50";
+  let inferredColor: HeroOverlayColor = "theme";
+  let inferredBlur: HeroOverlayBlur = "none";
+
+  if (placeRaw === "background-clean") {
+    inferredStyle = "none";
+  } else if (placeRaw.startsWith("background:")) {
+    const parts = placeRaw.split(":");
+    if (isHeroOverlayStyle(parts[1])) {
+      inferredStyle = parts[1];
+      if (isHeroOverlayOpacity(parts[2])) inferredOpacity = parts[2];
+      if (isHeroOverlayColor(parts[3])) inferredColor = parts[3];
+      if (isHeroOverlayBlur(parts[4])) inferredBlur = parts[4];
+    } else if (isHeroOverlayMode(parts[1])) {
+      if (parts[1] === "none") inferredStyle = "none";
+      else if (parts[1] === "70" || parts[1] === "50" || parts[1] === "20") {
+        inferredStyle = "solid";
+        inferredOpacity = parts[1] === "20" ? "15" : (parts[1] as HeroOverlayOpacity);
+      } else {
+        inferredStyle = parts[1] as HeroOverlayStyle;
+      }
+      if (isHeroOverlayColor(parts[2])) inferredColor = parts[2];
+    }
+  }
+
+  const overlayStyle: HeroOverlayStyle = isHeroOverlayStyle(row.overlayStyle)
+    ? row.overlayStyle
+    : isHeroOverlayStyle(row.overlayMode)
+      ? row.overlayMode
+      : row.overlay === false
+        ? "none"
+        : inferredStyle;
+
+  const overlayOpacity: HeroOverlayOpacity = isHeroOverlayOpacity(row.overlayOpacity)
+    ? row.overlayOpacity
+    : inferredOpacity;
+
+  const overlayColor: HeroOverlayColor = isHeroOverlayColor(row.overlayColor)
+    ? row.overlayColor
+    : inferredColor;
+
+  const overlayBlur: HeroOverlayBlur = isHeroOverlayBlur(row.overlayBlur)
+    ? row.overlayBlur
+    : inferredBlur;
+
+  const overlay = overlayStyle !== "none";
+
   return {
     kind,
     url: str(row.url),
     place,
     side,
+    overlay,
+    overlayStyle,
+    overlayOpacity,
+    overlayColor,
+    overlayBlur,
+    overlayMode: (overlayStyle as HeroOverlayMode) || "none",
   };
 }
 

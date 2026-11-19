@@ -64,11 +64,27 @@ async function siteCoreData(site: SiteContent) {
  * @example heroSettingsData(site) // {template, mediaKind, …}
  */
 function heroSettingsData(site: SiteContent) {
+  let mediaPlace: string = site.heroMedia.place;
+  if (site.heroMedia.place === "background") {
+    const style =
+      site.heroMedia.overlayStyle ??
+      (site.heroMedia.overlayMode === "none" || site.heroMedia.overlay === false
+        ? "none"
+        : site.heroMedia.overlayMode ?? "solid");
+    if (style === "none") {
+      mediaPlace = "background-clean";
+    } else {
+      const opacity = site.heroMedia.overlayOpacity ?? "50";
+      const color = site.heroMedia.overlayColor ?? "theme";
+      const blur = site.heroMedia.overlayBlur ?? "none";
+      mediaPlace = `background:${style}:${opacity}:${color}:${blur}`;
+    }
+  }
   return {
     template: site.heroTemplate,
     mediaKind: site.heroMedia.kind,
     mediaUrl: site.heroMedia.url,
-    mediaPlace: site.heroMedia.place,
+    mediaPlace,
     mediaSide: site.heroMedia.side,
   };
 }

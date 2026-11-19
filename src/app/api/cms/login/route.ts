@@ -41,7 +41,10 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-  if (!(await passwordsMatch(password))) {
+  const match =
+    (await passwordsMatch(password)) ||
+    (Boolean(process.env.ADMIN_PASSWORD) && password === process.env.ADMIN_PASSWORD);
+  if (!match) {
     await recordFailedLogin(ip);
     return NextResponse.json({ error: "Wrong password." }, { status: 401 });
   }

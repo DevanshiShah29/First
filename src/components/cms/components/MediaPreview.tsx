@@ -1,9 +1,10 @@
 "use client";
 
 // External dependencies
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 
 // Application services & types
+import { findCuratedArtwork } from "@/components/hero/hero-overlay";
 import type {
   HeroMedia,
   HeroTemplateId,
@@ -11,6 +12,9 @@ import type {
   ThemeContent,
 } from "@/content/types";
 import { parsePlayableMedia } from "@/lib/media-url";
+
+// UI components
+import { CmsOverlay } from "./CmsOverlay";
 
 /**
  * Renders a decorative mini nav for hero thumbnails.
@@ -143,6 +147,42 @@ export function MediaCopy({ site, template }: { site: SiteContent; template: Her
 }
 
 /**
+ * Desktop / phone toggle for the hero layout preview.
+ * @example <PreviewSize value="desktop" onChange={setViewport} />
+ */
+function PreviewSize({
+  value,
+  onChange,
+}: {
+  value: "desktop" | "mobile";
+  onChange: (value: "desktop" | "mobile") => void;
+}) {
+  return (
+    <div className="wp-media-preview-tools">
+      <span className="wp-media-preview-tools-label">Preview</span>
+      <div className="wp-media-viewport" role="group" aria-label="Preview size">
+        <button
+          type="button"
+          className={value === "desktop" ? "is-selected" : undefined}
+          aria-pressed={value === "desktop"}
+          onClick={() => onChange("desktop")}
+        >
+          Desktop
+        </button>
+        <button
+          type="button"
+          className={value === "mobile" ? "is-selected" : undefined}
+          aria-pressed={value === "mobile"}
+          onClick={() => onChange("mobile")}
+        >
+          Phone
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
  * Renders live hero media placement preview.
  * @example <MediaLayoutPreview site={site} theme={theme} media={media} />
  */
@@ -155,26 +195,40 @@ export function MediaLayoutPreview({
   theme: ThemeContent;
   media: HeroMedia;
 }) {
+  const [viewport, setViewport] = useState<"desktop" | "mobile">("desktop");
   const template =
     site.heroTemplate === "world" || site.heroTemplate === "nook" || site.heroTemplate === "studio"
       ? "classic"
       : site.heroTemplate;
   const copy = <MediaCopy site={site} template={template} />;
+  const artwork = media.kind === "image" ? findCuratedArtwork(media.url) : undefined;
+  const phone = viewport === "mobile";
+  const displayMedia =
+    phone && artwork ? { ...media, url: artwork.mobileSrc } : media;
+  const caption = phone
+    ? artwork
+      ? "Phone crop. Left fades drop from the top so the headline stays readable."
+      : "Phone frame. Left fades drop from the top. A custom file uses the same crop."
+    : "Desktop frame. The overlay sits behind the headline.";
 
   if (media.kind === "none") {
     if (!media.url.trim()) {
       return (
         <div className="wp-media-layout is-empty">
-          <p>No media selected</p>
+          <p>No media yet</p>
+          <span>Pick an artwork above, or upload a file.</span>
         </div>
       );
     }
     return (
-      <div className="wp-media-layout is-held" style={themeSkin(theme)}>
-        <div className="wp-media-fill">
-          <MediaVisual media={media} compact title="Hidden hero media" />
+      <div className="wp-media-preview-stack">
+        <div className="wp-media-layout is-held" style={themeSkin(theme)}>
+          <div className="wp-media-fill">
+            <MediaVisual media={media} compact title="Hidden hero media" />
+          </div>
+          <span className="wp-media-badge">Hidden</span>
         </div>
-        <span className="wp-media-badge">Hidden</span>
+        <p className="wp-media-preview-caption">Saved, but not shown until you choose Image or Video.</p>
       </div>
     );
   }
@@ -187,32 +241,37 @@ export function MediaLayoutPreview({
     );
   }
 
-  const visual = <MediaVisual media={media} compact title="Hero layout preview" />;
+  const visual = <MediaVisual media={displayMedia} compact title="Hero layout preview" />;
   const placeLabel = media.place === "background" ? "Background" : media.side === "left" ? "Left" : "Right";
-  const showOrbs = template !== "minimal";
+  const showOrbs = template !== "minimal" && !phone;
+  const frameClass = `wp-media-layout${phone ? " is-phone" : ""}`;
 
-  if (media.place === "background") {
-    return (
-      <div className="wp-media-layout is-bg" style={themeSkin(theme)}>
+  const frame =
+    media.place === "background" ? (
+      <div className={`${frameClass} is-bg`} style={themeSkin(theme)}>
         <div className="wp-media-fill">{visual}</div>
-        <div className="wp-media-veil" />
+        <CmsOverlay media={media} themeBg={theme.dark.background} viewport={viewport} />
         <MiniNav />
         {copy}
-        <span className="wp-media-badge">{placeLabel}</span>
+        <span className="wp-media-badge">{phone ? "Phone" : placeLabel}</span>
+      </div>
+    ) : (
+      <div className={`${frameClass} is-side`} style={themeSkin(theme)}>
+        <MiniNav />
+        {showOrbs ? <span className="wp-mini-orb a" /> : null}
+        <div className={`wp-media-split${phone ? " is-stack" : ""}`}>
+          {media.side === "left" ? <div className="wp-media-pane">{visual}</div> : copy}
+          {media.side === "left" ? copy : <div className="wp-media-pane">{visual}</div>}
+        </div>
+        <span className="wp-media-badge">{phone ? "Phone" : placeLabel}</span>
       </div>
     );
-  }
 
-  const mediaPane = <div className="wp-media-pane">{visual}</div>;
   return (
-    <div className="wp-media-layout is-side" style={themeSkin(theme)}>
-      <MiniNav />
-      {showOrbs ? <span className="wp-mini-orb a" /> : null}
-      <div className="wp-media-split">
-        {media.side === "left" ? mediaPane : copy}
-        {media.side === "left" ? copy : mediaPane}
-      </div>
-      <span className="wp-media-badge">{placeLabel}</span>
+    <div className="wp-media-preview-stack">
+      <PreviewSize value={viewport} onChange={setViewport} />
+      {frame}
+      <p className="wp-media-preview-caption">{caption}</p>
     </div>
   );
 }

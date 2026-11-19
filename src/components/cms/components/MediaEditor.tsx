@@ -4,11 +4,21 @@
 import { useState, type DragEvent, type ReactNode } from "react";
 
 // Application services & types
-import type { HeroMediaKind, HeroMediaPlace, HeroMediaSide } from "@/content/types";
+import type {
+  HeroMediaKind,
+  HeroMediaPlace,
+  HeroMediaSide,
+  HeroOverlayBlur,
+  HeroOverlayColor,
+  HeroOverlayMode,
+  HeroOverlayOpacity,
+  HeroOverlayStyle,
+} from "@/content/types";
 import { mediaHint, parsePlayableMedia } from "@/lib/media-url";
 
 // UI components
 import { ConfirmButton } from "./ConfirmDialog";
+import { OverlayControls } from "./OverlayControls";
 import { TextInput } from "../fields";
 
 const ACCEPT =
@@ -150,10 +160,18 @@ export function MediaEditor({
   onAlt,
   place,
   side,
+  overlayStyle = "solid",
+  overlayOpacity = "50",
+  overlayColor = "theme",
+  overlayBlur = "none",
   onKind,
   onUrl,
   onPlace,
   onSide,
+  onOverlayStyle,
+  onOverlayOpacity,
+  onOverlayColor,
+  onOverlayBlur,
   onFile,
   onClear,
   uploading,
@@ -161,6 +179,7 @@ export function MediaEditor({
   preview,
   note,
   warning,
+  themeBackground,
 }: {
   surface: "hero" | "contact";
   kind: HeroMediaKind;
@@ -170,10 +189,22 @@ export function MediaEditor({
   onAlt?: (alt: string) => void;
   place?: HeroMediaPlace;
   side?: HeroMediaSide;
+  overlay?: boolean;
+  overlayStyle?: HeroOverlayStyle;
+  overlayOpacity?: HeroOverlayOpacity;
+  overlayColor?: HeroOverlayColor;
+  overlayBlur?: HeroOverlayBlur;
+  overlayMode?: HeroOverlayMode;
   onKind: (kind: HeroMediaKind) => void;
   onUrl: (url: string) => void;
   onPlace?: (place: HeroMediaPlace) => void;
   onSide?: (side: HeroMediaSide) => void;
+  onOverlay?: (overlay: boolean) => void;
+  onOverlayStyle?: (style: HeroOverlayStyle) => void;
+  onOverlayOpacity?: (opacity: HeroOverlayOpacity) => void;
+  onOverlayColor?: (color: HeroOverlayColor) => void;
+  onOverlayBlur?: (blur: HeroOverlayBlur) => void;
+  onOverlayMode?: (mode: HeroOverlayMode) => void;
   onFile: (file: File) => void;
   onClear: () => void;
   uploading: boolean;
@@ -181,6 +212,7 @@ export function MediaEditor({
   preview: ReactNode;
   note?: string;
   warning?: string;
+  themeBackground?: string;
 }) {
   const [dragDepth, setDragDepth] = useState(0);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -273,6 +305,21 @@ export function MediaEditor({
               onChange={onPlace}
             />
           ) : null}
+          {showDetails && place === "background" && onOverlayStyle && onOverlayOpacity && onOverlayColor && onOverlayBlur ? (
+            <OverlayControls
+              surface={surface}
+              style={overlayStyle}
+              opacity={overlayOpacity}
+              color={overlayColor}
+              blur={overlayBlur}
+              imageUrl={kind === "image" && url.trim() ? url.trim() : undefined}
+              themeBackground={themeBackground}
+              onStyle={onOverlayStyle}
+              onOpacity={onOverlayOpacity}
+              onColor={onOverlayColor}
+              onBlur={onOverlayBlur}
+            />
+          ) : null}
           {showDetails && place === "side" && side && onSide ? (
             <Segmented
               label="Side"
@@ -284,6 +331,11 @@ export function MediaEditor({
               ]}
               onChange={onSide}
             />
+          ) : null}
+          {showDetails && place === "side" && onOverlayStyle ? (
+            <p className="wp-description wp-media-side-note">
+              Overlay applies when placement is Background.
+            </p>
           ) : null}
         </div>
 

@@ -8,7 +8,9 @@ import {
   HERO_TEMPLATES,
   type ContentData,
   type HeroMedia,
+  type HeroOverlayMode,
 } from "@/content/types";
+import { resolveHeroOverlay } from "@/components/hero/hero-overlay";
 import { generateHeroCopy, type HeroCopyVariant } from "@/lib/cms-client";
 import { goodreadsHint, pianoMusicHint } from "../types";
 
@@ -16,6 +18,7 @@ import { goodreadsHint, pianoMusicHint } from "../types";
 import { AiFormSection, AiGeneratePanel } from "../components/AiGeneratePanel";
 import { AiVariantPicker } from "../components/AiVariantPicker";
 import { CmsSaveButton, type CmsSaveStatus } from "../components/CmsSaveButton";
+import { heroMediaBadge, HeroMediaStudio } from "../components/HeroMediaStudio";
 import { MediaEditor } from "../components/MediaEditor";
 import {
   HeroThumb,
@@ -53,6 +56,7 @@ export function HeroScreen({
 }: HeroScreenProps) {
   const site = data.site;
   const heroMedia = site.heroMedia;
+  const heroOverlay = resolveHeroOverlay(heroMedia);
   const heroIs3d =
     site.heroTemplate === "world" || site.heroTemplate === "nook" || site.heroTemplate === "studio";
   const [generating, setGenerating] = useState(false);
@@ -163,11 +167,20 @@ export function HeroScreen({
           })}
         </div>
       </Metabox>
-      <Metabox
-        id="hero_media"
-        title="Media"
-        badge={heroMedia.kind !== "none" ? `${heroMedia.kind} (${heroMedia.place})` : "none"}
-      >
+      <Metabox id="hero_media" title="Media" badge={heroMediaBadge(heroMedia)}>
+        <HeroMediaStudio
+          media={heroMedia}
+          themeBackground={data.theme.dark.background}
+          hiddenOnSite={heroIs3d}
+          onChange={setHeroMedia}
+        />
+        <section className="wp-hero-media-section">
+          <div className="wp-hero-media-section-h">
+            <div>
+              <h3>File &amp; overlay</h3>
+              <p>Upload a replacement, paste a URL, or fine-tune the overlay.</p>
+            </div>
+          </div>
         <MediaEditor
           surface="hero"
           kind={heroMedia.kind}
@@ -179,30 +192,67 @@ export function HeroScreen({
           url={heroMedia.url}
           place={heroMedia.place}
           side={heroMedia.side}
+          overlay={heroOverlay.style !== "none"}
+          overlayStyle={heroOverlay.style}
+          overlayOpacity={heroOverlay.opacity}
+          overlayColor={heroOverlay.color}
+          overlayBlur={heroOverlay.blur}
+          overlayMode={heroMedia.overlayMode}
           onKind={(kind) => setHeroMedia({ kind })}
           onUrl={(url) => setHeroMedia({ url })}
           onPlace={(place) => setHeroMedia({ place })}
           onSide={(side) => setHeroMedia({ side })}
+          onOverlay={(overlay) =>
+            setHeroMedia({
+              overlay,
+              overlayStyle: overlay ? "left-fade" : "none",
+            })
+          }
+          onOverlayStyle={(overlayStyle) =>
+            setHeroMedia({
+              overlayStyle,
+              overlay: overlayStyle !== "none",
+              overlayMode: overlayStyle as HeroOverlayMode,
+            })
+          }
+          onOverlayOpacity={(overlayOpacity) =>
+            setHeroMedia({
+              overlayOpacity,
+              overlayStyle: heroOverlay.style,
+              overlayMode: heroOverlay.style as HeroOverlayMode,
+            })
+          }
+          onOverlayColor={(overlayColor) =>
+            setHeroMedia({
+              overlayColor,
+              overlayStyle: heroOverlay.style,
+              overlayMode: heroOverlay.style as HeroOverlayMode,
+            })
+          }
+          onOverlayBlur={(overlayBlur) =>
+            setHeroMedia({
+              overlayBlur,
+              overlayStyle: heroOverlay.style,
+              overlayMode: heroOverlay.style as HeroOverlayMode,
+            })
+          }
           onFile={(file) => void uploadHeroFile(file)}
           onClear={() => setHeroMedia({ kind: "none", url: "" })}
           uploading={uploading}
           clearLabel="Remove"
           preview={<MediaLayoutPreview site={site} theme={data.theme} media={heroMedia} />}
-          warning={
-            heroIs3d
-              ? "A 3D hero is live, so this image or video stays hidden on the public site until you activate another template."
-              : undefined
-          }
+          themeBackground={data.theme.dark.background}
           note={
             heroMedia.kind === "none"
               ? heroMedia.url.trim()
                 ? "Choose Image or Video to show this file. It stays off the hero until then."
-                : "Nothing is added to the hero until you choose Image or Video, or drop a file."
+                : "Nothing is added until you pick an artwork, or choose Image or Video and add a file."
               : heroIs3d
-                ? "Save to keep it. It appears on the site after you activate a template other than 3D."
+                ? "Save to keep it. It appears after you activate a template other than 3D."
                 : "Save to publish this on the site."
           }
         />
+        </section>
       </Metabox>
       <Metabox id="hero_world" title="3D World">
         <p style={{ margin: "0 0 12px" }}>
